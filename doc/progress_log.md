@@ -70,3 +70,90 @@ Successfully ran the full BayesDiff pipeline end-to-end on Mac (CPU) using real 
 - [ ] Train GP on actual PDBbind training set (~12K complexes)
 - [ ] Isotonic calibration on held-out validation set
 - [ ] OOD detection using Mahalanobis distance on scaffold splits
+
+---
+
+## Phase 1: Core Module Implementation (Day 3–7)
+
+### Summary
+Upgraded all 6 `bayesdiff/` core modules from Phase 0 stubs to production-quality Phase 1 implementations. Created and passed comprehensive validation test (41/41 checks, 4.1s on Mac CPU).
+
+**Verification criterion met**: 12 toy molecules → full pipeline → P_success output for each molecule.
+
+### Module Upgrades
+
+#### 1. `gen_uncertainty.py` (Phase 0 → Phase 1)
+**Added:**
+- Ledoit-Wolf shrinkage with configurable fallback to OAS
+- Law of Total Variance for multimodal distributions (per-mode covariances)
+- Eigenvalue analysis: participation ratio for effective dimensionality
+- `_safe_logdet()` for numerically stable log-determinant
+- Expanded `GenUncertaintyResult` dataclass: `gmm_covs`, `log_det_cov`, `effective_dim`, `top_eigenvalues`, `shrinkage_alpha`
+- Auto-selects `cov_type="full"` vs `"diag"` based on M/d ratio
+
+#### 2. `gp_oracle.py` (Phase 0 → Phase 1)
+**Added:**
+- PCA preprocessing with automatic dimension selection (`_fit_pca()` / `_apply_pca()`)
+- Chain-rule Jacobian backprojection through PCA for correct uncertainty propagation
+- k-means inducing point initialization via `MiniBatchKMeans`
+- `ReduceLROnPlateau` learning rate scheduler
+- Early stopping with best-state restoration
+- Diagnostic methods: `get_lengthscales()`, `get_noise()`
+- Save/load now preserves PCA state and training statistics
+
+#### 3. `fusion.py` (Phase 0 → Phase 1)
+**Added:**
+- `fuse_mc()`: Monte Carlo fallback (500 samples) for ill-conditioned Σ_gen
+- `fuse_multimodal()`: Mode-weighted P_success = Σ π_k P_k for multimodal GMM
+- Expanded `FusionResult` with `method` ("delta"/"mc"/"delta_multimodal") and `n_modes`
+- Robust handling of edge cases (zero variance, etc.)
+
+#### 4. `calibration.py` (Phase 0 → Phase 1)
+**Added:**
+- `PlattCalibrator`: Logistic sigmoid calibration (a·p + b)
+- `TemperatureCalibrator`: Logit/T temperature scaling
+- `cross_validated_calibrate()`: K-fold cross-validated calibration
+- `compute_ace()`: Adaptive Calibration Error with equal-count bins
+- `calibrate_multi_threshold()`: Separate calibrators for y=7 and y=8 per plan §6.1
+- `reliability_diagram_data()` now returns `ece_per_bin`
+
+#### 5. `ood.py` (Phase 0 → Phase 1)
+**Added:**
+- Relative Mahalanobis distance vs isotropic background distribution
+- `confidence_modifier`: Smooth exponential decay beyond OOD threshold (conf_mod < 1.0 for OOD)
+- Background distribution fitting (configurable scale factor)
+- Expanded `OODResult` with `relative_mahalanobis` and `confidence_modifier`
+- Save/load preserves background distribution state
+
+#### 6. `evaluate.py` (Phase 0 → Phase 1)
+**Added:**
+- `evaluate_multi_threshold()`: Evaluate at y=7 and y=8 simultaneously
+- `evaluate_per_pocket()`: Per-pocket metric breakdown
+- `_bootstrap_ci()`: Bootstrap confidence intervals for AUROC, EF@1%, Hit Rate
+- `save_results_json()` / `save_results_csv()`: Serialization for experiments
+- `comparison_table()`: Formatted method-comparison table
+- `results_to_dict()`: JSON-serializable conversion
+- Robust edge-case handling (degenerate labels, small N, constant inputs)
+
+### Validation Test Results
+Script: `notebooks/validate_phase1.py`
+
+| Module | Tests | Status |
+|--------|-------|--------|
+| gen_uncertainty | 12 | ✅ All pass |
+| gp_oracle | 5 | ✅ All pass |
+| fusion | 3 | ✅ All pass |
+| ood | 7 | ✅ All pass |
+| calibration | 4 | ✅ All pass |
+| evaluate | 10 | ✅ All pass |
+| **Total** | **41** | **41/41 passed** |
+
+### Phase 0 Backup
+Original Phase 0 module versions preserved in `bayesdiff/_phase0_backup/` for reference.
+
+### Next Steps (Phase 2)
+- [ ] Run TargetDiff sampling on HPC with 1000 diffusion steps and M=64 samples per pocket
+- [ ] Extract real SE(3) embeddings from TargetDiff encoder
+- [ ] Train GP oracle on full PDBbind training set (N ≈ 3,396)
+- [ ] Generate CASF-2016 coreset embeddings for evaluation
+- [ ] Produce Table 1 (method comparison) + Table 2 (ablation) + Figure 2 (reliability diagram)
