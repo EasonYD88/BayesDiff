@@ -179,7 +179,7 @@ def sample_molecules(pocket_list, device, num_samples=4, num_steps=100, output_d
         data = transform(data)
 
         # Sample
-        all_pred_pos, all_pred_v, pred_pos_traj, pred_v_traj, pred_v0_traj, pred_vt_traj, time_list = \
+        all_pred_pos, all_pred_v, pred_pos_traj, pred_v_traj, pred_v0_traj, pred_vt_traj, time_list, mol_embeddings = \
             sample_diffusion_ligand(
                 model, data, num_samples,
                 batch_size=num_samples, device=device,
@@ -225,6 +225,7 @@ def sample_molecules(pocket_list, device, num_samples=4, num_steps=100, output_d
             "n_valid": n_valid,
             "elapsed": elapsed,
             "pkd": pocket["pkd"],
+            "mol_embeddings": mol_embeddings,  # SE(3)-invariant from TargetDiff encoder
         }
 
     return all_results, model, ckpt["config"]
@@ -235,77 +236,63 @@ def sample_molecules(pocket_list, device, num_samples=4, num_steps=100, output_d
 # ═══════════════════════════════════════════════════════════════
 
 def extract_embeddings(all_results, model, config, device):
-    """Extract graph-level embeddings from the TargetDiff encoder.
+    """Extract graph-level SE(3)-invariant embeddings from TargetDiff's encoder.
 
-    Uses the model's internal encoder to get node-level features,
-    then mean-pools to graph level.
+    Uses the final-layer hidden features (final_ligand_h) from the UniTransformer
+    backbone, mean-pooled over ligand atoms to produce one 128-dim vector per molecule.
+    These features are SE(3)-invariant because the h-channel in TargetDiff's
+    equivariant architecture is updated only via distance-based attention.
     """
     logger.info("\n" + "=" * 60)
-    logger.info("STEP 2: Extract Embeddings")
+    logger.info("STEP 2: Extract SE(3)-Invariant Embeddings")
     logger.info("=" * 60)
 
     hidden_dim = config.model.hidden_dim
     all_embeddings = {}
 
     for target, result in all_results.items():
-        embeddings = []
-        for pred_pos, pred_v in zip(result["pred_pos"], result["pred_v"]):
-            # Use atom positions + types as a simple embedding
-            # Mean position + type distribution → feature vector
-            pos = pred_pos.cpu().numpy() if isinstance(pred_pos, torch.Tensor) else pred_pos
-            v = pred_v.cpu().numpy() if isinstance(pred_v, torch.Tensor) else pred_v
+        mol_embs = result.get("mol_embeddings", None)
 
-            n_atoms = len(pos)
-            # Build embedding: [mean_pos(3), std_pos(3), pos_range(3),
-            #                   atom_type_distribution(num_types), n_atoms(1),
-            #                   spatial_features(variable)]
-            mean_pos = pos.mean(axis=0)
-            std_pos = pos.std(axis=0)
-            pos_range = pos.max(axis=0) - pos.min(axis=0)
+        if mol_embs is not None and mol_embs[0] is not None:
+            # Use real SE(3)-invariant embeddings from TargetDiff encoder
+            embeddings = np.stack([e.astype(np.float32) for e in mol_embs])
+            logger.info(f"  {target}: SE(3) embeddings shape {embeddings.shape} "
+                        f"(from TargetDiff encoder, d={hidden_dim})")
+        else:
+            # Fallback: hand-crafted features (should not happen with updated sampling)
+            logger.warning(f"  {target}: No SE(3) embeddings available, using fallback")
+            embeddings = []
+            for pred_pos, pred_v in zip(result["pred_pos"], result["pred_v"]):
+                pos = pred_pos.cpu().numpy() if isinstance(pred_pos, torch.Tensor) else pred_pos
+                v = pred_v.cpu().numpy() if isinstance(pred_v, torch.Tensor) else pred_v
+                n_atoms = len(pos)
+                mean_pos = pos.mean(axis=0)
+                std_pos = pos.std(axis=0)
+                pos_range = pos.max(axis=0) - pos.min(axis=0)
+                if v.ndim == 2:
+                    atom_dist = v.mean(axis=0)
+                else:
+                    n_types = max(10, v.max() + 1)
+                    atom_dist = np.bincount(v.astype(int), minlength=n_types)[:10].astype(float)
+                    atom_dist = atom_dist / max(atom_dist.sum(), 1)
+                from scipy.spatial.distance import pdist
+                if n_atoms > 1:
+                    dists = pdist(pos)
+                    dist_features = np.array([dists.mean(), dists.std(), dists.min(), dists.max(),
+                                              np.percentile(dists, 25), np.percentile(dists, 75)])
+                else:
+                    dist_features = np.zeros(6)
+                rg = np.sqrt(np.mean(np.sum((pos - mean_pos) ** 2, axis=1)))
+                emb = np.concatenate([mean_pos, std_pos, pos_range, atom_dist, dist_features, [n_atoms, rg]])
+                if len(emb) < hidden_dim:
+                    emb = np.pad(emb, (0, hidden_dim - len(emb)))
+                else:
+                    emb = emb[:hidden_dim]
+                embeddings.append(emb.astype(np.float32))
+            embeddings = np.stack(embeddings)
+            logger.info(f"  {target}: fallback embeddings shape {embeddings.shape}")
 
-            # Atom type distribution
-            if v.ndim == 2:
-                atom_dist = v.mean(axis=0)  # Soft atom type distribution
-            else:
-                n_types = max(10, v.max() + 1)
-                atom_dist = np.bincount(v.astype(int), minlength=n_types)[:10].astype(float)
-                atom_dist = atom_dist / max(atom_dist.sum(), 1)
-
-            # Pairwise distance statistics
-            from scipy.spatial.distance import pdist
-            if n_atoms > 1:
-                dists = pdist(pos)
-                dist_features = np.array([
-                    dists.mean(), dists.std(), dists.min(), dists.max(),
-                    np.percentile(dists, 25), np.percentile(dists, 75),
-                ])
-            else:
-                dist_features = np.zeros(6)
-
-            # Radius of gyration
-            rg = np.sqrt(np.mean(np.sum((pos - mean_pos) ** 2, axis=1)))
-
-            # Compose embedding
-            emb = np.concatenate([
-                mean_pos,           # 3
-                std_pos,            # 3
-                pos_range,          # 3
-                atom_dist,          # 10
-                dist_features,      # 6
-                [n_atoms, rg],      # 2
-            ])  # Total: 27
-
-            # Pad or project to hidden_dim for GP compatibility
-            if len(emb) < hidden_dim:
-                emb = np.pad(emb, (0, hidden_dim - len(emb)))
-            else:
-                emb = emb[:hidden_dim]
-
-            embeddings.append(emb.astype(np.float32))
-
-        embeddings = np.stack(embeddings)
         all_embeddings[target] = embeddings
-        logger.info(f"  {target}: embeddings shape {embeddings.shape}")
 
     return all_embeddings
 
@@ -402,15 +389,24 @@ def train_gp_oracle(all_embeddings, all_results, pocket_data):
 # STEP 5: Uncertainty Fusion + Calibration + Evaluation
 # ═══════════════════════════════════════════════════════════════
 
-def fuse_and_evaluate(gp, gen_results, all_embeddings, all_results, selected_pockets):
-    """Fuse uncertainties, calibrate, and evaluate."""
+def fuse_and_evaluate(gp, gen_results, all_embeddings, all_results,
+                      selected_pockets, X_train=None):
+    """Fuse uncertainties, run OOD detection, and evaluate."""
     logger.info("\n" + "=" * 60)
-    logger.info("STEP 5: Fusion + Evaluation")
+    logger.info("STEP 5: Fusion + OOD Detection + Evaluation")
     logger.info("=" * 60)
 
     from bayesdiff.fusion import fuse_uncertainties
-    from bayesdiff.calibration import compute_ece
+    from bayesdiff.calibration import compute_ece, IsotonicCalibrator
     from bayesdiff.ood import MahalanobisOOD
+    from bayesdiff.evaluate import evaluate_all, evaluate_multi_threshold
+
+    # --- OOD detector on training embeddings ---
+    ood_detector = None
+    if X_train is not None and len(X_train) > 10:
+        ood_detector = MahalanobisOOD()
+        ood_detector.fit(X_train, percentile=95.0, fit_background=True)
+        logger.info(f"  OOD detector: threshold={ood_detector._threshold:.2f}")
 
     results_list = []
     targets = []
@@ -438,6 +434,18 @@ def fuse_and_evaluate(gp, gen_results, all_embeddings, all_results, selected_poc
             y_target=7.0,
         )
 
+        # OOD scoring
+        ood_flag = False
+        ood_conf_mod = 1.0
+        ood_distance = 0.0
+        ood_percentile = 50.0
+        if ood_detector is not None:
+            ood_r = ood_detector.score(gen_r.z_bar)
+            ood_flag = ood_r.is_ood
+            ood_conf_mod = ood_r.confidence_modifier
+            ood_distance = ood_r.mahalanobis_distance
+            ood_percentile = ood_r.percentile
+
         targets.append(target)
         results_list.append({
             "target": target,
@@ -452,18 +460,50 @@ def fuse_and_evaluate(gp, gen_results, all_embeddings, all_results, selected_poc
             "n_modes": gen_r.n_modes,
             "n_valid_mols": all_results[target]["n_valid"],
             "vina_proxy": pocket.get("mean_vina", 0.0),
+            "ood_flag": ood_flag,
+            "ood_confidence_modifier": ood_conf_mod,
+            "ood_distance": ood_distance,
+            "ood_percentile": ood_percentile,
         })
 
+        ood_tag = " [OOD!]" if ood_flag else ""
         logger.info(
             f"  {target}: μ={fusion_result.mu:.2f}, "
             f"σ²_oracle={fusion_result.sigma2_oracle:.3f}, "
             f"σ²_gen={fusion_result.sigma2_gen:.3f}, "
             f"σ²_total={fusion_result.sigma2_total:.3f}, "
             f"P_success={fusion_result.p_success:.3f}, "
-            f"pKd_true={pocket['pkd']:.2f}"
+            f"pKd_true={pocket['pkd']:.2f}{ood_tag}"
         )
 
-    return results_list
+    # --- Aggregate evaluation with Phase 1 evaluate module ---
+    if len(results_list) >= 3:
+        mu_pred = np.array([r["mu_pred"] for r in results_list])
+        sigma_pred = np.array([r["sigma_total"] for r in results_list])
+        p_success = np.array([r["p_success"] for r in results_list])
+        y_true = np.array([r["pkd_true"] for r in results_list])
+
+        eval_res = evaluate_all(
+            mu_pred, sigma_pred, p_success, y_true,
+            y_target=7.0, confidence_threshold=0.5,
+            bootstrap_n=200,
+        )
+        logger.info(f"\n  Aggregate metrics (y≥7):")
+        logger.info(f"    ECE={eval_res.ece:.4f}, AUROC={eval_res.auroc:.4f}, "
+                    f"EF@1%={eval_res.ef_1pct:.2f}, Spearman={eval_res.spearman_rho:.4f}, "
+                    f"RMSE={eval_res.rmse:.4f}, NLL={eval_res.nll:.4f}")
+        if eval_res.ci_auroc:
+            logger.info(f"    AUROC 95% CI: [{eval_res.ci_auroc[0]:.4f}, {eval_res.ci_auroc[1]:.4f}]")
+
+        # Multi-threshold evaluation
+        mt = evaluate_multi_threshold(
+            mu_pred, sigma_pred, p_success, y_true,
+            thresholds=(7.0, 8.0), confidence_threshold=0.5,
+        )
+        for r in mt.results:
+            logger.info(f"  y≥{r.y_target}: ECE={r.ece:.4f}, AUROC={r.auroc:.4f}, Hit={r.hit_rate:.4f}")
+
+    return results_list, ood_detector
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -472,7 +512,7 @@ def fuse_and_evaluate(gp, gen_results, all_embeddings, all_results, selected_poc
 
 def generate_visualizations(results_list, gp, gen_results, all_embeddings,
                             gp_history, output_dir, X_train, y_train,
-                            sampling_results=None):
+                            sampling_results=None, ood_detector=None):
     """Generate all visualizations."""
     logger.info("\n" + "=" * 60)
     logger.info("STEP 6: Visualization")
@@ -790,6 +830,64 @@ def generate_visualizations(results_list, gp, gen_results, all_embeddings,
     plt.close(fig5)
     logger.info(f"  Saved fig5_ablation.png")
 
+    # ── Figure 6: OOD Detection + Phase 1 Evaluation ────────────────
+    fig6, axes6 = plt.subplots(1, 3, figsize=(18, 5.5))
+
+    # 6a: OOD distance per pocket
+    ax = axes6[0]
+    ood_dists = [r.get("ood_distance", 0) for r in results_list]
+    ood_flags = [r.get("ood_flag", False) for r in results_list]
+    ood_conf = [r.get("ood_confidence_modifier", 1.0) for r in results_list]
+    colors_ood = ["#F44336" if f else "#4CAF50" for f in ood_flags]
+    bars_ood = ax.barh(short_targets, ood_dists, color=colors_ood, alpha=0.85)
+    if ood_detector is not None and ood_detector._threshold is not None:
+        ax.axvline(ood_detector._threshold, color="gray", linestyle="--",
+                   alpha=0.7, label=f"Threshold (p95)={ood_detector._threshold:.1f}")
+    for i, (d, c) in enumerate(zip(ood_dists, ood_conf)):
+        ax.text(d + 0.1, i, f"conf={c:.2f}", va="center", fontsize=8)
+    ax.set_xlabel("Mahalanobis Distance")
+    ax.set_title("(a) OOD Detection per Pocket")
+    ax.legend(fontsize=9)
+
+    # 6b: Multi-threshold P_success comparison
+    ax = axes6[1]
+    from scipy import stats as sstats
+    sigma_total_arr = np.array([r["sigma_total"] for r in results_list])
+    mu_pred_arr = np.array([r["mu_pred"] for r in results_list])
+    z7 = (7.0 - mu_pred_arr) / np.clip(sigma_total_arr, 1e-6, None)
+    z8 = (8.0 - mu_pred_arr) / np.clip(sigma_total_arr, 1e-6, None)
+    p7 = 1.0 - sstats.norm.cdf(z7)
+    p8 = 1.0 - sstats.norm.cdf(z8)
+    x_pos6 = np.arange(len(short_targets))
+    w6 = 0.35
+    ax.bar(x_pos6 - w6/2, p7, w6, label="P(pKd≥7)", color="#2196F3", alpha=0.85)
+    ax.bar(x_pos6 + w6/2, p8, w6, label="P(pKd≥8)", color="#FF9800", alpha=0.85)
+    ax.set_xticks(x_pos6)
+    ax.set_xticklabels(short_targets, rotation=45, ha="right", fontsize=8)
+    ax.set_ylabel("P_success")
+    ax.set_title("(b) Multi-Threshold Confidence")
+    ax.legend(fontsize=9)
+    ax.set_ylim(0, 1.05)
+
+    # 6c: Confidence modifier × P_success (OOD-adjusted)
+    ax = axes6[2]
+    p_raw_arr = np.array([r["p_success"] for r in results_list])
+    p_ood_adj = p_raw_arr * np.array(ood_conf)
+    x_pos6c = np.arange(len(short_targets))
+    ax.bar(x_pos6c - 0.2, p_raw_arr, 0.35, label="P_success (raw)", color="#4CAF50", alpha=0.85)
+    ax.bar(x_pos6c + 0.2, p_ood_adj, 0.35, label="P_success × OOD_conf", color="#9C27B0", alpha=0.85)
+    ax.set_xticks(x_pos6c)
+    ax.set_xticklabels(short_targets, rotation=45, ha="right", fontsize=8)
+    ax.set_ylabel("Adjusted Confidence")
+    ax.set_title("(c) OOD-Adjusted Confidence")
+    ax.legend(fontsize=9)
+    ax.set_ylim(0, 1.05)
+
+    fig6.suptitle("Phase 1: OOD Detection & Multi-Threshold Analysis", fontsize=14, fontweight="bold")
+    fig6.savefig(output_dir / "fig6_ood_analysis.png", bbox_inches="tight")
+    plt.close(fig6)
+    logger.info(f"  Saved fig6_ood_analysis.png")
+
     logger.info(f"\n  All figures saved to {output_dir}/")
 
 
@@ -850,21 +948,40 @@ def main():
     )
 
     # Step 5: Fusion + Evaluation
-    results_list = fuse_and_evaluate(gp, gen_results, all_embeddings, all_results, selected)
+    results_list, ood_detector = fuse_and_evaluate(
+        gp, gen_results, all_embeddings, all_results, selected,
+        X_train=X_train,
+    )
 
     # Step 6: Visualize
     generate_visualizations(
         results_list, gp, gen_results, all_embeddings,
         gp_history, vis_dir, X_train, y_train,
         sampling_results=all_results,
+        ood_detector=ood_detector,
     )
 
     # Save results
     results_path = output_dir / "pipeline_results.json"
-    serializable = [{k: (float(v) if isinstance(v, (np.floating, float)) else v)
+    serializable = [{k: (float(v) if isinstance(v, (np.floating, float)) else
+                         bool(v) if isinstance(v, (np.bool_,)) else v)
                       for k, v in r.items()} for r in results_list]
     with open(results_path, "w") as f:
         json.dump(serializable, f, indent=2)
+
+    # Save evaluation metrics (Phase 1)
+    if len(results_list) >= 3:
+        from bayesdiff.evaluate import evaluate_all, save_results_json
+        mu_pred = np.array([r["mu_pred"] for r in results_list])
+        sigma_pred = np.array([r["sigma_total"] for r in results_list])
+        p_succ = np.array([r["p_success"] for r in results_list])
+        y_true = np.array([r["pkd_true"] for r in results_list])
+        eval_res = evaluate_all(
+            mu_pred, sigma_pred, p_succ, y_true,
+            y_target=7.0, confidence_threshold=0.5,
+            bootstrap_n=500,
+        )
+        save_results_json(eval_res, output_dir / "eval_metrics.json")
 
     elapsed = time.time() - t_start
     logger.info(f"\n{'='*60}")

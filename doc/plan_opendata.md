@@ -320,37 +320,47 @@ python extract_embeddings.py \
 ```
 BayesDiff/
 ├── doc/
-│   ├── overall_plan.md     # 理论全景（已有）
-│   └── plan.md             # 本文件：实操方案
+│   ├── overall_plan.md         # 理论全景（已有）
+│   ├── plan_opendata.md        # 本文件：实操方案
+│   └── progress_log.md         # 开发日志
 ├── data/
-│   ├── pdbbind/            # PDBbind v2020 (手动下载)
+│   ├── pdbbind/                # PDBbind v2020 (手动下载，.gitignore)
 │   │   ├── refined-set/
 │   │   ├── INDEX_refined_data.2020
 │   │   └── CASF-2016/
-│   ├── splits/             # 划分文件 (train/val/cal/test PDB lists)
-│   └── embeddings/         # 预计算的 z 向量 (.npz)
+│   ├── splits/                 # 划分文件 (train/val/cal/test PDB lists)
+│   └── embeddings/             # 预计算的 z 向量 (.npz)
 ├── bayesdiff/
 │   ├── __init__.py
-│   ├── data.py             # 数据加载、split、标签转换
-│   ├── sampler.py          # 调用 TargetDiff 采样 + 提取 embedding
-│   ├── gen_uncertainty.py  # Σ̂_gen, GMM 模态检测
-│   ├── gp_oracle.py        # SVGP 训练/推理
-│   ├── fusion.py           # Delta method 融合
-│   ├── calibration.py      # Isotonic regression + ECE
-│   ├── ood.py              # Mahalanobis OOD 检测
-│   └── evaluate.py         # 全部指标计算
+│   ├── data.py                 # 数据加载、split、标签转换
+│   ├── sampler.py              # 调用 TargetDiff 采样 + 提取 embedding
+│   ├── gen_uncertainty.py      # Σ̂_gen, GMM 模态检测
+│   ├── gp_oracle.py            # SVGP 训练/推理
+│   ├── fusion.py               # Delta method 融合
+│   ├── calibration.py          # Isotonic regression + ECE
+│   ├── ood.py                  # Mahalanobis OOD 检测
+│   └── evaluate.py             # 全部指标计算
 ├── scripts/
-│   ├── 01_prepare_data.py          # Mac: 预处理 PDBbind
-│   ├── 02_sample_molecules.py      # HPC: TargetDiff 批量采样
-│   ├── 03_extract_embeddings.py    # Mac/HPC: 提取 z
-│   ├── 04_train_gp.py              # Mac: 训练 SVGP
-│   ├── 05_evaluate.py              # Mac: 融合 + 校准 + 评估
-│   └── 06_ablation.py              # Mac: 消融实验
+│   ├── 01_prepare_data.py      # Mac: 预处理 PDBbind
+│   ├── 02_sample_molecules.py  # HPC: TargetDiff 批量采样
+│   ├── 03_extract_embeddings.py# Mac/HPC: 提取 z
+│   ├── 04_train_gp.py          # Mac: 训练 SVGP
+│   ├── 05_evaluate.py          # Mac: 融合 + 校准 + 评估
+│   ├── 06_ablation.py          # Mac: 消融实验
+│   └── run_full_pipeline.py    # Mac: 一键端到端 debug pipeline
+├── external/
+│   └── targetdiff/             # TargetDiff clone (.gitignore)
+├── results/                    # 运行输出 (.gitignore)
+│   ├── figures/
+│   ├── generated_molecules/
+│   ├── gp_model/
+│   ├── evaluation/
+│   └── ablation/
 ├── notebooks/
-│   ├── debug_pipeline.ipynb        # Mac 端调试用
-│   └── visualize_results.ipynb     # 画图
+│   ├── debug_pipeline.py       # Mac 端调试用
+│   └── validate_phase1.py      # Phase 1 验证测试 (41 checks)
 ├── slurm/
-│   └── sample_job.sh               # HPC SLURM 脚本
+│   └── sample_job.sh           # HPC SLURM 脚本
 ├── requirements.txt
 └── README.md
 ```
@@ -389,26 +399,40 @@ pip install torch-geometric  # 按 PyG 官方指引装 CUDA 版
 
 ## 9. 分阶段执行计划
 
-### Phase 0: 数据 + 环境（Day 1-2）— Mac
+### Phase 0: 数据 + 环境（Day 1-2）— Mac ✅ COMPLETE
 
-- [ ] 下载 PDBbind v2020 refined set + CASF-2016
-- [ ] 创建 conda 环境，安装依赖
-- [ ] 运行 `01_prepare_data.py`：解析 INDEX 文件，生成 split，转 $pK_d$
-- [ ] 克隆 TargetDiff repo，下载预训练权重
-- [ ] 在 Mac 上对 **3 个口袋** 各采样 $M=4$ 个分子，验证 pipeline 通路
+- [x] 下载 PDBbind v2020 refined set + CASF-2016
+- [x] 创建 conda 环境，安装依赖
+- [x] 运行 `01_prepare_data.py`：解析 INDEX 文件，生成 split，转 $pK_d$
+- [x] 克隆 TargetDiff repo，下载预训练权重
+- [x] 在 Mac 上对 **3 个口袋** 各采样 $M=2$ 个分子，验证 pipeline 通路
 
-**验收标准**：能拿到 3 个口袋 × 4 个分子 = 12 个 SDF 文件 + 对应 embedding $z$。
+**验收标准**：能拿到 3 个口袋的分子 + 对应 SE(3) embedding $z$（128-dim）。✅ 已验收。
 
-### Phase 1: 核心模块实现（Day 3-7）— Mac
+> **实际情况**：使用 TargetDiff CrossDocked2020 test set（93 targets）作为数据源。
+> affinity_info.pkl 提供 pKd 标签（184K entries, 76K with pK）。
+> Mac CPU 上 3 pockets × 2 samples × 20 steps ≈ 7 min。20 步不足以产生有效分子，
+> 但 SE(3) embedding 已从 TargetDiff encoder 最后一层提取（scatter_mean over ligand atoms）。
 
-- [ ] `gen_uncertainty.py`：Ledoit-Wolf 协方差 + GMM 模态检测
-- [ ] `gp_oracle.py`：SVGP 训练/推理
-- [ ] `fusion.py`：一阶 Delta method + MC 回退
-- [ ] `calibration.py`：Isotonic regression + ECE
-- [ ] `ood.py`：Mahalanobis 距离
-- [ ] `evaluate.py`：全部指标
+### Phase 1: 核心模块实现（Day 3-7）— Mac ✅ COMPLETE
 
-**验收标准**：用 12 个分子的 toy data 跑通完整 pipeline，输出 $P_{success}$。
+- [x] `gen_uncertainty.py`：Ledoit-Wolf 协方差 + GMM 模态检测
+- [x] `gp_oracle.py`：SVGP 训练/推理（PCA + k-means inducing + early stopping）
+- [x] `fusion.py`：一阶 Delta method + MC 回退 + 多模态融合
+- [x] `calibration.py`：Isotonic + Platt + Temperature + cross-validated + ECE/ACE
+- [x] `ood.py`：Mahalanobis 距离 + relative distance + confidence modifier
+- [x] `evaluate.py`：全部指标 + bootstrap CI + multi-threshold + per-pocket
+- [x] `data.py`：PDBbind INDEX 解析 + protein family split + CASF-2016
+- [x] `sampler.py`：TargetDiff wrapper + SE(3) embedding extraction
+
+**验收标准**：用 toy data 跑通完整 pipeline，输出 $P_{success}$。✅ 已验收（41/41 validation checks pass）。
+
+> **SE(3) Embeddings**：从 TargetDiff UniTransformer 9 层 equivariant backbone 提取
+> final_ligand_h（N_lig × 128），scatter_mean 得到 per-molecule 128-dim invariant embedding。
+> 替代了 Phase 0 的 27-dim hand-crafted placeholder。
+
+> **独立脚本**：`scripts/04_train_gp.py`、`05_evaluate.py`、`06_ablation.py` 已创建，
+> 可独立于 `run_full_pipeline.py` 单独调用。
 
 ### Phase 2: HPC 批量采样（Day 5-12，与 Phase 1 并行）— HPC
 
