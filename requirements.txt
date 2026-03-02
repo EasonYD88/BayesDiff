@@ -1,0 +1,30 @@
+# Core
+torch>=2.0.0
+torchvision
+numpy>=1.24
+scipy>=1.10
+pandas>=2.0
+scikit-learn>=1.3
+
+# GP
+gpytorch>=1.11
+
+# Chemistry
+rdkit
+
+# Molecular graphs (CPU-only on Mac; install CUDA version on HPC)
+# pip install torch-geometric  # install separately per platform
+torch-geometric
+
+# TargetDiff dependencies
+easydict
+pyyaml
+tqdm
+
+# Visualization
+matplotlib
+seaborn
+
+# Jupyter
+jupyterlab
+ipywidgets

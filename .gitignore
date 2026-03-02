@@ -1,0 +1,24 @@
+# Data (downloaded manually)
+data/pdbbind/
+data/generated/
+data/embeddings/*.npz
+
+# External repos
+external/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+
+# Results
+results/
+outputs/
