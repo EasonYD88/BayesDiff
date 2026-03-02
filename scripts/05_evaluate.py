@@ -114,10 +114,8 @@ def main():
     first_emb = embeddings_dict[first_key]
     d = first_emb.shape[-1]
 
-    gp = GPOracle(d=d, n_inducing=128, device="cpu")
-    # Need dummy X for loading
-    X_dummy = np.random.randn(10, d).astype(np.float32)
-    gp.load(args.gp_model, X_dummy=X_dummy)
+    gp = GPOracle(d=d, n_inducing=10, device="cpu")  # n_inducing overridden by load
+    gp.load(args.gp_model)
     logger.info(f"  GP model loaded from {args.gp_model}")
 
     # ── Load training data for OOD ───────────────────────────────

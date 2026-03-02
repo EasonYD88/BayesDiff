@@ -349,3 +349,136 @@ protein_v → protein_atom_emb (Linear) → h_protein (N_prot, 128)
 - [ ] Full PDBbind training set for GP (N ≈ 3,396) instead of augmented N=200
 - [ ] Scaffold-split OOD evaluation
 - [ ] Compare SE(3) vs placeholder embeddings on larger test set (93 pockets)
+
+---
+
+## 2026-03-02: HPC Scripts Local Testing & Bug Fixes
+
+### Summary
+Systematically tested all numbered HPC scripts (`02`–`06`) and `slurm/sample_job.sh` locally on Mac CPU. Found and fixed **8 bugs** across 6 files. The `sampler.py` module was the most severely affected — its entire sampling pipeline was non-functional due to incompatible internal implementations that were never exercised because `run_full_pipeline.py` uses a completely different code path. All scripts now pass end-to-end local testing.
+
+### Motivation
+Scripts `02_sample_molecules.py` through `06_ablation.py` are designed for HPC batch execution via SLURM, but had never been tested independently. The monolithic `run_full_pipeline.py` works because it calls TargetDiff's native functions directly, bypassing `sampler.py`. This testing session exposed critical divergences between the two code paths.
+
+### Bugs Found & Fixed
+
+#### Bug 1: `find_pocket_file()` only supports PDBbind layout
+**File**: `bayesdiff/data.py`  
+**Symptom**: Pocket files not found for TargetDiff test_set targets  
+**Root cause**: `find_pocket_file()` only searched `refined-set/{code}/{code}_pocket.pdb` (PDBbind layout), but open test data uses `{target_name}/*_rec.pdb` (TargetDiff layout)  
+**Fix**: Added 3-tier search — PDBbind refined-set → TargetDiff `*_rec.pdb` → fallback subdirectory scan. Same dual-layout support added to `find_ligand_file()` for `*.sdf` files.
+
+#### Bug 2: `torch.load()` default `weights_only=True`
+**File**: `bayesdiff/sampler.py` (line 75)  
+**Symptom**: `_pickle.UnpicklingError: Weights only load failed... 'easydict.EasyDict' is not allowed`  
+**Root cause**: PyTorch 2.10 defaults to `weights_only=True`, but the TargetDiff checkpoint contains `easydict.EasyDict` objects  
+**Fix**: Added `weights_only=False` to `torch.load()` call
+
+#### Bug 3: `ScorePosNet3D()` missing constructor arguments
+**File**: `bayesdiff/sampler.py` (line ~88)  
+**Symptom**: `TypeError: ScorePosNet3D.__init__() missing 2 required positional arguments: 'protein_atom_feature_dim' and 'ligand_atom_feature_dim'`  
+**Root cause**: `sampler.py` called `ScorePosNet3D(config.model)` but the constructor requires two additional feature dimension args obtained from `FeaturizeProteinAtom().feature_dim` and `FeaturizeLigandAtom().feature_dim`  
+**Fix**: Build featurizers first, pass their `.feature_dim` values to constructor (matching `run_full_pipeline.py` approach)
+
+#### Bug 4: Checkpoint config lacks `.sample` attribute
+**File**: `bayesdiff/sampler.py`  
+**Symptom**: `'EasyDict' object has no attribute 'sample'` when calling `sample_for_pocket()`  
+**Root cause**: The checkpoint's config only contains `model` and `data` sections; sampling parameters (`pos_only`, `center_pos_mode`, `sample_num_atoms`) are in `configs/sampling.yml`, which was never loaded  
+**Fix**: Added loading of `configs/sampling.yml` via `load_config()` during `_load_model()`, with hardcoded fallback defaults
+
+#### Bug 5: Complete `sampler.py` rewrite — broken internal pipeline
+**File**: `bayesdiff/sampler.py` (entire file)  
+**Symptom**: Multiple failures in `_sample_batch()`, `_run_ddpm_sampling()`, `reconstruct_molecules()`, `_encode_molecule()`  
+**Root cause**: The internal methods reimplemented TargetDiff's sampling/reconstruction from scratch with incompatible data structures:
+  - `pocket_pdb_to_data()` built raw Data objects without applying `FeaturizeProteinAtom` transform
+  - `_sample_batch()` manually constructed ligand data with wrong feature dimensions
+  - `_run_ddpm_sampling()` tried to import from `utils.sample` (doesn't exist; correct path is `scripts.sample_diffusion`)
+  - `reconstruct_molecules()` used a hand-coded ELEMENT_MAP instead of TargetDiff's native `get_atomic_number_from_index()` + `reconstruct_from_generated()`
+  - `_encode_molecule()` called `model()` directly with wrong argument names  
+**Fix**: **Rewrote the entire module** (539 → 375 lines) to use TargetDiff's native functions:
+  - `pocket_pdb_to_data()` → now calls TargetDiff's `pdb_to_pocket_data()` + applies protein featurizer transform
+  - `sample_for_pocket()` → delegates to `sample_diffusion_ligand()` directly (same as `run_full_pipeline.py`)
+  - `reconstruct_molecules()` → uses TargetDiff's `reconstruct_from_generated()` with proper aromatic handling
+  - Removed broken methods: `_sample_batch()`, `_run_ddpm_sampling()`, `_fallback_sample()`, `_encode_molecule()`
+
+#### Bug 6: `03_extract_embeddings.py` — `checkpoint_path="auto"` not handled
+**File**: `scripts/03_extract_embeddings.py`  
+**Symptom**: `FileNotFoundError: Checkpoint path 'auto' not found`  
+**Root cause**: Script passed `args.checkpoint or "auto"` to `TargetDiffSampler`, but the sampler expects a real file path  
+**Fix**: Added checkpoint auto-detection logic in `main()` (same as `02_sample_molecules.py`), trying 3 candidate paths
+
+#### Bug 7: GP model loading — `n_inducing` mismatch
+**File**: `scripts/05_evaluate.py`, `scripts/06_ablation.py`  
+**Symptom**: `RuntimeError: size mismatch for variational_strategy.inducing_points: shape [16, 128] vs [10, 128]`  
+**Root cause**: Scripts hardcoded `GPOracle(n_inducing=128)` then called `gp.load()`, but the checkpoint may have a different `n_inducing` (e.g., 16 in test). The `load()` method correctly reads `n_inducing` from checkpoint and reconstructs the model, but only if `X_dummy` has enough rows  
+**Fix**: Removed `X_dummy` argument from `gp.load()` calls (let `load()` auto-create zeros of correct shape), set initial `n_inducing=10` as placeholder (overridden by load)
+
+#### Bug 8: `slurm/sample_job.sh` — wrong default `PDBBIND_DIR`
+**File**: `slurm/sample_job.sh`  
+**Symptom**: `data/pdbbind` directory doesn't exist in open data setup  
+**Root cause**: Default pointed to `data/pdbbind` (PDBbind layout), but project uses TargetDiff test_set  
+**Fix**: Changed default to `external/targetdiff/data/test_set`. Added comment explaining dual-layout support. Also clarified Step 2 as optional (since 02 already saves embeddings).
+
+### Test Results
+
+All tests run from `/Users/daiyizhe/Documents/GitHub/projects/BayesDiff/` with the shared venv (Python 3.13.5, PyTorch 2.10.0 CPU).
+
+| Script | Test Parameters | Result | Key Output |
+|--------|----------------|--------|------------|
+| `02_sample_molecules.py` | 2 pockets × 2 samples × 20 steps | ✅ Pass | Embeddings shape (2, 128) per pocket. 0 valid mols (expected at 20 steps). Combined `all_embeddings.npz` saved. |
+| `03_extract_embeddings.py` | Reference mode, 2 pockets | ✅ Pass | Embedding (128,) per pocket. First pocket completed in 9.5 min (100 steps default). |
+| `04_train_gp.py` | 30 synthetic pockets, d=128, J=16, 20 epochs | ✅ Pass | Training: 0.8s, final loss=20.27. Model + metadata + train_data saved. |
+| `05_evaluate.py` | Synthetic data, GP from 04 | ✅ Pass | ECE=0.20, AUROC=0.39, Spearman=0.12, RMSE=5.54 (poor metrics expected on random data). OOD detector fitted. |
+| `06_ablation.py` | Ablations A1+A3 on synthetic data | ✅ Pass | Comparison table: A1 vs A3 with ECE, AUROC, EF, Spearman, RMSE, NLL. Both ablation runs complete. |
+
+### Files Modified (6 files, net -95 lines)
+
+| File | Lines | Change | Description |
+|------|-------|--------|-------------|
+| `bayesdiff/sampler.py` | 375 | **Rewritten** (539→375) | Complete rewrite to use TargetDiff native APIs |
+| `bayesdiff/data.py` | 469 | +34 lines | Dual-layout support for pocket/ligand file finding |
+| `scripts/03_extract_embeddings.py` | 229 | +18 lines | Checkpoint auto-detection |
+| `scripts/05_evaluate.py` | 254 | −4 lines | GP load fix |
+| `scripts/06_ablation.py` | 288 | −3 lines | GP load fix |
+| `slurm/sample_job.sh` | 78 | +5 lines | Default path fix + comments |
+
+### Architecture Insight
+
+The core issue was that `sampler.py` and `run_full_pipeline.py` diverged in how they interface with TargetDiff:
+
+```
+run_full_pipeline.py (WORKING):
+  ├─ Imports TargetDiff functions directly
+  ├─ pdb_to_pocket_data() → transform(data) → sample_diffusion_ligand()
+  └─ reconstruct_from_generated() with proper atom type mapping
+
+sampler.py (BROKEN - before fix):
+  ├─ Reimplemented everything from scratch
+  ├─ pocket_pdb_to_data(): raw PDBProtein → Data (no featurizer)
+  ├─ _sample_batch(): manually built ligand data (wrong dims)
+  ├─ _run_ddpm_sampling(): import from wrong module
+  └─ reconstruct_molecules(): hand-coded element map (incomplete)
+
+sampler.py (FIXED):
+  ├─ Delegates to TargetDiff's native functions (same as run_full_pipeline)
+  ├─ pdb_to_pocket_data() + FeaturizeProteinAtom transform
+  ├─ sample_diffusion_ligand() for actual sampling
+  └─ reconstruct_from_generated() for molecule reconstruction
+```
+
+### Compile Check
+All 7 modified/key files pass `py_compile`:
+```
+OK  scripts/02_sample_molecules.py
+OK  scripts/03_extract_embeddings.py
+OK  scripts/04_train_gp.py
+OK  scripts/05_evaluate.py
+OK  scripts/06_ablation.py
+OK  bayesdiff/sampler.py
+OK  bayesdiff/data.py
+```
+
+### Next Steps
+- [ ] Run full HPC workflow: `sbatch slurm/sample_job.sh` with 93 pockets × 64 samples × 1000 steps on GPU
+- [ ] Train GP on real PDBbind data (full split)
+- [ ] Run `05_evaluate.py` + `06_ablation.py` on real embeddings for publication-quality tables

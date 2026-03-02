@@ -26,7 +26,9 @@ POCKET_LIST="${POCKET_LIST:-data/splits/test_pockets.txt}"
 NUM_SAMPLES="${NUM_SAMPLES:-64}"
 NUM_STEPS="${NUM_STEPS:-100}"
 DEVICE="${DEVICE:-cuda}"
-PDBBIND_DIR="${PDBBIND_DIR:-data/pdbbind}"
+# PDBBIND_DIR supports both PDBbind layout (refined-set/{code}/{code}_pocket.pdb)
+# and TargetDiff test_set layout ({target}/{*_rec.pdb}). For open data:
+PDBBIND_DIR="${PDBBIND_DIR:-external/targetdiff/data/test_set}"
 TARGETDIFF_DIR="${TARGETDIFF_DIR:-external/targetdiff}"
 OUTPUT_DIR="${OUTPUT_DIR:-results/generated_molecules}"
 
@@ -56,16 +58,20 @@ python scripts/02_sample_molecules.py \
     --device "${DEVICE}" \
     --output_dir "${OUTPUT_DIR}"
 
-# ── Step 2: Extract embeddings ──────────────────────────────
+# ── Step 2: Extract embeddings (optional) ───────────────────
+# Note: 02_sample_molecules.py already saves per-pocket and combined
+# embeddings via sample_and_embed(). This step is useful when:
+#   - Re-extracting embeddings from existing SDF files
+#   - Using a different encoder/checkpoint
 echo ""
-echo ">>> Step 2/2: Extracting embeddings..."
+echo ">>> Step 2/2: Re-extracting embeddings (from generated SDFs)..."
 python scripts/03_extract_embeddings.py \
     --mode generated \
     --input_dir "${OUTPUT_DIR}" \
     --pdbbind_dir "${PDBBIND_DIR}" \
     --targetdiff_dir "${TARGETDIFF_DIR}" \
     --device "${DEVICE}" \
-    --output "${OUTPUT_DIR}/all_embeddings.npz"
+    --output "${OUTPUT_DIR}/all_embeddings_reextracted.npz"
 
 echo ""
 echo "=== Done! ==="

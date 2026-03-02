@@ -55,7 +55,7 @@ def extract_from_generated(args):
 
     sampler = TargetDiffSampler(
         targetdiff_dir=args.targetdiff_dir,
-        checkpoint_path=args.checkpoint or "auto",
+        checkpoint_path=args.ckpt_path,
         device=args.device,
     )
 
@@ -101,7 +101,7 @@ def extract_from_reference(args):
 
     sampler = TargetDiffSampler(
         targetdiff_dir=args.targetdiff_dir,
-        checkpoint_path=args.checkpoint or "auto",
+        checkpoint_path=args.ckpt_path,
         device=args.device,
     )
 
@@ -185,6 +185,25 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # Auto-detect checkpoint
+    targetdiff_dir = Path(args.targetdiff_dir)
+    if args.checkpoint:
+        args.ckpt_path = args.checkpoint
+    else:
+        candidates = [
+            targetdiff_dir / "pretrained_model.pt",
+            targetdiff_dir / "pretrained_models" / "pretrained_diffusion.pt",
+            targetdiff_dir / "checkpoints" / "pretrained_model.pt",
+        ]
+        args.ckpt_path = None
+        for c in candidates:
+            if c.exists():
+                args.ckpt_path = str(c)
+                break
+        if args.ckpt_path is None:
+            logger.error("Cannot find TargetDiff checkpoint. Provide --checkpoint.")
+            sys.exit(1)
 
     if args.mode == "generated":
         all_embeddings = extract_from_generated(args)

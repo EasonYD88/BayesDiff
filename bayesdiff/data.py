@@ -349,32 +349,66 @@ def deltaG_to_pka(dG: float) -> float:
 
 
 def find_pocket_file(pdbbind_dir: str | Path, pdb_code: str) -> Optional[Path]:
-    """Find the pocket PDB file for a given PDB code."""
-    pdbbind_dir = Path(pdbbind_dir)
-    base = pdbbind_dir / "refined-set" / pdb_code
+    """Find the pocket PDB file for a given PDB code.
 
-    # Try standard naming conventions
+    Supports two layouts:
+      1. PDBbind: pdbbind_dir/refined-set/{code}/{code}_pocket.pdb
+      2. TargetDiff test_set: pdbbind_dir/{target_name}/*_rec.pdb
+    """
+    pdbbind_dir = Path(pdbbind_dir)
+
+    # ── Layout 1: PDBbind refined-set ────────────────────────────
+    base = pdbbind_dir / "refined-set" / pdb_code
     for suffix in [f"{pdb_code}_pocket.pdb", f"{pdb_code}_pocket10.pdb"]:
         p = base / suffix
         if p.exists():
             return p
-
-    # Fallback: use protein file (will need pocket extraction)
     protein = base / f"{pdb_code}_protein.pdb"
     if protein.exists():
         return protein
+
+    # ── Layout 2: TargetDiff test_set (target_name/*_rec.pdb) ──
+    target_dir = pdbbind_dir / pdb_code
+    if target_dir.is_dir():
+        rec_files = list(target_dir.glob("*_rec.pdb"))
+        if rec_files:
+            return rec_files[0]
+        # Any PDB file as fallback
+        pdb_files = list(target_dir.glob("*.pdb"))
+        if pdb_files:
+            return pdb_files[0]
+
+    # ── Layout 3: directory is the test_set root, search 1 level ──
+    for sub in pdbbind_dir.iterdir():
+        if sub.is_dir() and sub.name == pdb_code:
+            rec = list(sub.glob("*_rec.pdb"))
+            if rec:
+                return rec[0]
 
     return None
 
 
 def find_ligand_file(pdbbind_dir: str | Path, pdb_code: str) -> Optional[Path]:
-    """Find the reference ligand file for a given PDB code."""
+    """Find the reference ligand file for a given PDB code.
+
+    Supports PDBbind layout and TargetDiff test_set layout.
+    """
     pdbbind_dir = Path(pdbbind_dir)
+
+    # PDBbind layout
     base = pdbbind_dir / "refined-set" / pdb_code
     for suffix in [f"{pdb_code}_ligand.sdf", f"{pdb_code}_ligand.mol2"]:
         p = base / suffix
         if p.exists():
             return p
+
+    # TargetDiff test_set layout
+    target_dir = pdbbind_dir / pdb_code
+    if target_dir.is_dir():
+        sdf_files = list(target_dir.glob("*.sdf"))
+        if sdf_files:
+            return sdf_files[0]
+
     return None
 
 

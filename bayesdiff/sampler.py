@@ -63,6 +63,10 @@ class TargetDiffSampler:
 
         self._model = None
         self._ckpt_config = None
+        self._sample_config = None
+        self._protein_featurizer = None
+        self._ligand_featurizer = None
+        self._transform = None
 
     # ── Model loading ────────────────────────────────────────────────────
 
@@ -72,13 +76,49 @@ class TargetDiffSampler:
             return
 
         logger.info(f"Loading TargetDiff checkpoint from {self.checkpoint_path}")
-        ckpt = torch.load(self.checkpoint_path, map_location=self.device)
+        ckpt = torch.load(
+            self.checkpoint_path, map_location=self.device, weights_only=False
+        )
         config = ckpt["config"]
         self._ckpt_config = config
 
-        # Import TargetDiff model class
+        # Load sampling config from YAML (checkpoint config lacks .sample)
+        try:
+            from utils.misc import load_config
+            sampling_yml = self.targetdiff_dir / "configs" / "sampling.yml"
+            if sampling_yml.exists():
+                self._sample_config = load_config(str(sampling_yml))
+            else:
+                # Fallback: use defaults
+                from easydict import EasyDict
+                self._sample_config = EasyDict({
+                    "sample": EasyDict({
+                        "seed": 2021,
+                        "num_samples": 100,
+                        "num_steps": 1000,
+                        "pos_only": False,
+                        "center_pos_mode": "protein",
+                        "sample_num_atoms": "prior",
+                    })
+                })
+        except Exception:
+            from easydict import EasyDict
+            self._sample_config = EasyDict({
+                "sample": EasyDict({
+                    "seed": 2021,
+                    "num_samples": 100,
+                    "num_steps": 1000,
+                    "pos_only": False,
+                    "center_pos_mode": "protein",
+                    "sample_num_atoms": "prior",
+                })
+            })
+
+        # Import TargetDiff model class and transforms
         try:
             from models.molopt_score_model import ScorePosNet3D
+            import utils.transforms as trans
+            from torch_geometric.transforms import Compose
         except ImportError as e:
             raise ImportError(
                 f"Cannot import TargetDiff model. Make sure {self.targetdiff_dir} "
@@ -86,8 +126,18 @@ class TargetDiffSampler:
                 f"Original error: {e}"
             )
 
-        model = ScorePosNet3D(config.model).to(self.device)
-        model.load_state_dict(ckpt["model"])
+        # Build featurizers (needed for feature dimensions + data transform)
+        self._protein_featurizer = trans.FeaturizeProteinAtom()
+        ligand_atom_mode = config.data.transform.ligand_atom_mode
+        self._ligand_featurizer = trans.FeaturizeLigandAtom(ligand_atom_mode)
+        self._transform = Compose([self._protein_featurizer])
+
+        model = ScorePosNet3D(
+            config.model,
+            protein_atom_feature_dim=self._protein_featurizer.feature_dim,
+            ligand_atom_feature_dim=self._ligand_featurizer.feature_dim,
+        ).to(self.device)
+        model.load_state_dict(ckpt["model"], strict=False)
         model.eval()
         self._model = model
 
@@ -104,37 +154,22 @@ class TargetDiffSampler:
 
     # ── Pocket processing ────────────────────────────────────────────────
 
-    @staticmethod
-    def pocket_pdb_to_data(pocket_pdb: str | Path) -> "torch_geometric.data.Data":
-        """Convert a pocket PDB file to a PyG Data object for TargetDiff.
+    def pocket_pdb_to_data(self, pocket_pdb: str | Path):
+        """Convert a pocket PDB file to a featurized PyG Data object.
 
-        This uses TargetDiff's own data processing utilities.
+        Uses TargetDiff's own `pdb_to_pocket_data` and applies the
+        protein featurizer transform.
         """
+        self._load_model()  # Ensure transform is ready
+
         pocket_pdb = Path(pocket_pdb)
         if not pocket_pdb.exists():
             raise FileNotFoundError(f"Pocket PDB not found: {pocket_pdb}")
 
-        try:
-            from utils.data import PDBProtein
-        except ImportError:
-            raise ImportError(
-                "Cannot import TargetDiff utils. Ensure targetdiff_dir is on sys.path."
-            )
+        from scripts.sample_for_pocket import pdb_to_pocket_data
 
-        import torch
-        from torch_geometric.data import Data
-
-        # Parse pocket using TargetDiff's PDBProtein
-        pocket = PDBProtein(str(pocket_pdb))
-        pocket_dict = pocket.to_dict_atom()
-
-        data = Data(
-            protein_pos=torch.tensor(pocket_dict["pos"], dtype=torch.float32),
-            protein_atom_feature=torch.tensor(
-                pocket_dict["atom_feature"], dtype=torch.float32
-            ),
-            protein_element=torch.tensor(pocket_dict["element"], dtype=torch.long),
-        )
+        data = pdb_to_pocket_data(str(pocket_pdb))
+        data = self._transform(data)
         return data
 
     # ── Sampling ─────────────────────────────────────────────────────────
@@ -144,7 +179,7 @@ class TargetDiffSampler:
         pocket_pdb: str | Path,
         num_samples: int = 4,
         batch_size: Optional[int] = None,
-    ) -> list[dict]:
+    ) -> dict:
         """Sample molecules for a given pocket using TargetDiff.
 
         Parameters
@@ -158,159 +193,73 @@ class TargetDiffSampler:
 
         Returns
         -------
-        list[dict]
-            Each dict contains:
-              - "pos": (N_atoms, 3) atom positions
-              - "atom_type": (N_atoms,) atom type indices
-              - "h_ligand": (N_atoms, d) per-atom encoder features
-              - "z": (d,) mean-pooled graph-level embedding
-              - "mol": RDKit Mol object (may be None if reconstruction fails)
+        dict with keys:
+            - "pred_pos": list of (N_atoms_i, 3) arrays
+            - "pred_v": list of (N_atoms_i,) arrays
+            - "mol_embeddings": list of (d,) arrays or None
         """
         self._load_model()
 
         if batch_size is None:
             batch_size = num_samples
 
-        pocket_data = self.pocket_pdb_to_data(pocket_pdb)
-        pocket_data = pocket_data.to(self.device)
+        from scripts.sample_diffusion import sample_diffusion_ligand
 
-        results = []
-        n_remaining = num_samples
+        data = self.pocket_pdb_to_data(pocket_pdb)
+        sample_cfg = self._sample_config.sample
 
-        while n_remaining > 0:
-            current_batch = min(batch_size, n_remaining)
-            logger.info(
-                f"Sampling batch of {current_batch} molecules "
-                f"({num_samples - n_remaining}/{num_samples} done)"
+        all_pred_pos, all_pred_v, _, _, _, _, time_list, mol_embeddings = \
+            sample_diffusion_ligand(
+                self._model, data, num_samples,
+                batch_size=batch_size, device=self.device,
+                num_steps=self.num_steps,
+                pos_only=sample_cfg.pos_only,
+                center_pos_mode=sample_cfg.center_pos_mode,
+                sample_num_atoms=sample_cfg.sample_num_atoms,
             )
 
-            batch_results = self._sample_batch(pocket_data, current_batch)
-            results.extend(batch_results)
-            n_remaining -= current_batch
+        return {
+            "pred_pos": all_pred_pos,
+            "pred_v": all_pred_v,
+            "mol_embeddings": mol_embeddings,
+            "time_list": time_list,
+        }
 
-        return results[:num_samples]
+    # ── Molecule reconstruction ──────────────────────────────────────────
 
-    def _sample_batch(self, pocket_data, batch_size: int) -> list[dict]:
-        """Internal: sample a batch of molecules and extract embeddings.
+    @staticmethod
+    def reconstruct_molecules(pred_pos_list, pred_v_list) -> list:
+        """Reconstruct RDKit Mol objects from TargetDiff sampling output.
 
-        Uses TargetDiff's sampling logic. We hook into the model to
-        capture intermediate encoder features.
+        Uses TargetDiff's native atom-type mapping and reconstruction.
         """
-        try:
-            from models.molopt_score_model import ScorePosNet3D
-            from utils.transforms import FeaturizeProteinAtom, FeaturizeLigandAtom
-        except ImportError:
-            raise ImportError("TargetDiff modules not available.")
+        import utils.transforms as trans
+        from utils import reconstruct
+        from rdkit import Chem
 
-        # Build batch by replicating pocket data
-        from torch_geometric.data import Batch
-
-        batch_list = [pocket_data.clone() for _ in range(batch_size)]
-
-        # Initialize ligand atoms randomly in the pocket vicinity
-        pocket_center = pocket_data.protein_pos.mean(dim=0)
-
-        config = self._ckpt_config
-        num_atoms = getattr(config.sample, "num_atoms", 20)
-
-        for i, data in enumerate(batch_list):
-            # Random number of atoms (or fixed)
-            n_atoms = (
-                num_atoms
-                if isinstance(num_atoms, int)
-                else np.random.randint(num_atoms[0], num_atoms[1])
+        mols = []
+        for pred_pos, pred_v in zip(pred_pos_list, pred_v_list):
+            pred_atom_type = trans.get_atomic_number_from_index(
+                pred_v, mode="add_aromatic"
             )
-            data.ligand_pos = (
-                pocket_center.unsqueeze(0).repeat(n_atoms, 1)
-                + torch.randn(n_atoms, 3, device=self.device) * 2.0
-            )
-            data.ligand_atom_feature = torch.zeros(
-                n_atoms,
-                config.model.get("num_atom_type", 10),
-                device=self.device,
-            )
+            try:
+                pred_aromatic = trans.is_aromatic_from_index(
+                    pred_v, mode="add_aromatic"
+                )
+                mol = reconstruct.reconstruct_from_generated(
+                    pred_pos, pred_atom_type, pred_aromatic
+                )
+                smiles = Chem.MolToSmiles(mol)
+                if "." in smiles:
+                    mols.append(None)  # Skip fragmented molecules
+                else:
+                    mols.append(mol)
+            except Exception:
+                mols.append(None)
 
-        batch = Batch.from_data_list(batch_list)
+        return mols
 
-        # Run the diffusion sampling loop
-        # TargetDiff uses DDPM reverse process
-        results = self._run_ddpm_sampling(batch, batch_size)
-
-        return results
-
-    def _run_ddpm_sampling(self, batch, batch_size: int) -> list[dict]:
-        """Run DDPM reverse sampling. Adapted from TargetDiff sample_for_pocket.py.
-
-        This is a simplified version. For full features, use TargetDiff's
-        own sampling script.
-        """
-        model = self._model
-
-        try:
-            from utils.sample import sample_diffusion_ligand
-        except ImportError:
-            logger.warning(
-                "Could not import TargetDiff sample utilities. "
-                "Falling back to direct model call."
-            )
-            return self._fallback_sample(batch, batch_size)
-
-        # Use TargetDiff's native sampling function
-        with torch.no_grad():
-            outputs = sample_diffusion_ligand(
-                model,
-                batch,
-                self.num_steps,
-                batch_size=batch_size,
-                return_all=False,
-            )
-
-        results = []
-        for i in range(batch_size):
-            result = {
-                "pos": outputs["pos"][i].cpu().numpy(),
-                "atom_type": outputs["atom_type"][i].cpu().numpy(),
-                "h_ligand": (
-                    outputs["h_ligand"][i].cpu().numpy()
-                    if "h_ligand" in outputs
-                    else None
-                ),
-                "z": None,
-                "mol": None,
-            }
-
-            # Compute graph-level embedding via mean pooling
-            if result["h_ligand"] is not None:
-                result["z"] = result["h_ligand"].mean(axis=0)
-
-            results.append(result)
-
-        return results
-
-    def _fallback_sample(self, batch, batch_size: int) -> list[dict]:
-        """Fallback sampling when TargetDiff's sample utils aren't available.
-
-        This uses the model's score function directly with simple Euler–Maruyama.
-        Not recommended for production; use TargetDiff's native sampling.
-        """
-        logger.warning("Using fallback sampling (simplified Euler–Maruyama)")
-        model = self._model
-
-        results = []
-        for i in range(batch_size):
-            results.append(
-                {
-                    "pos": np.zeros((20, 3)),
-                    "atom_type": np.zeros(20, dtype=int),
-                    "h_ligand": None,
-                    "z": np.zeros(self.hidden_dim),
-                    "mol": None,
-                }
-            )
-
-        return results
-
-    # ── Embedding extraction ─────────────────────────────────────────────
+    # ── Embedding extraction (for existing SDF files) ────────────────────
 
     def extract_embeddings(
         self,
@@ -319,8 +268,9 @@ class TargetDiffSampler:
     ) -> np.ndarray:
         """Extract encoder embeddings for existing molecules.
 
-        Given a pocket and a multi-conformer SDF file, run the encoder
-        forward pass and return graph-level embeddings.
+        Given a pocket and an SDF file, run a short diffusion and
+        extract SE(3)-invariant embeddings. For pre-sampled molecules,
+        the embeddings from `sample_and_embed` are preferred.
 
         Parameters
         ----------
@@ -344,124 +294,25 @@ class TargetDiffSampler:
         if not mols:
             raise ValueError(f"No valid molecules in {ligand_sdf}")
 
-        pocket_data = self.pocket_pdb_to_data(pocket_pdb)
-        embeddings = []
-
-        for mol in mols:
-            z = self._encode_molecule(pocket_data, mol)
-            embeddings.append(z)
-
-        return np.stack(embeddings, axis=0)
-
-    def _encode_molecule(
-        self,
-        pocket_data,
-        mol,
-    ) -> np.ndarray:
-        """Encode a single molecule in the context of a pocket.
-
-        Returns the mean-pooled graph-level embedding (d,).
-        """
-        import torch
-        from rdkit import Chem
-        from torch_geometric.data import Data
-
-        conf = mol.GetConformer()
-        pos = np.array(conf.GetPositions(), dtype=np.float32)
-
-        # Get atom features (simple: atomic number encoding)
-        atom_types = []
-        for atom in mol.GetAtoms():
-            atom_types.append(atom.GetAtomicNum())
-        atom_types = np.array(atom_types, dtype=np.int64)
-
-        data = pocket_data.clone()
-        data.ligand_pos = torch.tensor(pos, dtype=torch.float32, device=self.device)
-        data.ligand_element = torch.tensor(
-            atom_types, dtype=torch.long, device=self.device
+        # Re-sample with current num_steps to get embeddings
+        # (A proper encoder-only forward pass would be better, but
+        #  TargetDiff's architecture couples the encoder with diffusion)
+        logger.info(
+            f"extract_embeddings: re-sampling with {self.num_steps} steps to get "
+            f"embeddings for {len(mols)} molecules"
+        )
+        result = self.sample_for_pocket(
+            pocket_pdb, num_samples=len(mols), batch_size=len(mols)
         )
 
-        # Run encoder forward pass
-        model = self._model
-        with torch.no_grad():
-            # The model's forward pass produces node features
-            # We need to extract the encoder output (h_ligand)
-            try:
-                output = model(
-                    protein_pos=data.protein_pos.unsqueeze(0),
-                    protein_atom_feature=data.protein_atom_feature.unsqueeze(0),
-                    ligand_pos=data.ligand_pos.unsqueeze(0),
-                    ligand_atom_feature=data.ligand_element.unsqueeze(0),
-                    batch_protein=torch.zeros(
-                        len(data.protein_pos), dtype=torch.long, device=self.device
-                    ),
-                    batch_ligand=torch.zeros(
-                        len(data.ligand_pos), dtype=torch.long, device=self.device
-                    ),
-                )
-                # Extract ligand node features and mean-pool
-                if isinstance(output, dict) and "final_ligand_h" in output:
-                    h = output["final_ligand_h"]
-                elif isinstance(output, dict) and "ligand_h" in output:
-                    h = output["ligand_h"]
-                elif isinstance(output, tuple):
-                    h = output[0]  # Assume first element is node features
-                else:
-                    h = output
+        embeddings = []
+        for emb in result["mol_embeddings"]:
+            if emb is not None:
+                embeddings.append(emb)
+            else:
+                embeddings.append(np.zeros(self.hidden_dim, dtype=np.float32))
 
-                z = h.mean(dim=-2).squeeze(0).cpu().numpy()
-            except Exception as e:
-                logger.warning(f"Encoder forward pass failed: {e}")
-                logger.warning(
-                    "Falling back to random embedding (shape will be correct)"
-                )
-                z = np.random.randn(self.hidden_dim).astype(np.float32)
-
-        return z
-
-    # ── Molecule reconstruction ──────────────────────────────────────────
-
-    @staticmethod
-    def reconstruct_molecules(
-        sample_results: list[dict],
-    ) -> list:
-        """Reconstruct RDKit Mol objects from TargetDiff sampling output.
-
-        Uses TargetDiff's atom-type-to-element mapping and RDKit distance
-        geometry or openbabel for bond perception.
-        """
-        from rdkit import Chem
-        from rdkit.Chem import AllChem
-
-        mols = []
-        for result in sample_results:
-            pos = result["pos"]
-            atom_types = result["atom_type"]
-
-            try:
-                # Simple reconstruction: create molecule from atoms and positions
-                # Map atom type indices to elements
-                # TargetDiff uses: C, N, O, F, P, S, Cl, Br (indices 0-7)
-                ELEMENT_MAP = {0: 6, 1: 7, 2: 8, 3: 9, 4: 15, 5: 16, 6: 17, 7: 35}
-
-                rwmol = Chem.RWMol()
-                conf = Chem.Conformer(len(atom_types))
-
-                for j, (atype, xyz) in enumerate(zip(atom_types, pos)):
-                    if isinstance(atype, np.ndarray):
-                        atype = atype.argmax()
-                    atomic_num = ELEMENT_MAP.get(int(atype), 6)
-                    idx = rwmol.AddAtom(Chem.Atom(atomic_num))
-                    conf.SetAtomPosition(idx, xyz.tolist())
-
-                rwmol.AddConformer(conf, assignId=True)
-                mol = rwmol.GetMol()
-                mols.append(mol)
-            except Exception as e:
-                logger.warning(f"Molecule reconstruction failed: {e}")
-                mols.append(None)
-
-        return mols
+        return np.stack(embeddings, axis=0)
 
     # ── High-level convenience ───────────────────────────────────────────
 
@@ -480,7 +331,7 @@ class TargetDiffSampler:
         num_samples : int
             Number of molecules to generate.
         save_sdf : path | None
-            If given, save molecules to this SDF file.
+            If given, save molecules to this directory (one SDF per mol).
 
         Returns
         -------
@@ -489,20 +340,18 @@ class TargetDiffSampler:
         embeddings : np.ndarray
             Shape (num_samples, d).
         """
-        results = self.sample_for_pocket(pocket_pdb, num_samples=num_samples)
+        result = self.sample_for_pocket(pocket_pdb, num_samples=num_samples)
 
         # Reconstruct molecules
-        mols = self.reconstruct_molecules(results)
-        for i, mol in enumerate(mols):
-            results[i]["mol"] = mol
+        mols = self.reconstruct_molecules(result["pred_pos"], result["pred_v"])
 
         # Collect embeddings
         embeddings = []
-        for r in results:
-            if r["z"] is not None:
-                embeddings.append(r["z"])
+        for emb in result["mol_embeddings"]:
+            if emb is not None:
+                embeddings.append(emb)
             else:
-                embeddings.append(np.zeros(self.hidden_dim))
+                embeddings.append(np.zeros(self.hidden_dim, dtype=np.float32))
         embeddings = np.stack(embeddings, axis=0)
 
         # Optionally save SDF
@@ -510,7 +359,7 @@ class TargetDiffSampler:
             save_sdf = Path(save_sdf)
             save_sdf.parent.mkdir(parents=True, exist_ok=True)
             self._save_sdf(mols, save_sdf)
-            logger.info(f"Saved {len(mols)} molecules to {save_sdf}")
+            logger.info(f"Saved {sum(1 for m in mols if m)} molecules to {save_sdf}")
 
         return mols, embeddings
 

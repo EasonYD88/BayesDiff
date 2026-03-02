@@ -201,9 +201,8 @@ def main():
 
     first_emb = list(embeddings_dict.values())[0]
     d = first_emb.shape[-1]
-    gp = GPOracle(d=d, n_inducing=128, device="cpu")
-    X_dummy = np.random.randn(10, d).astype(np.float32)
-    gp.load(args.gp_model, X_dummy=X_dummy)
+    gp = GPOracle(d=d, n_inducing=10, device="cpu")  # n_inducing overridden by load
+    gp.load(args.gp_model)
     logger.info(f"  GP model loaded (d={d})")
 
     # ── OOD detector ─────────────────────────────────────────────
