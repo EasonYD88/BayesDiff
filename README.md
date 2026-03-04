@@ -8,9 +8,22 @@ Dual uncertainty-aware confidence scoring for 3D molecular generation.
 |-------|-------------|--------|
 | Phase 0 | Data + Environment | ✅ Complete |
 | Phase 1 | Core Modules (8 modules, 41 validation checks) | ✅ Complete |
-| Phase 2 | HPC Batch Sampling (285+ pockets × M=64) | ⬜ Not started |
+| Phase 1.5 | HPC Environment Setup (NYU Torch) | ✅ Complete |
+| Phase 2 | HPC Batch Sampling (93 pockets × M=64) | ⬜ Not started |
 | Phase 3 | Full Experiments + Ablation | ⬜ Not started |
 | Phase 4 | Writing | ⬜ Not started |
+
+### HPC Environment (NYU Torch)
+
+| Component | Version / Path |
+|-----------|---------------|
+| Cluster | NYU Torch HPC (SLURM) |
+| Conda env | `/scratch/yd2915/conda_envs/bayesdiff` |
+| PyTorch | 2.5.1+cu121 |
+| PyG | 2.7.0 |
+| GPyTorch | 1.15.2 |
+
+> See [doc/HPC_ENV_STATUS.md](doc/HPC_ENV_STATUS.md) for full verification details.
 
 ## Quick Start
 
