@@ -1,7 +1,7 @@
 # BayesDiff HPC Environment Status
 
 > Auto-generated HPC environment verification report.
-> Cluster: NYU Torch HPC | Date: 2025-07-18
+> Cluster: NYU Torch HPC | Updated: 2026-03-04
 
 ---
 
@@ -11,10 +11,12 @@
 |------|-------|
 | Cluster | NYU Torch HPC |
 | Login Node | torch-login-5 |
+| GPU Node | ga018.hpc.nyu.edu (A100-SXM4-80GB) |
 | User | yd2915 |
 | Scheduler | SLURM |
-| Account | torch_pr_281_general |
-| Partition | gpu |
+| Accounts | torch_pr_281_general, torch_pr_281_chemistry |
+| GPU Partition | a100_chemistry (tested), l40s_public (QOS shared) |
+| Driver | NVIDIA 580.82.07, CUDA 13.0 |
 
 ## Environment
 
@@ -50,7 +52,8 @@ cd /scratch/yd2915/BayesDiff
 | S1.5 | _check_deps.py (7/7 passed) | ✅ Complete |
 | S1.6 | Structure verification | ✅ Complete |
 | S2.1 | test_pockets.txt (93 lines) | ✅ Complete |
-| S2.2 | Smoke test (5 pockets × 4 samples) | ⬜ Requires GPU node |
+| S0.3 | GPU verification (A100-80GB) | ✅ Complete (job 3253941) |
+| S2.2 | Smoke test (5 pockets × 4 samples) | ⚠️ Blocked by missing openbabel |
 | S3 | Batch sampling (93 pockets × 64 samples) | ⬜ Not started |
 | S4 | Embedding re-extraction | ⬜ Not started |
 | S5 | GP training | ⬜ Not started |
@@ -87,9 +90,27 @@ lmdb: OK                 ✅
 yaml: OK                 ✅
 ```
 
+## GPU Verification (S0.3) — Job 3253941
+
+```
+Node:       ga018.hpc.nyu.edu
+GPU:        NVIDIA A100-SXM4-80GB (80 GB)
+Driver:     580.82.07 / CUDA 13.0
+PyTorch:    2.5.1+cu121, cuda=True
+Matmul:     OK (2000×2000)
+Wall time:  1m04s
+```
+
+## Known Issues
+
+- `openbabel` not installed → TargetDiff `reconstruct.py` import fails → S2.2 smoke test blocked
+  - Fix: `conda install -c conda-forge openbabel` or `pip install openbabel-wheel`
+- `QOSGrpGRES` on `l40s_public` — shared GPU quota with other users (yx2892)
+  - Workaround: use `--partition=a100_chemistry --account=torch_pr_281_chemistry`
+
 ## Notes
 
-- `cuda=False` on login nodes is expected; GPU nodes will show `cuda=True`
+- `cuda=False` on login nodes is expected; GPU nodes show `cuda=True` ✅
 - Prior results in `results/` are from Mac CPU debug run (3 pockets, 2 samples)
 - HPC production runs (S3+) will overwrite/extend these results
-- GPU validation (S0.3) pending — requires `srun --gres=gpu:1` interactive session
+- For sbatch, always specify `--account=torch_pr_281_chemistry --partition=a100_chemistry`

@@ -1,6 +1,14 @@
 # BayesDiff NYU Torch 定制 HPC 指南（给 Coding Agent）
 
-更新时间：2026-03-03（America/New_York）
+更新时间：2026-03-04（America/New_York）
+
+## 0. HPC 实测要点（2026-03-04 验证）
+
+1. **不要用 `--partition=gpu`** — Torch 没有名为 `gpu` 的分区，分区按 GPU 型号命名。
+2. **推荐分区**：`--partition=a100_chemistry`（已验证可用）。
+3. **QOSGrpGRES 问题**：不指定分区时 SLURM 默认走 `l40s_public`，此分区 GPU 配额与其他用户共享，常被占满。指定 `a100_chemistry` 可绕过。
+4. **缺少 openbabel**：TargetDiff 的 `reconstruct.py` 依赖 openbabel，需 `conda install -c conda-forge openbabel` 才能完整运行 smoke test。
+5. **GPU 验证通过**：A100-SXM4-80GB, PyTorch 2.5.1+cu121, cuda=True ✅
 
 ## 1. 适用范围
 
@@ -18,8 +26,8 @@
 
 | 变量 | 是否必填 | 推荐值（本项目） | 说明 |
 |---|---|---|---|
-| `NETID` | 是 | `<your_netid>` | NYU 登录用户 |
-| `SLURM_ACCOUNT` | 是 | `<your_slurm_account>` | Torch 必填，提交作业必须有 |
+| `NETID` | 是 | `yd2915` | NYU 登录用户 |
+| `SLURM_ACCOUNT` | 是 | `torch_pr_281_chemistry` | Torch 必填，提交作业必须有 |
 | `PDBBIND_DIR` | 是 | `external/targetdiff/data/test_set` | 本项目默认数据布局 |
 | `TARGETDIFF_DIR` | 是 | `external/targetdiff` | TargetDiff clone 根目录 |
 | `POCKET_LIST` | 是 | `data/splits/test_pockets.txt` | 每行一个 pocket 名 |
@@ -31,8 +39,8 @@
 推荐先在会话里导出：
 
 ```bash
-export NETID="<your_netid>"
-export SLURM_ACCOUNT="<your_slurm_account>"
+export NETID="yd2915"
+export SLURM_ACCOUNT="torch_pr_281_chemistry"
 export PDBBIND_DIR="external/targetdiff/data/test_set"
 export TARGETDIFF_DIR="external/targetdiff"
 export POCKET_LIST="data/splits/test_pockets.txt"

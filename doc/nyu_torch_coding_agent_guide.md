@@ -1,7 +1,7 @@
 # NYU Torch 使用指南（给 Coding Agent）
 
 基于 NYU Research Technology Services 的 Torch 文档整理，面向“可执行操作”而非概念介绍。  
-整理日期：2026-03-03（美国东部时间）。
+整理日期：2026-03-03（美国东部时间），实测更新：2026-03-04。
 
 ## 1. 先决条件（必须满足）
 
@@ -164,16 +164,17 @@ pip install -U pip
 Torch 官方页面给出的关键约束：
 
 1. 每个作业都要带 `--account=<SLURM_ACCOUNT>`。
-2. 一般不要手动指定 partition（除 preemption 用法）。
-3. 低 GPU 利用率作业可能被系统主动取消（策略较严格）。
-4. 用户 GPU quota（文档当前描述）：walltime < 48h 的作业，单用户总 GPU 上限 24。
+2. **Torch 没有名为 `gpu` 的通用分区** — 分区按 GPU 型号命名：`a100`, `a100_chemistry`, `l40s`, `l40s_public`, `h100`, `h200` 等。
+3. **实测推荐**：`--partition=a100_chemistry --account=torch_pr_281_chemistry`（2026-03-04 验证通过）。不指定分区时默认走 `l40s_public`，GPU 配额易被其他用户占满（`QOSGrpGRES`）。
+4. 低 GPU 利用率作业可能被系统主动取消（策略较严格）。
+5. 用户 GPU quota（文档当前描述）：walltime < 48h 的作业，单用户总 GPU 上限 24。
 
 ### 7.1 单卡模板（可直接改）
 
 ```bash
 #!/bin/bash
 #SBATCH --job-name=bayesdiff-sgpu
-#SBATCH --account=<SLURM_ACCOUNT>
+#SBATCH --account=torch_pr_281_chemistry
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -199,7 +200,7 @@ srun singularity exec --nv \
 ```bash
 #!/bin/bash
 #SBATCH --job-name=bayesdiff-ddp
-#SBATCH --account=<SLURM_ACCOUNT>
+#SBATCH --account=torch_pr_281_chemistry
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=2
 #SBATCH --cpus-per-task=8
