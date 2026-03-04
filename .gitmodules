@@ -1,0 +1,3 @@
+[submodule "external/targetdiff"]
+	path = external/targetdiff
+	url = https://github.com/guanjq/targetdiff.git

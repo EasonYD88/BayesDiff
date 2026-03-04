@@ -1,0 +1,25 @@
+{
+  "ece": 0.2949091339568114,
+  "auroc": 1.0,
+  "ef_1pct": 3.0,
+  "hit_rate": 0.5,
+  "spearman_rho": 1.0,
+  "spearman_pval": 0.0,
+  "rmse": 1.4318746583438786,
+  "nll": 1.7875674483170088,
+  "n_samples": 3,
+  "confidence_threshold": 0.5,
+  "y_target": 7.0,
+  "ci_auroc": [
+    1.0,
+    1.0
+  ],
+  "ci_ef_1pct": [
+    0.0,
+    3.0
+  ],
+  "ci_hit_rate": [
+    0.0,
+    1.0
+  ]
+}

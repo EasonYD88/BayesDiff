@@ -1,24 +1,32 @@
-# Data (downloaded manually)
+# ── Data (manually downloaded, too large for git) ────────────
 data/pdbbind/
 data/generated/
 data/embeddings/*.npz
 
-# External repos
-external/
+# ── External: ignore large binaries, track our own patches ───
+external/targetdiff/data/
+external/targetdiff/pretrained_models/*.pt
+external/targetdiff/pretrained_models/*.pkl
+external/targetdiff/**/__pycache__/
+external/targetdiff/**/*.pyc
+# Keep: external/targetdiff/torch_scatter.py (our shim)
+# Keep: external/targetdiff/ source code (if not using submodule)
 
-# Python
+# ── Python ────────────────────────────────────────────────────
 __pycache__/
 *.pyc
 *.egg-info/
 dist/
 build/
 
-# Jupyter
+# ── Jupyter ───────────────────────────────────────────────────
 .ipynb_checkpoints/
 
-# OS
+# ── OS ────────────────────────────────────────────────────────
 .DS_Store
 
-# Results
-results/
-outputs/
+# ── Results: track JSON/txt/log/figures (small), ignore large binaries ──
+results/**/*.npz
+results/**/*.pt
+results/**/*.sdf
+# Everything else in results/ is tracked (JSON, CSV, TXT, PNG)
