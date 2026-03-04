@@ -1,0 +1,9 @@
+=== BayesDiff Sampling Job ===
+Date:        Wed Mar  4 11:15:55 EST 2026
+Node:        ga037.hpc.nyu.edu
+GPU:         NVIDIA A100-SXM4-80GB
+Pocket list: data/splits/test_pockets.txt
+Samples/pkt: 64
+Output:      results/generated_molecules
+
+>>> Step 1/2: Sampling molecules...

@@ -47,6 +47,9 @@ echo ""
 eval "$(/scratch/yd2915/miniconda3/bin/conda shell.bash hook)"
 conda activate /scratch/yd2915/conda_envs/bayesdiff
 
+# Reduce GPU memory fragmentation
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
 mkdir -p slurm/logs "${OUTPUT_DIR}"
 
 # ── Step 1: Sample molecules ────────────────────────────────

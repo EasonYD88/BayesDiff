@@ -208,14 +208,26 @@ class TargetDiffSampler:
         data = self.pocket_pdb_to_data(pocket_pdb)
         sample_cfg = self._sample_config.sample
 
-        all_pred_pos, all_pred_v, _, _, _, _, time_list, mol_embeddings = \
-            sample_diffusion_ligand(
-                self._model, data, num_samples,
-                batch_size=batch_size, device=self.device,
-                num_steps=self.num_steps,
-                pos_only=sample_cfg.pos_only,
-                center_pos_mode=sample_cfg.center_pos_mode,
-                sample_num_atoms=sample_cfg.sample_num_atoms,
+        result = sample_diffusion_ligand(
+            self._model, data, num_samples,
+            batch_size=batch_size, device=self.device,
+            num_steps=self.num_steps,
+            pos_only=sample_cfg.pos_only,
+            center_pos_mode=sample_cfg.center_pos_mode,
+            sample_num_atoms=sample_cfg.sample_num_atoms,
+        )
+
+        # TargetDiff returns 7 values; our earlier draft expected 8 (with
+        # mol_embeddings).  Handle both gracefully.
+        if len(result) == 8:
+            all_pred_pos, all_pred_v, _, _, _, _, time_list, mol_embeddings = result
+        elif len(result) == 7:
+            all_pred_pos, all_pred_v, _, _, _, _, time_list = result
+            mol_embeddings = [None] * len(all_pred_pos)
+        else:
+            raise ValueError(
+                f"Unexpected number of return values from "
+                f"sample_diffusion_ligand: {len(result)}"
             )
 
         return {
@@ -340,7 +352,24 @@ class TargetDiffSampler:
         embeddings : np.ndarray
             Shape (num_samples, d).
         """
-        result = self.sample_for_pocket(pocket_pdb, num_samples=num_samples)
+        # Use batch_size=16 to avoid CUDA OOM on large pockets, with
+        # automatic retry at half the batch size on OOM.
+        batch_size = min(16, num_samples)
+        while True:
+            try:
+                result = self.sample_for_pocket(
+                    pocket_pdb, num_samples=num_samples, batch_size=batch_size,
+                )
+                break
+            except RuntimeError as e:
+                if "out of memory" in str(e).lower() and batch_size > 1:
+                    torch.cuda.empty_cache()
+                    batch_size = max(1, batch_size // 2)
+                    logger.warning(
+                        f"CUDA OOM – retrying with batch_size={batch_size}"
+                    )
+                else:
+                    raise
 
         # Reconstruct molecules
         mols = self.reconstruct_molecules(result["pred_pos"], result["pred_v"])
