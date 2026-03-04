@@ -54,7 +54,8 @@ cd /scratch/yd2915/BayesDiff
 | S2.1 | test_pockets.txt (93 lines) | ✅ Complete |
 | S0.3 | GPU verification (A100-80GB) | ✅ Complete (job 3253941) |
 | S2.2 | Smoke test (5 pockets × 4 samples) | ✅ Complete (job 3254006, 105s) |
-| S3 | Batch sampling (93 pockets × 64 samples) | 🟡 Running (job 3254044, ga038 A100) |
+| S3 | Batch sampling (93 × 64) — 1st attempt | ❌ Failed (job 3254044, 10h28m, 0 output files) |
+| S3 | Batch sampling (93 × 64) — 2nd attempt | 🟡 Running (job 3284523) |
 | S4 | Embedding re-extraction | ⬜ Not started |
 | S5 | GP training | ⬜ Not started |
 | S6 | Evaluation + calibration | ⬜ Not started |
@@ -117,6 +118,32 @@ Figures:    6 PNG saved to results/figures/
 - `openbabel` installed via `conda install -c conda-forge openbabel` ✅
 - `torch-cluster` installed via `pip install torch-cluster -f pyg whl` ✅
 - `sample_diffusion_ligand` return value mismatch (7 vs 8) — fixed in `run_full_pipeline.py` ✅
+- **S3 job 3254044 failure** — fixed in `bayesdiff/sampler.py` (see below) ✅
+
+## S3 Batch Sampling – 1st Attempt Post-Mortem (Job 3254044)
+
+**Symptoms:** Job COMPLETED (exit 0), ran 10h28m on ga038 (A100-80GB), used ~10.5 GB RAM.
+93 pocket directories were created but contained **0 embedding files, 0 SDF files**.
+
+**Root Causes:**
+
+1. **Return value unpacking (93/93 pockets affected)**
+   `bayesdiff/sampler.py:sample_for_pocket()` expected 8 return values from
+   TargetDiff's `sample_diffusion_ligand()`, which only returns 7 (no `mol_embeddings`).
+   Error: `not enough values to unpack (expected 8, got 7)`.
+   The same bug was previously fixed in `run_full_pipeline.py` but not in `sampler.py`.
+
+2. **CUDA OOM (~20/93 pockets affected)**
+   Default `batch_size=num_samples=64` caused OOM on larger pockets (e.g., BAPA_SPHXN
+   tried to allocate 27.5 GiB with only 11.5 GiB free).
+
+**Fixes Applied (commit `ecd3d64`):**
+
+| File | Fix |
+|------|-----|
+| `bayesdiff/sampler.py` | `sample_for_pocket()` now handles both 7- and 8-value returns |
+| `bayesdiff/sampler.py` | `sample_and_embed()` starts at `batch_size=16`, auto-halves on OOM |
+| `slurm/sample_job.sh` | Added `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` |
 
 ## Known Issues
 

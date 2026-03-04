@@ -1,0 +1,22 @@
+11:16:24 INFO: Will sample 64 molecules for 93 pockets
+11:16:24 INFO: 
+============================================================
+11:16:24 INFO: [1/93] Sampling for pocket: ABL2_HUMAN_274_551_0
+11:16:24 INFO: Loading TargetDiff checkpoint from /scratch/yd2915/BayesDiff/external/targetdiff/pretrained_models/pretrained_diffusion.pt
+11:16:42 INFO: Model loaded. Hidden dim: 128, Device: cuda
+  0%|          | 0/4 [00:00<?, ?it/s]
+sampling:   0%|          | 0/100 [00:00<?, ?it/s][A
+sampling:   1%|          | 1/100 [00:01<02:29,  1.51s/it][A
+sampling:   2%|▏         | 2/100 [00:02<01:44,  1.07s/it][A
+sampling:   3%|▎         | 3/100 [00:03<01:29,  1.08it/s][A
+sampling:   4%|▍         | 4/100 [00:03<01:22,  1.17it/s][A
+sampling:   5%|▌         | 5/100 [00:04<01:17,  1.22it/s][A
+sampling:   6%|▌         | 6/100 [00:05<01:14,  1.26it/s][A
+sampling:   7%|▋         | 7/100 [00:06<01:12,  1.28it/s][A
+sampling:   8%|▊         | 8/100 [00:06<01:11,  1.29it/s][A
+sampling:   9%|▉         | 9/100 [00:07<01:09,  1.30it/s][A
+sampling:  10%|█         | 10/100 [00:08<01:08,  1.31it/s][A
+sampling:  11%|█         | 11/100 [00:09<01:07,  1.32it/s][A
+sampling:  12%|█▏        | 12/100 [00:09<01:06,  1.32it/s][A
+sampling:  13%|█▎        | 13/100 [00:10<01:05,  1.32it/s][A
+sampling:  14%|█▍        | 14/100 [00:11<01:04,  1.32it/s][A
