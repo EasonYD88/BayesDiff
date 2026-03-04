@@ -6,6 +6,29 @@
 
 ---
 
+## 仓库现状（2026-03-03）
+
+| 内容 | 追踪方式 | 说明 |
+|------|----------|------|
+| `bayesdiff/` (9 .py) | ✅ git 直接追踪 | 核心库，可直接 clone |
+| `scripts/` (9 .py) | ✅ git 直接追踪 | 含 HPC 脚本、shim |
+| `doc/` | ✅ git 直接追踪 | 含本文件 |
+| `slurm/` | ✅ git 直接追踪 | SLURM 脚本 |
+| `results/` JSON/PNG | ✅ git 直接追踪 | 调试结果和图表 |
+| `external/targetdiff/` 代码 | ✅ **git submodule** | `--recurse-submodules` 自动拉取 |
+| `external/targetdiff/pretrained_models/*.pt` | ❌ .gitignore 排除 | 需手动上传（~33MB） |
+| `external/targetdiff/data/test_set/` | ❌ .gitignore 排除 | 需手动同步（~500MB） |
+| `external/targetdiff/data/affinity_info.pkl` | ❌ .gitignore 排除 | 需手动同步（~20MB） |
+| `scripts/torch_scatter_shim.py` | ✅ git 直接追踪 | 克隆后手动 `cp` 到 TargetDiff 目录 |
+
+**最简克隆命令**：
+```bash
+git clone --recurse-submodules https://github.com/EasonYD88/BayesDiff.git
+```
+之后只需手动补充 3 项大文件（模型权重 + 数据集），详见 S1.2–S1.3。
+
+---
+
 ## 0. 执行概览
 
 | 阶段 | 任务 | 预计耗时 | 资源 | 验收标准 |
@@ -80,68 +103,95 @@ print(f'PyG: {torch_geometric.__version__}')
 
 ## S1. 代码部署
 
-### S1.1 克隆仓库
+> **重要变更（2026-03-03）**：`external/targetdiff` 已注册为 git submodule，
+> `results/` 的 JSON/PNG 也已纳入 git 追踪。只需 `--recurse-submodules` 克隆即可
+> 自动拉取 TargetDiff 代码；预训练模型和数据集（大文件）仍需手动部署。
+
+### S1.1 克隆仓库（含 submodule）
 
 ```bash
 cd /scratch/$USER   # 或你的 HPC 工作目录
-git clone https://github.com/EasonYD88/BayesDiff.git
+
+# 一键克隆：自动拉取 BayesDiff + TargetDiff submodule
+git clone --recurse-submodules https://github.com/EasonYD88/BayesDiff.git
 cd BayesDiff
 ```
 
-### S1.2 部署 TargetDiff
+如果已经克隆但忘了 `--recurse-submodules`：
 
 ```bash
-# 克隆 TargetDiff
-git clone https://github.com/guanjq/targetdiff.git external/targetdiff
+git submodule update --init --recursive
+```
 
-# 下载预训练权重
+克隆完成后 `external/targetdiff/` 目录结构已存在，但以下大文件**不在 git 中**，需要手动部署：
+
+| 缺失文件 | 大小 | 需要操作 |
+|----------|------|----------|
+| `external/targetdiff/pretrained_models/pretrained_diffusion.pt` | ~33MB | 下载或上传 |
+| `external/targetdiff/pretrained_models/egnn_pdbbind_v2016.pt` | ~30MB | 下载或上传（可选）|
+| `external/targetdiff/data/test_set/` (93 targets) | ~500MB | 从 Mac 同步 |
+| `external/targetdiff/data/affinity_info.pkl` | ~20MB | 从 Mac 同步 |
+
+### S1.2 部署预训练权重
+
+```bash
 mkdir -p external/targetdiff/pretrained_models
-cd external/targetdiff/pretrained_models
 
-# 方法 1: 从 TargetDiff release 下载
-wget <targetdiff_pretrained_url> -O pretrained_diffusion.pt
+# 方法 1: 从 Mac 上传（推荐，因为 TargetDiff 官方下载链接不稳定）
+# （在 Mac 本地运行）
+scp external/targetdiff/pretrained_models/pretrained_diffusion.pt \
+    <user>@<hpc>:/scratch/$USER/BayesDiff/external/targetdiff/pretrained_models/
 
-# 方法 2: 从已有的 Mac 上传
-# (在 Mac 上) scp external/targetdiff/pretrained_models/pretrained_diffusion.pt <user>@<hpc>:/scratch/$USER/BayesDiff/external/targetdiff/pretrained_models/
+# 方法 2: 在 HPC 上从 TargetDiff release 下载
+# wget https://drive.usercontent.google.com/download?id=... -O external/targetdiff/pretrained_models/pretrained_diffusion.pt
+```
 
-cd /scratch/$USER/BayesDiff
+验证：
+```bash
+ls -lh external/targetdiff/pretrained_models/
+# 应看到 pretrained_diffusion.pt (~33MB)
 ```
 
 ### S1.3 部署 CrossDocked2020 测试集数据
 
 ```bash
-# 方法 1: 从 Mac 上传整个 test_set 目录
-# (在 Mac 上)
-rsync -avz external/targetdiff/data/ <user>@<hpc>:/scratch/$USER/BayesDiff/external/targetdiff/data/
+mkdir -p external/targetdiff/data
 
-# 方法 2: 在 HPC 上重新下载（如果有 test_set.zip）
-cd external/targetdiff/data
-# wget <test_set_url> -O test_set.zip && unzip test_set.zip
+# 从 Mac 同步（推荐，~520MB，rsync 支持断点续传）
+# （在 Mac 本地运行）
+rsync -avz --progress \
+    external/targetdiff/data/test_set \
+    external/targetdiff/data/affinity_info.pkl \
+    <user>@<hpc>:/scratch/$USER/BayesDiff/external/targetdiff/data/
+```
+
+验证：
+```bash
+ls external/targetdiff/data/test_set/ | wc -l   # 应输出 93
+ls -lh external/targetdiff/data/affinity_info.pkl  # 应约 20MB
 ```
 
 ### S1.4 部署 torch_scatter shim
 
-TargetDiff 代码使用旧的 `import torch_scatter` API，需要兼容 shim：
+TargetDiff 代码依赖旧的 `torch_scatter` 包，我们提供了兼容 shim。
+该文件已保存在 BayesDiff 仓库中（`scripts/torch_scatter_shim.py`），克隆后复制即可：
 
 ```bash
-# 确认 shim 已存在
-cat external/targetdiff/torch_scatter.py
-# 应包含：将 torch_scatter API 映射到 torch_geometric.utils.scatter
+# 从 BayesDiff 仓库的 scripts/ 目录复制到 TargetDiff 目录
+cp scripts/torch_scatter_shim.py external/targetdiff/torch_scatter.py
+
+# 验证
+python -c "
+import sys
+sys.path.insert(0, 'external/targetdiff')
+from torch_scatter import scatter_mean, scatter_add, scatter_max
+print('torch_scatter shim OK')
+"
 ```
 
-如果没有，从 Mac 上传或手动创建：
-
-```python
-# external/targetdiff/torch_scatter.py
-"""Shim: maps torch_scatter API to torch_geometric.utils.scatter."""
-from torch_geometric.utils import scatter
-def scatter_mean(src, index, dim=0, dim_size=None):
-    return scatter(src, index, dim=dim, dim_size=dim_size, reduce='mean')
-def scatter_add(src, index, dim=0, dim_size=None):
-    return scatter(src, index, dim=dim, dim_size=dim_size, reduce='sum')
-def scatter_max(src, index, dim=0, dim_size=None):
-    return scatter(src, index, dim=dim, dim_size=dim_size, reduce='max')
-```
+> **为什么需要这个 shim**：新版 `torch_geometric` 已将 `torch_scatter` 的功能内置，
+> 但 TargetDiff 仍用旧的 `import torch_scatter` 风格。这个 shim 将旧 API 映射到
+> `torch_geometric.utils.scatter`，无需安装独立的 `torch_scatter` 包。
 
 ### S1.5 检查依赖完整性
 
@@ -153,14 +203,40 @@ python scripts/_check_deps.py
 
 预期：所有依赖项 ✅。如果有缺失，按提示 `pip install` 补装。
 
-### S1.6 验证目录结构
+### S1.6 验证完整目录结构
 
 ```bash
-echo "=== Project Structure ==="
-ls -la bayesdiff/*.py | wc -l     # 应为 9 (含 __init__.py)
-ls -la scripts/*.py | wc -l       # 应为 8
-ls external/targetdiff/pretrained_models/pretrained_diffusion.pt  # 应存在
-ls external/targetdiff/data/test_set/ | wc -l  # 应为 93
+echo "=== BayesDiff Project Structure Check ==="
+echo ""
+echo "-- Core library (bayesdiff/) --"
+ls bayesdiff/*.py | wc -l     # 应为 9 (含 __init__.py)
+
+echo ""
+echo "-- Pipeline scripts (scripts/) --"
+ls scripts/*.py | wc -l       # 应为 9 (含 _check_deps.py, torch_scatter_shim.py)
+
+echo ""
+echo "-- TargetDiff submodule --"
+ls external/targetdiff/models/ | head -3    # 应能看到模型文件
+
+echo ""
+echo "-- Pretrained model --"
+ls -lh external/targetdiff/pretrained_models/pretrained_diffusion.pt
+
+echo ""
+echo "-- Test set --"
+ls external/targetdiff/data/test_set/ | wc -l   # 应为 93
+
+echo ""
+echo "-- torch_scatter shim --"
+python -c "
+import sys; sys.path.insert(0, 'external/targetdiff')
+from torch_scatter import scatter_mean; print('shim OK')
+"
+
+echo ""
+echo "-- Results (from prior runs, tracked in git) --"
+ls results/ 2>/dev/null && echo "results/ present" || echo "results/ empty (first time)"
 ```
 
 ---
@@ -803,13 +879,30 @@ except Exception as e:
 
 ## 附录 E：检查清单（提交前逐项确认）
 
-- [ ] Conda 环境创建成功，`torch.cuda.is_available()` → True
-- [ ] BayesDiff 代码已 clone，`scripts/_check_deps.py` 全部通过
-- [ ] TargetDiff 已 clone + 权重已下载，`pretrained_diffusion.pt` 存在
-- [ ] 测试集数据（93 targets）已部署到 `external/targetdiff/data/test_set/`
-- [ ] `affinity_info.pkl` 已就位
-- [ ] `data/splits/test_pockets.txt` 已生成（93 行）
-- [ ] 冒烟测试通过（5 pockets × 4 samples on GPU）
-- [ ] `slurm/sample_job.sh` 中 partition / conda 激活方式已适配
+### E1. 代码部署
+- [ ] `git clone --recurse-submodules` 完成（bayesdiff/ + scripts/ + external/targetdiff/ 代码均存在）
+- [ ] `external/targetdiff/pretrained_models/pretrained_diffusion.pt` 已就位（~33MB）
+- [ ] `external/targetdiff/data/test_set/` 已就位（93 个 target 目录）
+- [ ] `external/targetdiff/data/affinity_info.pkl` 已就位（~20MB）
+- [ ] `cp scripts/torch_scatter_shim.py external/targetdiff/torch_scatter.py` 已执行
+
+### E2. 环境
+- [ ] Conda 环境 `bayesdiff` 创建成功
+- [ ] `torch.cuda.is_available()` → `True`
+- [ ] `python scripts/_check_deps.py` 全部通过
+- [ ] `python -c "from torch_scatter import scatter_mean; print('shim OK')"` 通过（在 BayesDiff 根目录下）
+
+### E3. 数据验证
+- [ ] `ls external/targetdiff/data/test_set/ | wc -l` → `93`
+- [ ] `data/splits/test_pockets.txt` 已生成（`ls external/targetdiff/data/test_set/ > data/splits/test_pockets.txt`）
+
+### E4. 冒烟测试（提交正式 job 前必做）
+- [ ] 5-pocket × 4-sample 冒烟测试通过（on GPU，~10 min）
+- [ ] `results/smoke_test/sampling_summary.json` 无 `"error"` 字段
+- [ ] embedding shape 为 `(4, 128)`
+
+### E5. SLURM 配置
+- [ ] `slurm/sample_job.sh` 中 `--partition` 填写实际 GPU 分区名
+- [ ] conda 激活命令适配（`eval "$(conda shell.bash hook)"` 或 `source activate`）
 - [ ] `slurm/logs/` 目录已创建
-- [ ] 磁盘空间充足（至少 5GB for results）
+- [ ] 磁盘空间充足（至少 5GB 用于 results/）
