@@ -54,7 +54,7 @@ cd /scratch/yd2915/BayesDiff
 | S2.1 | test_pockets.txt (93 lines) | ✅ Complete |
 | S0.3 | GPU verification (A100-80GB) | ✅ Complete (job 3253941) |
 | S2.2 | Smoke test (5 pockets × 4 samples) | ✅ Complete (job 3254006, 105s) |
-| S3 | Batch sampling (93 pockets × 64 samples) | ⬜ Not started |
+| S3 | Batch sampling (93 pockets × 64 samples) | 🟡 Running (job 3254044, ga038 A100) |
 | S4 | Embedding re-extraction | ⬜ Not started |
 | S5 | GP training | ⬜ Not started |
 | S6 | Evaluation + calibration | ⬜ Not started |

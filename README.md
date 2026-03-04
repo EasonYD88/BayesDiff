@@ -9,7 +9,7 @@ Dual uncertainty-aware confidence scoring for 3D molecular generation.
 | Phase 0 | Data + Environment | ✅ Complete |
 | Phase 1 | Core Modules (8 modules, 41 validation checks) | ✅ Complete |
 | Phase 1.5 | HPC Environment Setup (NYU Torch) | ✅ Complete |
-| Phase 2 | HPC Batch Sampling (93 pockets × M=64) | ⬜ Not started |
+| Phase 2 | HPC Batch Sampling (93 pockets × M=64) | 🟡 Running (job 3254044) |
 | Phase 3 | Full Experiments + Ablation | ⬜ Not started |
 | Phase 4 | Writing | ⬜ Not started |
 

@@ -1,7 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=bayesdiff_sample
-#SBATCH --partition=gpu
-#SBATCH --gres=gpu:1
+#SBATCH --account=torch_pr_281_chemistry
+#SBATCH --partition=a100_chemistry
+#SBATCH --gres=gpu:a100:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
 #SBATCH --time=48:00:00
@@ -43,7 +44,8 @@ echo "Output:      ${OUTPUT_DIR}"
 echo ""
 
 # Activate conda environment
-source activate bayesdiff 2>/dev/null || conda activate bayesdiff 2>/dev/null || true
+eval "$(/scratch/yd2915/miniconda3/bin/conda shell.bash hook)"
+conda activate /scratch/yd2915/conda_envs/bayesdiff
 
 mkdir -p slurm/logs "${OUTPUT_DIR}"
 
