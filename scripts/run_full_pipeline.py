@@ -179,8 +179,7 @@ def sample_molecules(pocket_list, device, num_samples=4, num_steps=100, output_d
         data = transform(data)
 
         # Sample
-        all_pred_pos, all_pred_v, pred_pos_traj, pred_v_traj, pred_v0_traj, pred_vt_traj, time_list, mol_embeddings = \
-            sample_diffusion_ligand(
+        result = sample_diffusion_ligand(
                 model, data, num_samples,
                 batch_size=num_samples, device=device,
                 num_steps=num_steps,
@@ -188,6 +187,12 @@ def sample_molecules(pocket_list, device, num_samples=4, num_steps=100, output_d
                 center_pos_mode=config.sample.center_pos_mode,
                 sample_num_atoms=config.sample.sample_num_atoms,
             )
+        # TargetDiff returns 7 values; BayesDiff originally expected 8 (with mol_embeddings)
+        if len(result) == 7:
+            all_pred_pos, all_pred_v, pred_pos_traj, pred_v_traj, pred_v0_traj, pred_vt_traj, time_list = result
+            mol_embeddings = None
+        else:
+            all_pred_pos, all_pred_v, pred_pos_traj, pred_v_traj, pred_v0_traj, pred_vt_traj, time_list, mol_embeddings = result
 
         # Reconstruct molecules
         gen_mols = []

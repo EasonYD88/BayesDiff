@@ -1,0 +1,32 @@
+=== S0.3 GPU Verification ===
+Hostname: ga004.hpc.nyu.edu
+Date: Wed Mar  4 00:17:16 EST 2026
+
+--- nvidia-smi ---
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-80GB, 81920 MiB, 580.82.07
+Wed Mar  4 00:17:16 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.82.07              Driver Version: 580.82.07      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-80GB          On  |   00000000:E3:00.0 Off |                    0 |
+| N/A   24C    P0             61W /  500W |       0MiB /  81920MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+--- PyTorch GPU Test ---
+PyTorch: 2.5.1+cu121
+CUDA available: True
+GPU: NVIDIA A100-SXM4-80GB

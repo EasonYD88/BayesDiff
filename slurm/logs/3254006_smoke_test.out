@@ -1,0 +1,267 @@
+=== S2.2 Smoke Test ===
+Hostname: ga032.hpc.nyu.edu
+Date: Wed Mar  4 00:31:27 EST 2026
+
+NVIDIA A100-SXM4-80GB, 81920 MiB
+
+--- Quick GPU check ---
+cuda=True, gpu=NVIDIA A100-SXM4-80GB
+
+--- Smoke Test: 5 pockets x 4 samples x 20 steps (GPU) ---
+00:31:55 [INFO] ╔══════════════════════════════════════════════════════════╗
+00:31:55 [INFO] ║         BayesDiff End-to-End Pipeline                   ║
+00:31:55 [INFO] ╚══════════════════════════════════════════════════════════╝
+00:31:55 [INFO] Mode: debug, Device: cuda
+00:31:55 [INFO] Pockets: 5, Samples/pocket: 4, Steps: 20
+00:31:55 [INFO] ============================================================
+00:31:55 [INFO] STEP 0: Data Preparation
+00:31:55 [INFO] ============================================================
+00:31:55 [INFO] Test set: 93 protein targets
+00:31:57 [INFO] Pockets with data: 93
+00:31:57 [INFO] Selected 5 pockets:
+00:31:57 [INFO]   PPIA_HUMAN_1_165_0: pKd=1.87, vina=-4.8
+00:31:57 [INFO]   BSD_ASPTE_1_130_0: pKd=4.68, vina=-10.0
+00:31:57 [INFO]   NAGZ_VIBCH_1_330_0: pKd=6.64, vina=-5.5
+00:31:57 [INFO]   XANLY_BACGL_26_777_0: pKd=7.63, vina=-7.6
+00:31:57 [INFO]   IDHP_HUMAN_40_452_0: pKd=12.48, vina=-12.5
+00:31:57 [INFO] 
+============================================================
+00:31:57 [INFO] STEP 1: Molecule Sampling (TargetDiff)
+00:31:57 [INFO] ============================================================
+00:32:16 [INFO] Loaded checkpoint from /scratch/yd2915/BayesDiff/external/targetdiff/pretrained_models/pretrained_diffusion.pt
+00:32:16 [INFO] Model loaded. Device: cuda
+00:32:16 [INFO] Hidden dim: 128
+00:32:16 [INFO] 
+[1/5] Sampling 4 molecules for PPIA_HUMAN_1_165_0
+  0%|          | 0/1 [00:00<?, ?it/s]
+sampling:   0%|          | 0/20 [00:00<?, ?it/s][A
+sampling:   5%|▌         | 1/20 [00:02<00:39,  2.08s/it][A
+sampling:  10%|█         | 2/20 [00:03<00:30,  1.68s/it][A
+sampling:  15%|█▌        | 3/20 [00:04<00:26,  1.56s/it][A
+sampling:  20%|██        | 4/20 [00:06<00:23,  1.49s/it][A
+sampling:  25%|██▌       | 5/20 [00:07<00:21,  1.46s/it][A
+sampling:  30%|███       | 6/20 [00:09<00:20,  1.44s/it][A
+sampling:  35%|███▌      | 7/20 [00:10<00:18,  1.43s/it][A
+sampling:  40%|████      | 8/20 [00:11<00:17,  1.42s/it][A
+sampling:  45%|████▌     | 9/20 [00:13<00:15,  1.42s/it][A
+sampling:  50%|█████     | 10/20 [00:14<00:14,  1.41s/it][A
+sampling:  55%|█████▌    | 11/20 [00:16<00:12,  1.41s/it][A
+sampling:  60%|██████    | 12/20 [00:17<00:11,  1.41s/it][A
+sampling:  65%|██████▌   | 13/20 [00:18<00:09,  1.41s/it][A
+sampling:  70%|███████   | 14/20 [00:20<00:08,  1.40s/it][A
+sampling:  75%|███████▌  | 15/20 [00:21<00:07,  1.40s/it][A
+sampling:  80%|████████  | 16/20 [00:23<00:05,  1.40s/it][A
+sampling:  85%|████████▌ | 17/20 [00:24<00:04,  1.40s/it][A
+sampling:  90%|█████████ | 18/20 [00:25<00:02,  1.40s/it][A
+sampling:  95%|█████████▌| 19/20 [00:27<00:01,  1.40s/it][A
+sampling: 100%|██████████| 20/20 [00:28<00:00,  1.40s/it][Asampling: 100%|██████████| 20/20 [00:28<00:00,  1.44s/it]
+100%|██████████| 1/1 [00:31<00:00, 31.57s/it]100%|██████████| 1/1 [00:31<00:00, 31.57s/it]
+[00:32:48] Explicit valence for atom # 1 Cl, 3, is greater than permitted
+[00:32:48] Explicit valence for atom # 0 Cl, 3, is greater than permitted
+[00:32:48] Explicit valence for atom # 12 Cl, 2, is greater than permitted
+[00:32:48] Explicit valence for atom # 2 H, 2, is greater than permitted
+00:32:48 [INFO]   Generated 0/4 valid molecules in 32.3s
+00:32:48 [INFO] 
+[2/5] Sampling 4 molecules for BSD_ASPTE_1_130_0
+  0%|          | 0/1 [00:00<?, ?it/s]
+sampling:   0%|          | 0/20 [00:00<?, ?it/s][A
+sampling:   5%|▌         | 1/20 [00:00<00:06,  3.07it/s][A
+sampling:  10%|█         | 2/20 [00:00<00:05,  3.07it/s][A
+sampling:  15%|█▌        | 3/20 [00:00<00:05,  3.07it/s][A
+sampling:  20%|██        | 4/20 [00:01<00:05,  3.08it/s][A
+sampling:  25%|██▌       | 5/20 [00:01<00:04,  3.08it/s][A
+sampling:  30%|███       | 6/20 [00:01<00:04,  3.08it/s][A
+sampling:  35%|███▌      | 7/20 [00:02<00:04,  3.08it/s][A
+sampling:  40%|████      | 8/20 [00:02<00:03,  3.08it/s][A
+sampling:  45%|████▌     | 9/20 [00:02<00:03,  3.08it/s][A
+sampling:  50%|█████     | 10/20 [00:03<00:03,  3.08it/s][A
+sampling:  55%|█████▌    | 11/20 [00:03<00:02,  3.08it/s][A
+sampling:  60%|██████    | 12/20 [00:03<00:02,  3.08it/s][A
+sampling:  65%|██████▌   | 13/20 [00:04<00:02,  3.08it/s][A
+sampling:  70%|███████   | 14/20 [00:04<00:01,  3.08it/s][A
+sampling:  75%|███████▌  | 15/20 [00:04<00:01,  3.08it/s][A
+sampling:  80%|████████  | 16/20 [00:05<00:01,  3.07it/s][A
+sampling:  85%|████████▌ | 17/20 [00:05<00:00,  3.07it/s][A
+sampling:  90%|█████████ | 18/20 [00:05<00:00,  3.07it/s][A
+sampling:  95%|█████████▌| 19/20 [00:06<00:00,  3.08it/s][A
+sampling: 100%|██████████| 20/20 [00:06<00:00,  3.08it/s][Asampling: 100%|██████████| 20/20 [00:06<00:00,  3.08it/s]
+100%|██████████| 1/1 [00:06<00:00,  6.65s/it]100%|██████████| 1/1 [00:06<00:00,  6.65s/it]
+[00:32:56] WARNING: not removing hydrogen atom without neighbors
+[00:32:56] Explicit valence for atom # 0 Cl, 2, is greater than permitted
+[00:32:56] Explicit valence for atom # 5 F, 2, is greater than permitted
+[00:32:56] Explicit valence for atom # 9 O, 3, is greater than permitted
+[00:32:56] Explicit valence for atom # 11 Cl, 2, is greater than permitted
+00:32:56 [INFO]   Generated 0/4 valid molecules in 7.7s
+00:32:56 [INFO] 
+[3/5] Sampling 4 molecules for NAGZ_VIBCH_1_330_0
+  0%|          | 0/1 [00:00<?, ?it/s]
+sampling:   0%|          | 0/20 [00:00<?, ?it/s][A
+sampling:   5%|▌         | 1/20 [00:00<00:04,  4.30it/s][A
+sampling:  10%|█         | 2/20 [00:00<00:04,  4.29it/s][A
+sampling:  15%|█▌        | 3/20 [00:00<00:03,  4.30it/s][A
+sampling:  20%|██        | 4/20 [00:00<00:03,  4.30it/s][A
+sampling:  25%|██▌       | 5/20 [00:01<00:03,  4.30it/s][A
+sampling:  30%|███       | 6/20 [00:01<00:03,  4.30it/s][A
+sampling:  35%|███▌      | 7/20 [00:01<00:03,  4.29it/s][A
+sampling:  40%|████      | 8/20 [00:01<00:02,  4.30it/s][A
+sampling:  45%|████▌     | 9/20 [00:02<00:02,  4.30it/s][A
+sampling:  50%|█████     | 10/20 [00:02<00:02,  4.30it/s][A
+sampling:  55%|█████▌    | 11/20 [00:02<00:02,  4.30it/s][A
+sampling:  60%|██████    | 12/20 [00:02<00:01,  4.30it/s][A
+sampling:  65%|██████▌   | 13/20 [00:03<00:01,  4.30it/s][A
+sampling:  70%|███████   | 14/20 [00:03<00:01,  4.30it/s][A
+sampling:  75%|███████▌  | 15/20 [00:03<00:01,  4.30it/s][A
+sampling:  80%|████████  | 16/20 [00:03<00:00,  4.30it/s][A
+sampling:  85%|████████▌ | 17/20 [00:03<00:00,  4.30it/s][A
+sampling:  90%|█████████ | 18/20 [00:04<00:00,  4.30it/s][A
+sampling:  95%|█████████▌| 19/20 [00:04<00:00,  4.30it/s][A
+sampling: 100%|██████████| 20/20 [00:04<00:00,  4.25it/s][Asampling: 100%|██████████| 20/20 [00:04<00:00,  4.29it/s]
+100%|██████████| 1/1 [00:04<00:00,  4.75s/it]100%|██████████| 1/1 [00:04<00:00,  4.75s/it]
+[00:33:01] Explicit valence for atom # 12 Cl, 3, is greater than permitted
+[00:33:01] Explicit valence for atom # 7 O, 4, is greater than permitted
+[00:33:02] Explicit valence for atom # 1 Cl, 3, is greater than permitted
+[00:33:02] Explicit valence for atom # 6 Cl, 6, is greater than permitted
+00:33:02 [INFO]   Generated 0/4 valid molecules in 5.7s
+00:33:02 [INFO] 
+[4/5] Sampling 4 molecules for XANLY_BACGL_26_777_0
+  0%|          | 0/1 [00:00<?, ?it/s]
+sampling:   0%|          | 0/20 [00:00<?, ?it/s][A
+sampling:   5%|▌         | 1/20 [00:00<00:09,  1.96it/s][A
+sampling:  10%|█         | 2/20 [00:01<00:09,  1.95it/s][A
+sampling:  15%|█▌        | 3/20 [00:01<00:08,  1.95it/s][A
+sampling:  20%|██        | 4/20 [00:02<00:08,  1.95it/s][A
+sampling:  25%|██▌       | 5/20 [00:02<00:07,  1.95it/s][A
+sampling:  30%|███       | 6/20 [00:03<00:07,  1.95it/s][A
+sampling:  35%|███▌      | 7/20 [00:03<00:06,  1.95it/s][A
+sampling:  40%|████      | 8/20 [00:04<00:06,  1.95it/s][A
+sampling:  45%|████▌     | 9/20 [00:04<00:05,  1.95it/s][A
+sampling:  50%|█████     | 10/20 [00:05<00:05,  1.95it/s][A
+sampling:  55%|█████▌    | 11/20 [00:05<00:04,  1.95it/s][A
+sampling:  60%|██████    | 12/20 [00:06<00:04,  1.95it/s][A
+sampling:  65%|██████▌   | 13/20 [00:06<00:03,  1.96it/s][A
+sampling:  70%|███████   | 14/20 [00:07<00:03,  1.95it/s][A
+sampling:  75%|███████▌  | 15/20 [00:07<00:02,  1.95it/s][A
+sampling:  80%|████████  | 16/20 [00:08<00:02,  1.95it/s][A
+sampling:  85%|████████▌ | 17/20 [00:08<00:01,  1.95it/s][A
+sampling:  90%|█████████ | 18/20 [00:09<00:01,  1.95it/s][A
+sampling:  95%|█████████▌| 19/20 [00:09<00:00,  1.95it/s][A
+sampling: 100%|██████████| 20/20 [00:10<00:00,  1.95it/s][Asampling: 100%|██████████| 20/20 [00:10<00:00,  1.95it/s]
+100%|██████████| 1/1 [00:10<00:00, 10.59s/it]100%|██████████| 1/1 [00:10<00:00, 10.59s/it]
+[00:33:13] Explicit valence for atom # 8 Cl, 4, is greater than permitted
+[00:33:13] Explicit valence for atom # 2 O, 3, is greater than permitted
+[00:33:13] Explicit valence for atom # 10 F, 2, is greater than permitted
+[00:33:13] Explicit valence for atom # 1 Cl, 2, is greater than permitted
+00:33:13 [INFO]   Generated 0/4 valid molecules in 11.6s
+00:33:13 [INFO] 
+[5/5] Sampling 4 molecules for IDHP_HUMAN_40_452_0
+  0%|          | 0/1 [00:00<?, ?it/s]
+sampling:   0%|          | 0/20 [00:00<?, ?it/s][A
+sampling:   5%|▌         | 1/20 [00:00<00:11,  1.70it/s][A
+sampling:  10%|█         | 2/20 [00:01<00:10,  1.70it/s][A
+sampling:  15%|█▌        | 3/20 [00:01<00:09,  1.70it/s][A
+sampling:  20%|██        | 4/20 [00:02<00:09,  1.70it/s][A
+sampling:  25%|██▌       | 5/20 [00:02<00:08,  1.70it/s][A
+sampling:  30%|███       | 6/20 [00:03<00:08,  1.70it/s][A
+sampling:  35%|███▌      | 7/20 [00:04<00:07,  1.70it/s][A
+sampling:  40%|████      | 8/20 [00:04<00:07,  1.70it/s][A
+sampling:  45%|████▌     | 9/20 [00:05<00:06,  1.70it/s][A
+sampling:  50%|█████     | 10/20 [00:05<00:05,  1.70it/s][A
+sampling:  55%|█████▌    | 11/20 [00:06<00:05,  1.70it/s][A
+sampling:  60%|██████    | 12/20 [00:07<00:04,  1.70it/s][A
+sampling:  65%|██████▌   | 13/20 [00:07<00:04,  1.70it/s][A
+sampling:  70%|███████   | 14/20 [00:08<00:03,  1.70it/s][A
+sampling:  75%|███████▌  | 15/20 [00:08<00:02,  1.70it/s][A
+sampling:  80%|████████  | 16/20 [00:09<00:02,  1.70it/s][A
+sampling:  85%|████████▌ | 17/20 [00:09<00:01,  1.70it/s][A
+sampling:  90%|█████████ | 18/20 [00:10<00:01,  1.70it/s][A
+sampling:  95%|█████████▌| 19/20 [00:11<00:00,  1.70it/s][A
+sampling: 100%|██████████| 20/20 [00:11<00:00,  1.70it/s][Asampling: 100%|██████████| 20/20 [00:11<00:00,  1.70it/s]
+100%|██████████| 1/1 [00:12<00:00, 12.19s/it]100%|██████████| 1/1 [00:12<00:00, 12.19s/it]
+[00:33:26] Explicit valence for atom # 11 Cl, 2, is greater than permitted
+[00:33:26] Explicit valence for atom # 1 Cl, 2, is greater than permitted
+[00:33:26] Explicit valence for atom # 2 Cl, 3, is greater than permitted
+[00:33:26] Explicit valence for atom # 13 Cl, 2, is greater than permitted
+00:33:26 [INFO]   Generated 0/4 valid molecules in 12.9s
+00:33:26 [INFO] 
+============================================================
+00:33:26 [INFO] STEP 2: Extract SE(3)-Invariant Embeddings
+00:33:26 [INFO] ============================================================
+00:33:26 [WARNING]   PPIA_HUMAN_1_165_0: No SE(3) embeddings available, using fallback
+00:33:26 [INFO]   PPIA_HUMAN_1_165_0: fallback embeddings shape (4, 128)
+00:33:26 [WARNING]   BSD_ASPTE_1_130_0: No SE(3) embeddings available, using fallback
+00:33:26 [INFO]   BSD_ASPTE_1_130_0: fallback embeddings shape (4, 128)
+00:33:26 [WARNING]   NAGZ_VIBCH_1_330_0: No SE(3) embeddings available, using fallback
+00:33:26 [INFO]   NAGZ_VIBCH_1_330_0: fallback embeddings shape (4, 128)
+00:33:26 [WARNING]   XANLY_BACGL_26_777_0: No SE(3) embeddings available, using fallback
+00:33:26 [INFO]   XANLY_BACGL_26_777_0: fallback embeddings shape (4, 128)
+00:33:26 [WARNING]   IDHP_HUMAN_40_452_0: No SE(3) embeddings available, using fallback
+00:33:26 [INFO]   IDHP_HUMAN_40_452_0: fallback embeddings shape (4, 128)
+00:33:26 [INFO] 
+============================================================
+00:33:26 [INFO] STEP 3: Generation Uncertainty (U_gen)
+00:33:26 [INFO] ============================================================
+00:33:28 [INFO]   Ledoit-Wolf shrinkage: α=0.2824
+00:33:28 [INFO]   PPIA_HUMAN_1_165_0: Tr(Σ)=27.43, modes=1
+00:33:28 [INFO]   Ledoit-Wolf shrinkage: α=0.2289
+00:33:28 [INFO]   BSD_ASPTE_1_130_0: Tr(Σ)=144.86, modes=1
+00:33:28 [INFO]   Ledoit-Wolf shrinkage: α=0.3488
+00:33:28 [INFO]   NAGZ_VIBCH_1_330_0: Tr(Σ)=12.69, modes=1
+00:33:28 [INFO]   Ledoit-Wolf shrinkage: α=0.3147
+00:33:28 [INFO]   XANLY_BACGL_26_777_0: Tr(Σ)=51.44, modes=1
+00:33:28 [INFO]   Ledoit-Wolf shrinkage: α=0.0419
+00:33:28 [INFO]   IDHP_HUMAN_40_452_0: Tr(Σ)=63.68, modes=1
+00:33:28 [INFO] 
+============================================================
+00:33:28 [INFO] STEP 4: GP Oracle Training
+00:33:28 [INFO] ============================================================
+00:33:29 [INFO]   Only 5 training points. Augmenting with noise.
+00:33:29 [INFO]   Training set: 200 samples, d=128
+00:33:29 [INFO]   pKd range: [0.2, 12.5], mean=6.0
+00:33:30 [INFO]   Epoch 20/100: loss=15.9254, noise=1.0876
+00:33:31 [INFO]   Epoch 40/100: loss=8.3930, noise=1.3922
+00:33:32 [INFO]   Epoch 60/100: loss=3.5633, noise=1.5335
+00:33:33 [INFO]   Epoch 80/100: loss=2.6474, noise=1.5784
+00:33:33 [INFO]   Epoch 100/100: loss=2.2996, noise=1.5973
+00:33:33 [INFO]   GP training done. Final loss: 2.2996
+00:33:33 [INFO] 
+============================================================
+00:33:33 [INFO] STEP 5: Fusion + OOD Detection + Evaluation
+00:33:33 [INFO] ============================================================
+00:33:33 [INFO] OOD detector: N=200, d=128, threshold(p95)=12.58, mean_d=11.22
+00:33:33 [INFO]   OOD detector: threshold=12.58
+00:33:33 [INFO]   PPIA_HUMAN_1_165_0: μ=1.79, σ²_oracle=2.497, σ²_gen=0.003, σ²_total=2.500, P_success=0.000, pKd_true=1.87
+00:33:33 [INFO]   BSD_ASPTE_1_130_0: μ=5.15, σ²_oracle=2.262, σ²_gen=0.721, σ²_total=2.983, P_success=0.142, pKd_true=4.68
+00:33:33 [INFO]   NAGZ_VIBCH_1_330_0: μ=7.68, σ²_oracle=2.544, σ²_gen=0.041, σ²_total=2.586, P_success=0.665, pKd_true=6.64
+00:33:33 [INFO]   XANLY_BACGL_26_777_0: μ=8.45, σ²_oracle=2.673, σ²_gen=1.986, σ²_total=4.658, P_success=0.750, pKd_true=7.63
+00:33:33 [INFO]   IDHP_HUMAN_40_452_0: μ=8.71, σ²_oracle=2.778, σ²_gen=0.111, σ²_total=2.889, P_success=0.843, pKd_true=12.48
+00:33:34 [INFO] 
+  Aggregate metrics (y≥7):
+00:33:34 [INFO]     ECE=0.2429, AUROC=1.0000, EF@1%=2.50, Spearman=1.0000, RMSE=1.8013, NLL=2.0316
+00:33:34 [INFO]     AUROC 95% CI: [1.0000, 1.0000]
+00:33:34 [INFO]   y≥7.0: ECE=0.2429, AUROC=1.0000, Hit=0.6667
+00:33:34 [INFO]   y≥8.0: ECE=0.3428, AUROC=1.0000, Hit=0.3333
+00:33:34 [INFO] 
+============================================================
+00:33:34 [INFO] STEP 6: Visualization
+00:33:34 [INFO] ============================================================
+00:33:36 [INFO] Failed to extract font properties from /usr/share/fonts/cantarell/Cantarell-VF.otf: Can not load face (SFNT font table missing; error code 0x8e)
+00:33:36 [INFO] generated new fontManager
+00:33:37 [INFO]   Saved fig1_dashboard.png
+00:33:38 [INFO]   Saved fig2_embeddings.png
+00:33:38 [INFO]   Saved fig3_uncertainty.png
+/scratch/yd2915/BayesDiff/scripts/run_full_pipeline.py:743: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+  ax.set_xticklabels(short_targets, rotation=45, ha="right")
+00:33:39 [INFO]   Saved fig4_generation.png
+00:33:39 [INFO]   Saved fig5_ablation.png
+00:33:39 [INFO]   Saved fig6_ood_analysis.png
+00:33:39 [INFO] 
+  All figures saved to results/figures/
+00:33:40 [INFO] Saved results to results/eval_metrics.json
+00:33:40 [INFO] 
+============================================================
+00:33:40 [INFO] Pipeline complete in 105s (1.7 min)
+00:33:40 [INFO] Results: results/pipeline_results.json
+00:33:40 [INFO] Figures: results/figures/
+00:33:40 [INFO] ============================================================
+
+=== Smoke Test Complete ===

@@ -1,13 +1,13 @@
 {
-  "ece": 0.2949091339568114,
+  "ece": 0.2428579007138616,
   "auroc": 1.0,
-  "ef_1pct": 3.0,
-  "hit_rate": 0.5,
-  "spearman_rho": 1.0,
-  "spearman_pval": 0.0,
-  "rmse": 1.4318746583438786,
-  "nll": 1.7875674483170088,
-  "n_samples": 3,
+  "ef_1pct": 2.5,
+  "hit_rate": 0.6666666666666666,
+  "spearman_rho": 0.9999999999999999,
+  "spearman_pval": 1.4042654220543672e-24,
+  "rmse": 1.801282327391333,
+  "nll": 2.031599050562394,
+  "n_samples": 5,
   "confidence_threshold": 0.5,
   "y_target": 7.0,
   "ci_auroc": [
@@ -16,7 +16,7 @@
   ],
   "ci_ef_1pct": [
     0.0,
-    3.0
+    5.0
   ],
   "ci_hit_rate": [
     0.0,

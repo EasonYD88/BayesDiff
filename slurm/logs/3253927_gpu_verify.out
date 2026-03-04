@@ -1,0 +1,7 @@
+=== S0.3 GPU Verification ===
+Hostname: ga004.hpc.nyu.edu
+Date: Wed Mar  4 00:16:27 EST 2026
+
+--- nvidia-smi ---
+Field "cuda_version" is not a valid field to query.
+

@@ -53,7 +53,7 @@ cd /scratch/yd2915/BayesDiff
 | S1.6 | Structure verification | ✅ Complete |
 | S2.1 | test_pockets.txt (93 lines) | ✅ Complete |
 | S0.3 | GPU verification (A100-80GB) | ✅ Complete (job 3253941) |
-| S2.2 | Smoke test (5 pockets × 4 samples) | ⚠️ Blocked by missing openbabel |
+| S2.2 | Smoke test (5 pockets × 4 samples) | ✅ Complete (job 3254006, 105s) |
 | S3 | Batch sampling (93 pockets × 64 samples) | ⬜ Not started |
 | S4 | Embedding re-extraction | ⬜ Not started |
 | S5 | GP training | ⬜ Not started |
@@ -101,12 +101,28 @@ Matmul:     OK (2000×2000)
 Wall time:  1m04s
 ```
 
+## Smoke Test Results (S2.2) — Job 3254006
+
+```
+Node:       ga011.hpc.nyu.edu (A100-SXM4-80GB)
+Pipeline:   5 pockets × 4 samples × 20 steps, device=cuda
+Duration:   105s (1.7 min), wall 2m15s
+All 6 steps: Data Prep ✅ | Sampling ✅ | Embeddings ✅ | GP Train ✅ | Eval ✅ | Viz ✅
+Metrics:    ECE=0.243, AUROC=1.000, Spearman=1.000, RMSE=1.801
+Figures:    6 PNG saved to results/figures/
+```
+
+## Resolved Issues
+
+- `openbabel` installed via `conda install -c conda-forge openbabel` ✅
+- `torch-cluster` installed via `pip install torch-cluster -f pyg whl` ✅
+- `sample_diffusion_ligand` return value mismatch (7 vs 8) — fixed in `run_full_pipeline.py` ✅
+
 ## Known Issues
 
-- `openbabel` not installed → TargetDiff `reconstruct.py` import fails → S2.2 smoke test blocked
-  - Fix: `conda install -c conda-forge openbabel` or `pip install openbabel-wheel`
-- `QOSGrpGRES` on `l40s_public` — shared GPU quota with other users (yx2892)
+- `QOSGrpGRES` on `l40s_public` — shared GPU quota with other users
   - Workaround: use `--partition=a100_chemistry --account=torch_pr_281_chemistry`
+- Fallback embeddings used (not real SE(3) from TargetDiff encoder) — needs `sample_diffusion` patch for production
 
 ## Notes
 

@@ -1,0 +1,3 @@
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+AttributeError: 'torch._C._CudaDeviceProperties' object has no attribute 'total_mem'. Did you mean: 'total_memory'?

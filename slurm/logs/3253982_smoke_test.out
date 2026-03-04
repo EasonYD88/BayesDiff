@@ -1,0 +1,30 @@
+=== S2.2 Smoke Test ===
+Hostname: ga009.hpc.nyu.edu
+Date: Wed Mar  4 00:25:31 EST 2026
+
+NVIDIA A100-SXM4-80GB, 81920 MiB
+
+--- Quick GPU check ---
+cuda=True, gpu=NVIDIA A100-SXM4-80GB
+
+--- Smoke Test: 5 pockets x 4 samples x 20 steps (GPU) ---
+00:25:59 [INFO] ╔══════════════════════════════════════════════════════════╗
+00:25:59 [INFO] ║         BayesDiff End-to-End Pipeline                   ║
+00:25:59 [INFO] ╚══════════════════════════════════════════════════════════╝
+00:25:59 [INFO] Mode: debug, Device: cuda
+00:25:59 [INFO] Pockets: 5, Samples/pocket: 4, Steps: 20
+00:25:59 [INFO] ============================================================
+00:25:59 [INFO] STEP 0: Data Preparation
+00:25:59 [INFO] ============================================================
+00:25:59 [INFO] Test set: 93 protein targets
+00:26:01 [INFO] Pockets with data: 93
+00:26:01 [INFO] Selected 5 pockets:
+00:26:01 [INFO]   PPIA_HUMAN_1_165_0: pKd=1.87, vina=-4.8
+00:26:01 [INFO]   BSD_ASPTE_1_130_0: pKd=4.68, vina=-10.0
+00:26:01 [INFO]   NAGZ_VIBCH_1_330_0: pKd=6.64, vina=-5.5
+00:26:01 [INFO]   XANLY_BACGL_26_777_0: pKd=7.63, vina=-7.6
+00:26:01 [INFO]   IDHP_HUMAN_40_452_0: pKd=12.48, vina=-12.5
+00:26:01 [INFO] 
+============================================================
+00:26:01 [INFO] STEP 1: Molecule Sampling (TargetDiff)
+00:26:01 [INFO] ============================================================

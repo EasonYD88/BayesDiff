@@ -1,0 +1,74 @@
+=== S0.3 GPU Verification ===
+Hostname: ga004.hpc.nyu.edu
+Date: Wed Mar  4 00:18:23 EST 2026
+
+--- nvidia-smi ---
+Wed Mar  4 00:18:23 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.82.07              Driver Version: 580.82.07      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-80GB          On  |   00000000:E3:00.0 Off |                    0 |
+| N/A   24C    P0             61W /  500W |       0MiB /  81920MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+--- PyTorch GPU Test ---
+PyTorch: 2.5.1+cu121
+CUDA available: True
+GPU: NVIDIA A100-SXM4-80GB
+GPU Memory: 79.3 GB
+CUDA version (torch): 12.1
+GPU matmul test: OK (torch.Size([2000, 2000]))
+PyG: 2.7.0
+GPyTorch: 1.15.2
+
+ALL GPU CHECKS PASSED
+
+--- S2.2 Smoke Test (5 pockets x 4 samples) ---
+00:19:00 [INFO] ╔══════════════════════════════════════════════════════════╗
+00:19:00 [INFO] ║         BayesDiff End-to-End Pipeline                   ║
+00:19:00 [INFO] ╚══════════════════════════════════════════════════════════╝
+00:19:00 [INFO] Mode: debug, Device: cpu
+00:19:00 [INFO] Pockets: 5, Samples/pocket: 4, Steps: 20
+00:19:00 [INFO] ============================================================
+00:19:00 [INFO] STEP 0: Data Preparation
+00:19:00 [INFO] ============================================================
+00:19:00 [INFO] Test set: 93 protein targets
+00:19:02 [INFO] Pockets with data: 93
+00:19:02 [INFO] Selected 5 pockets:
+00:19:02 [INFO]   PPIA_HUMAN_1_165_0: pKd=1.87, vina=-4.8
+00:19:02 [INFO]   BSD_ASPTE_1_130_0: pKd=4.68, vina=-10.0
+00:19:02 [INFO]   NAGZ_VIBCH_1_330_0: pKd=6.64, vina=-5.5
+00:19:02 [INFO]   XANLY_BACGL_26_777_0: pKd=7.63, vina=-7.6
+00:19:02 [INFO]   IDHP_HUMAN_40_452_0: pKd=12.48, vina=-12.5
+00:19:02 [INFO] 
+============================================================
+00:19:02 [INFO] STEP 1: Molecule Sampling (TargetDiff)
+00:19:02 [INFO] ============================================================
+Traceback (most recent call last):
+  File "/scratch/yd2915/BayesDiff/scripts/run_full_pipeline.py", line 995, in <module>
+    main()
+  File "/scratch/yd2915/BayesDiff/scripts/run_full_pipeline.py", line 934, in main
+    all_results, model, config = sample_molecules(
+  File "/scratch/yd2915/BayesDiff/scripts/run_full_pipeline.py", line 135, in sample_molecules
+    from scripts.sample_for_pocket import pdb_to_pocket_data
+  File "/scratch/yd2915/BayesDiff/external/targetdiff/scripts/sample_for_pocket.py", line 14, in <module>
+    from utils import reconstruct
+  File "/scratch/yd2915/BayesDiff/external/targetdiff/utils/reconstruct.py", line 12, in <module>
+    from openbabel import openbabel as ob
+ModuleNotFoundError: No module named 'openbabel'
+Smoke test completed with issues (see above)
+
+=== GPU Verification Complete ===

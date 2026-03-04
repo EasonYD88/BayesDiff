@@ -1,0 +1,70 @@
+=== S2.2 Smoke Test ===
+Hostname: ga013.hpc.nyu.edu
+Date: Wed Mar  4 00:25:35 EST 2026
+
+NVIDIA A100-SXM4-80GB, 81920 MiB
+
+--- Quick GPU check ---
+cuda=True, gpu=NVIDIA A100-SXM4-80GB
+
+--- Smoke Test: 5 pockets x 4 samples x 20 steps (GPU) ---
+00:26:04 [INFO] ╔══════════════════════════════════════════════════════════╗
+00:26:04 [INFO] ║         BayesDiff End-to-End Pipeline                   ║
+00:26:04 [INFO] ╚══════════════════════════════════════════════════════════╝
+00:26:04 [INFO] Mode: debug, Device: cuda
+00:26:04 [INFO] Pockets: 5, Samples/pocket: 4, Steps: 20
+00:26:04 [INFO] ============================================================
+00:26:04 [INFO] STEP 0: Data Preparation
+00:26:04 [INFO] ============================================================
+00:26:04 [INFO] Test set: 93 protein targets
+00:26:06 [INFO] Pockets with data: 93
+00:26:06 [INFO] Selected 5 pockets:
+00:26:06 [INFO]   PPIA_HUMAN_1_165_0: pKd=1.87, vina=-4.8
+00:26:06 [INFO]   BSD_ASPTE_1_130_0: pKd=4.68, vina=-10.0
+00:26:06 [INFO]   NAGZ_VIBCH_1_330_0: pKd=6.64, vina=-5.5
+00:26:06 [INFO]   XANLY_BACGL_26_777_0: pKd=7.63, vina=-7.6
+00:26:06 [INFO]   IDHP_HUMAN_40_452_0: pKd=12.48, vina=-12.5
+00:26:06 [INFO] 
+============================================================
+00:26:06 [INFO] STEP 1: Molecule Sampling (TargetDiff)
+00:26:06 [INFO] ============================================================
+00:26:25 [INFO] Loaded checkpoint from /scratch/yd2915/BayesDiff/external/targetdiff/pretrained_models/pretrained_diffusion.pt
+00:26:26 [INFO] Model loaded. Device: cuda
+00:26:26 [INFO] Hidden dim: 128
+00:26:26 [INFO] 
+[1/5] Sampling 4 molecules for PPIA_HUMAN_1_165_0
+  0%|          | 0/1 [00:00<?, ?it/s]
+sampling:   0%|          | 0/20 [00:00<?, ?it/s][Asampling:   0%|          | 0/20 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:03<?, ?it/s]
+Traceback (most recent call last):
+  File "/scratch/yd2915/BayesDiff/scripts/run_full_pipeline.py", line 995, in <module>
+    main()
+  File "/scratch/yd2915/BayesDiff/scripts/run_full_pipeline.py", line 934, in main
+    all_results, model, config = sample_molecules(
+  File "/scratch/yd2915/BayesDiff/scripts/run_full_pipeline.py", line 183, in sample_molecules
+    sample_diffusion_ligand(
+  File "/scratch/yd2915/BayesDiff/external/targetdiff/scripts/sample_diffusion.py", line 72, in sample_diffusion_ligand
+    r = model.sample_diffusion(
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+  File "/scratch/yd2915/BayesDiff/external/targetdiff/models/molopt_score_model.py", line 652, in sample_diffusion
+    preds = self(
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/scratch/yd2915/BayesDiff/external/targetdiff/models/molopt_score_model.py", line 349, in forward
+    outputs = self.refine_net(h_all, pos_all, mask_ligand, batch_all, return_all=return_all, fix_x=fix_x)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/scratch/yd2915/BayesDiff/external/targetdiff/models/uni_transformer.py", line 307, in forward
+    edge_index = self._connect_edge(x, mask_ligand, batch)
+  File "/scratch/yd2915/BayesDiff/external/targetdiff/models/uni_transformer.py", line 280, in _connect_edge
+    edge_index = knn_graph(x, k=self.k, batch=batch, flow='source_to_target')
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torch_geometric/nn/pool/__init__.py", line 173, in knn_graph
+    return torch_cluster.knn_graph(x, k, batch, loop, flow, cosine,
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torch_geometric/typing.py", line 144, in __getattr__
+    raise ImportError(f"'{key}' requires 'torch-cluster'")
+ImportError: 'knn_graph' requires 'torch-cluster'
