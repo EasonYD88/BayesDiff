@@ -62,12 +62,17 @@ def load_labels(labels_path, affinity_pkl):
         df = pd.read_csv(labels_path)
         return dict(zip(df["pdb_code"], df["pkd"]))
     if affinity_pkl and Path(affinity_pkl).exists():
+        import numpy as _np
         with open(affinity_pkl, "rb") as f:
             a = pickle.load(f)
-        return {
-            str(k).split("_")[0] if "_" in str(k) else str(k): float(v.get("neglog_aff", 0))
-            for k, v in a.items() if v.get("neglog_aff") is not None
-        }
+        pocket_pks: dict[str, list[float]] = {}
+        for k, v in a.items():
+            pk = v.get("pk")
+            if pk is None or float(pk) == 0.0:
+                continue
+            pocket_fam = str(k).split("/")[0]
+            pocket_pks.setdefault(pocket_fam, []).append(float(pk))
+        return {fam: float(_np.mean(vals)) for fam, vals in pocket_pks.items()}
     default = PROJECT_ROOT / "external" / "targetdiff" / "data" / "affinity_info.pkl"
     if default.exists():
         return load_labels(None, str(default))

@@ -1,0 +1,14 @@
+=== GP Training Job ===
+Date      : Thu Mar  5 08:10:04 EST 2026
+Host      : ga007.hpc.nyu.edu
+GPU       : NVIDIA A100-SXM4-80GB
+Python    : /scratch/yd2915/conda_envs/bayesdiff/bin/python
+========================
+
+=== GP Training Complete ===
+Model: results/gp_model/gp_model.pt
+Meta:  results/gp_model/train_meta.json
+total 144K
+-rw-r--r--. 1 yd2915 yd2915  40K Mar  5 08:10 gp_model.pt
+-rw-r--r--. 1 yd2915 yd2915 102K Mar  5 08:10 train_data.npz
+-rw-r--r--. 1 yd2915 yd2915 1.6K Mar  5 08:10 train_meta.json

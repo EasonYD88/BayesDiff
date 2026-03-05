@@ -51,16 +51,23 @@ def load_labels_csv(labels_csv: Path) -> dict[str, float]:
 
 
 def load_affinity_pkl(pkl_path: Path) -> dict[str, float]:
-    """Load pdb_code -> pKd from TargetDiff's affinity_info.pkl."""
+    """Load pocket_family -> mean pKd from TargetDiff's affinity_info.pkl.
+
+    Keys in the pkl have format ``POCKET_FAMILY/complex_detail``.
+    The pKd value is stored under the ``pk`` field (0.0 means unknown).
+    We aggregate all non-zero pk values per pocket family and return their mean.
+    """
     with open(pkl_path, "rb") as f:
         affinity = pickle.load(f)
-    label_map = {}
+    pocket_pks: dict[str, list[float]] = {}
     for key, info in affinity.items():
-        pk = info.get("neglog_aff") or info.get("pk") or info.get("pkd")
-        if pk is not None:
-            # Extract PDB code from the key (e.g., "1a2b_0" -> "1a2b")
-            pdb_code = str(key).split("_")[0] if "_" in str(key) else str(key)
-            label_map[pdb_code] = float(pk)
+        pk = info.get("pk")
+        if pk is None or float(pk) == 0.0:
+            continue
+        pocket_fam = str(key).split("/")[0]
+        pocket_pks.setdefault(pocket_fam, []).append(float(pk))
+
+    label_map = {fam: float(np.mean(vals)) for fam, vals in pocket_pks.items()}
     return label_map
 
 
@@ -80,8 +87,11 @@ def build_training_set(
     X_list, y_list, codes = [], [], []
 
     for pdb_code, emb in embeddings_dict.items():
-        pdb_base = pdb_code.split("_")[0] if "_" in pdb_code else pdb_code
-        pk = label_map.get(pdb_base) or label_map.get(pdb_code)
+        # Try full pocket name first, then PDB-code prefix
+        pk = label_map.get(pdb_code)
+        if pk is None:
+            pdb_base = pdb_code.split("_")[0] if "_" in pdb_code else pdb_code
+            pk = label_map.get(pdb_base)
         if pk is None:
             continue
 
@@ -154,6 +164,8 @@ def main():
     parser.add_argument("--lr", type=float, default=0.01)
     parser.add_argument("--augment_to", type=int, default=0,
                         help="Augment to this many samples if dataset is small (0=off)")
+    parser.add_argument("--device", type=str, default="auto",
+                        help="Device: cpu, cuda, or auto (default: auto = cuda if available)")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -213,8 +225,14 @@ def main():
     d = X.shape[1]
     n_inducing = min(args.n_inducing, X.shape[0])
 
-    logger.info(f"\nTraining SVGP (d={d}, J={n_inducing}, epochs={args.n_epochs})...")
-    gp = GPOracle(d=d, n_inducing=n_inducing, device="cpu")
+    # Resolve device
+    if args.device == "auto":
+        import torch
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    else:
+        device = args.device
+    logger.info(f"\nTraining SVGP (d={d}, J={n_inducing}, epochs={args.n_epochs}, device={device})...")
+    gp = GPOracle(d=d, n_inducing=n_inducing, device=device)
 
     t0 = time.time()
     history = gp.train(

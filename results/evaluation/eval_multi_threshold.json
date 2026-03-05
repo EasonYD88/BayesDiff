@@ -1,0 +1,34 @@
+{
+  "y>=7.0": {
+    "ece": 0.03377516701114694,
+    "auroc": 0.5,
+    "ef_1pct": 0.0,
+    "hit_rate": NaN,
+    "spearman_rho": NaN,
+    "spearman_pval": NaN,
+    "rmse": 1.8686613232779667,
+    "nll": 2.193952543305451,
+    "n_samples": 48,
+    "confidence_threshold": 0.5,
+    "y_target": 7.0,
+    "ci_auroc": null,
+    "ci_ef_1pct": null,
+    "ci_hit_rate": null
+  },
+  "y>=8.0": {
+    "ece": 0.15372483298885303,
+    "auroc": 0.5,
+    "ef_1pct": 0.0,
+    "hit_rate": NaN,
+    "spearman_rho": NaN,
+    "spearman_pval": NaN,
+    "rmse": 1.8686613232779667,
+    "nll": 2.193952543305451,
+    "n_samples": 48,
+    "confidence_threshold": 0.5,
+    "y_target": 8.0,
+    "ci_auroc": null,
+    "ci_ef_1pct": null,
+    "ci_hit_rate": null
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "ece": 0.03377516701114694,
+  "auroc": 0.5,
+  "ef_1pct": 0.0,
+  "hit_rate": NaN,
+  "spearman_rho": NaN,
+  "spearman_pval": NaN,
+  "rmse": 1.8686613232779667,
+  "nll": 2.193952543305451,
+  "n_samples": 48,
+  "confidence_threshold": 0.5,
+  "y_target": 7.0,
+  "ci_auroc": [
+    0.5,
+    0.5
+  ],
+  "ci_ef_1pct": [
+    0.0,
+    5.079999999999988
+  ],
+  "ci_hit_rate": [
+    NaN,
+    NaN
+  ]
+}

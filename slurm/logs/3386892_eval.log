@@ -1,0 +1,24 @@
+=== S6 + S7 Evaluation Job ===
+Date : Thu Mar  5 08:13:42 EST 2026
+Host : ga007.hpc.nyu.edu
+GPU  : NVIDIA A100-SXM4-80GB
+===============================
+
+>>> S6: Running full evaluation pipeline...
+
+>>> S6 complete. Results:
+total 24K
+-rw-r--r--. 1 yd2915 yd2915 392 Mar  5 08:16 eval_metrics.json
+-rw-r--r--. 1 yd2915 yd2915 738 Mar  5 08:16 eval_multi_threshold.json
+-rw-r--r--. 1 yd2915 yd2915 22K Mar  5 08:16 per_pocket_results.json
+
+>>> S7: Running ablation study...
+
+>>> S7 complete. Results:
+total 103K
+-rw-r--r--. 1 yd2915 yd2915 100K Mar  5 08:26 ablation_per_pocket.json
+-rw-r--r--. 1 yd2915 yd2915 3.5K Mar  5 08:26 ablation_summary.json
+
+=== All Evaluation & Ablation Complete ===
+Evaluation: results/evaluation/
+Ablation:   results/ablation/
