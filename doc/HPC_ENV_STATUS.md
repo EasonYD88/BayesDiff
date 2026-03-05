@@ -54,13 +54,14 @@ cd /scratch/yd2915/BayesDiff
 | S2.1 | test_pockets.txt (93 lines) | ✅ Complete |
 | S0.3 | GPU verification (A100-80GB) | ✅ Complete (job 3253941) |
 | S2.2 | Smoke test (5 pockets × 4 samples) | ✅ Complete (job 3254006, 105s) |
-| S3 | Batch sampling (93 × 64) — 1st attempt | ❌ Failed (job 3254044, 10h28m, 0 output files) |
-| S3 | Batch sampling (93 × 64) — 2nd attempt | 🟡 Running (job 3284523) |
-| S4 | Embedding re-extraction | ⬜ Not started |
-| S5 | GP training | ⬜ Not started |
-| S6 | Evaluation + calibration | ⬜ Not started |
-| S7 | Ablation experiments | ⬜ Not started |
-| S8 | Results collection | ⬜ Not started |
+| S3 | Batch sampling — 1st attempt | ❌ Failed (job 3254044, bugs fixed) |
+| S3 | Batch sampling — 2nd attempt (serial) | ✅ Complete (job 3284523, 19h02m, 93/93) |
+| S3 | Batch sampling — parallel (4-shard) | ✅ Complete (93 pockets merged) |
+| S4 | Embedding re-extraction | ⏭ Skipped (S3 includes embeddings) |
+| S5 | GP training (GPU) | ✅ Complete (job 3386803, 14.1s on A100) |
+| S6 | Evaluation + calibration | ✅ Complete (job 3386892) |
+| S7 | Ablation experiments | ✅ Complete (job 3386892, 7 variants) |
+| S8 | Results collection + push | ✅ Complete (commit 146bf70) |
 
 ## Structure Verification (S1.6)
 
@@ -195,10 +196,23 @@ This avoids overwriting existing outputs under `results/generated_molecules/`.
 
 | Item | Status |
 |------|--------|
-| Parallel workflow implementation | ✅ Ready |
-| Parallel workflow docs | ✅ Ready |
-| Parallel S3 execution | ⬜ Pending submit |
-| Merged parallel embeddings validation | ⬜ Pending |
-| S5/S6/S7 downstream tasks | ⬜ Pending |
+| Parallel workflow implementation | ✅ Complete |
+| Parallel workflow docs | ✅ Complete |
+| Parallel S3 execution | ✅ Complete (4-shard, 93 pockets merged) |
+| Merged parallel embeddings validation | ✅ Complete |
+| S5 GP training (GPU, 14.1s) | ✅ Complete (job 3386803) |
+| S6 Evaluation | ✅ Complete (job 3386892) |
+| S7 Ablation | ✅ Complete (job 3386892, 7 variants) |
+| S8 Results push | ✅ Complete (commit 146bf70) |
 
 Note: parallel outputs are isolated under `results/generated_molecules_parallel/<run_tag>/` to avoid overwriting existing results.
+
+### SLURM Scripts
+
+| Script | Purpose | Resources |
+|--------|---------|-----------|
+| `slurm/sample_job.sh` | Serial batch sampling | 1×A100, 48h |
+| `slurm/sample_array_job.sh` | Parallel array sampling | N×A100, 24h |
+| `slurm/train_gp.sh` | GP training on GPU | 1×A100, 1h |
+| `slurm/eval_ablation.sh` | S6 eval + S7 ablation | 1×A100, 1h |
+| `slurm/merge_sample_shards_job.sh` | Merge parallel shards | CPU, 30min |

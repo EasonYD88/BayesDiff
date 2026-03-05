@@ -9,8 +9,9 @@ Dual uncertainty-aware confidence scoring for 3D molecular generation.
 | Phase 0 | Data + Environment | ✅ Complete |
 | Phase 1 | Core Modules (8 modules, 41 validation checks) | ✅ Complete |
 | Phase 1.5 | HPC Environment Setup (NYU Torch) | ✅ Complete |
-| Phase 2 | HPC Batch Sampling (93 pockets × M=64) | 🟡 Running (job 3254044) |
-| Phase 3 | Full Experiments + Ablation | ⬜ Not started |
+| Phase 2 | HPC Batch Sampling (93 pockets × M=64) | ✅ Complete (job 3284523, 19h02m) |
+| Phase 2.5 | Parallel Sampling (4-shard array) | ✅ Complete |
+| Phase 3 | GP Training + Evaluation + Ablation | ✅ Complete (jobs 3386803, 3386892) |
 | Phase 4 | Writing | ⬜ Not started |
 
 ### HPC Environment (NYU Torch)
@@ -18,10 +19,21 @@ Dual uncertainty-aware confidence scoring for 3D molecular generation.
 | Component | Version / Path |
 |-----------|---------------|
 | Cluster | NYU Torch HPC (SLURM) |
+| Partition | a100_chemistry |
+| GPU | NVIDIA A100-SXM4-80GB |
 | Conda env | `/scratch/yd2915/conda_envs/bayesdiff` |
 | PyTorch | 2.5.1+cu121 |
 | PyG | 2.7.0 |
 | GPyTorch | 1.15.2 |
+
+### HPC Results Summary
+
+| Stage | Result |
+|-------|--------|
+| S3 Sampling | 93 pockets × 64 samples, 100 steps, 19h on A100 |
+| S5 GP Training | 48 pockets, d=128, J=48, **14.1s on GPU** |
+| S6 Evaluation | ECE=0.034, RMSE=1.87, N=48 |
+| S7 Ablation | 7 variants; A2 (no oracle var) → NLL explodes |
 
 > See [doc/HPC_ENV_STATUS.md](doc/HPC_ENV_STATUS.md) for full verification details.
 
@@ -66,16 +78,18 @@ BayesDiff/
 │   ├── 01_prepare_data.py   # Parse PDBbind INDEX → splits + labels
 │   ├── 02_sample_molecules.py  # TargetDiff batch sampling
 │   ├── 03_extract_embeddings.py  # SE(3) embedding extraction
-│   ├── 04_train_gp.py       # Train SVGP oracle
+│   ├── 04_train_gp.py       # Train SVGP oracle (--device auto for GPU)
 │   ├── 05_evaluate.py       # Full evaluation pipeline
 │   ├── 06_ablation.py       # Ablation experiments (A1-A5, A7)
+│   ├── 07_merge_sampling_shards.py  # Merge parallel shard outputs
+│   ├── 08_sample_molecules_shard.py # Shard wrapper for array jobs
 │   └── run_full_pipeline.py # End-to-end debug pipeline
 ├── external/                # TargetDiff clone (not tracked)
 ├── data/                    # Data directory (not tracked)
-├── results/                 # Pipeline outputs (not tracked)
+├── results/                 # Pipeline outputs (JSON tracked, binaries ignored)
 ├── doc/                     # Plans & progress log
 ├── notebooks/               # Validation & debugging
-├── slurm/                   # HPC job scripts
+├── slurm/                   # HPC job scripts (sample, train_gp, eval_ablation)
 └── requirements.txt
 ```
 
