@@ -1,0 +1,990 @@
+{
+  "source_shards_dir": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards",
+  "n_shard_dirs_total": 4,
+  "n_shard_dirs_merged": 4,
+  "n_pockets_merged": 93,
+  "n_errors": 0,
+  "timing": [
+    {
+      "pdb_code": "ABL2_HUMAN_274_551_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 318.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "AROE_THET8_1_263_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 558.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BAZ2A_HUMAN_1795_1898_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 126.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BTRN_BACCI_2_250_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 277.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CDK6_HUMAN_1_312_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 562.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CHOD_BREST_46_552_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 529.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CPXB_BACMB_2_464_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 522.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "DPO4_SULSO_1_347_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 373.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "EXG1_CANAL_41_438_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 447.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "GRK4_HUMAN_1_578_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 1152.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "HDHA_ECOLI_1_255_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 1068.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "IPMK_HUMAN_49_416_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 271.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "M3K14_HUMAN_321_678_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 345.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NAGZ_VIBCH_1_330_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 351.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NOS3_HUMAN_65_480_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 910.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "ODBB_THET8_1_324_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 1631.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PA2B8_DABRR_1_121_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 147.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PHP_SULSO_1_314_0",
+      "n_valid": 4,
+      "n_total": 64,
+      "elapsed_s": 697.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PPIA_HUMAN_1_165_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 2369.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "QPCT_HUMAN_33_361_0",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed_s": 366.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "SDIA_ECOLI_1_171_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 543.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TIAM1_HUMAN_840_931_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 108.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "UBE2T_HUMAN_1_156_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 177.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "Y635_MYCTU_1_158_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 637.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "ACE_HUMAN_650_1230_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 677.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "ATS5_HUMAN_262_480_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 238.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BGAT_HUMAN_63_353_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 319.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CAT_ECOLX_1_219_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 753.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CHIA_SERMA_19_563_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 1235.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "COAA_MYCTU_1_312_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 688.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "DFPA_LOLVU_2_314_0",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed_s": 345.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "DPP2_HUMAN_27_492_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 982.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "F16P1_HUMAN_1_338_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 1475.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "GSTP1_HUMAN_2_210_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 426.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "HMD_METJA_1_358_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 728.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "KS6A3_HUMAN_41_357_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 321.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "MCCF_ECOLX_1_344_0",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed_s": 743.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NEP_HUMAN_54_750_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 793.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NPD_THEMA_1_246_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 277.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "OLIAC_CANSA_1_101_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 242.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PAC_ECOLX_27_846_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 861.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PLCD1_RAT_134_756_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 569.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PTGIS_HUMAN_20_500_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 535.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "RG1_RAUSE_1_513_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 5611.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "SIR3_HUMAN_117_398_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 302.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TNKS1_HUMAN_1099_1319_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 240.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "UPPS_ECOLI_1_253_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 453.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "AK1BA_HUMAN_1_316_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 358.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BACE2_HUMAN_76_460_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 503.3,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BGL07_ORYSJ_25_504_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 533.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CCPR_YEAST_69_361_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 400.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CHIB1_ASPFM_39_433_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 428.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CONA_CANCT_1_237_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 258.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "DHAK_ECOLI_1_356_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 716.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "DYRK2_HUMAN_145_550_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 446.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "FKB1A_HUMAN_2_108_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 125.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "GUX1_HYPJE_18_451_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 447.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "IDHP_HUMAN_40_452_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 930.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "LAT_MYCTU_1_449_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 947.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "MENE_BACSU_2_486_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 863.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NOS1_HUMAN_302_723_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 940.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NQO1_HUMAN_2_274_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 308.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "P2Y12_HUMAN_1_342_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 437.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PAK4_HUMAN_291_591_ATP_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 322.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PNTM_STRAE_2_398_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 433.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PYRD_TRYCC_2_314_catalytic_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 667.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "RIBB_VIBCH_2_218_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 456.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "SQHC_ALIAD_1_631_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 1509.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TNKS2_HUMAN_948_1162_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 238.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "VAOX_PENSI_1_560_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 6386.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "AKT1_HUMAN_1_137_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 443.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BAPA_SPHXN_30_402_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 1606.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BSD_ASPTE_1_130_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 499.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CD38_HUMAN_44_300_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 292.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CHIB_SERMA_1_499_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 544.3,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "COTA_BACSU_1_513_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 564.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "DIDH_RAT_1_319_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 719.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "EFTU1_ECOLI_2_178_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 395.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "GLMU_STRPN_2_459_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 1577.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "HDAC8_HUMAN_1_377_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 388.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "IMA1_HUMAN_68_497_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 456.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "LMBL1_HUMAN_198_526_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 368.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "MURA_ECOLI_1_419_catalytic_0",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed_s": 1894.3,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NOS2_HUMAN_78_505_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 965.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NR1H4_HUMAN_258_486_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 275.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PA21B_PIG_23_146_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 143.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PHKG1_RABIT_6_296_ATPsite_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 317.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "POL_FOAMV_861_1060_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 615.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PYRE_BACAN_1_210_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 442.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "ROCO4_DICDI_1009_1292_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 316.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TBK1_HUMAN_1_303_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 1546.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TRAR_RHIRD_1_234_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 258.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "XANLY_BACGL_26_777_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 810.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    }
+  ],
+  "shards": [
+    {
+      "shard_dir": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_0of4",
+      "npz": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_0of4/all_embeddings.npz",
+      "n_keys": 24,
+      "keys_preview": [
+        "ABL2_HUMAN_274_551_0",
+        "AROE_THET8_1_263_0",
+        "BAZ2A_HUMAN_1795_1898_0"
+      ],
+      "summary": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_0of4/sampling_summary.json",
+      "n_timing_entries": 24
+    },
+    {
+      "shard_dir": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_1of4",
+      "npz": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_1of4/all_embeddings.npz",
+      "n_keys": 23,
+      "keys_preview": [
+        "ACE_HUMAN_650_1230_0",
+        "ATS5_HUMAN_262_480_0",
+        "BGAT_HUMAN_63_353_0"
+      ],
+      "summary": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_1of4/sampling_summary.json",
+      "n_timing_entries": 23
+    },
+    {
+      "shard_dir": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_2of4",
+      "npz": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_2of4/all_embeddings.npz",
+      "n_keys": 23,
+      "keys_preview": [
+        "AK1BA_HUMAN_1_316_0",
+        "BACE2_HUMAN_76_460_0",
+        "BGL07_ORYSJ_25_504_0"
+      ],
+      "summary": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_2of4/sampling_summary.json",
+      "n_timing_entries": 23
+    },
+    {
+      "shard_dir": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_3of4",
+      "npz": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_3of4/all_embeddings.npz",
+      "n_keys": 23,
+      "keys_preview": [
+        "AKT1_HUMAN_1_137_0",
+        "BAPA_SPHXN_30_402_0",
+        "BSD_ASPTE_1_130_0"
+      ],
+      "summary": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_3of4/sampling_summary.json",
+      "n_timing_entries": 23
+    }
+  ],
+  "errors": []
+}

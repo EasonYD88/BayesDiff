@@ -1,0 +1,247 @@
+{
+  "args": {
+    "pocket_list": "/state/partition1/job-3361536/bayesdiff_shard_26935ao3/pockets_shard.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 64,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_3of4",
+    "num_steps": 100
+  },
+  "n_pockets": 23,
+  "n_sampled": 23,
+  "timing": [
+    {
+      "pdb_code": "AKT1_HUMAN_1_137_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 443.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BAPA_SPHXN_30_402_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 1606.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BSD_ASPTE_1_130_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 499.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CD38_HUMAN_44_300_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 292.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CHIB_SERMA_1_499_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 544.3,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "COTA_BACSU_1_513_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 564.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "DIDH_RAT_1_319_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 719.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "EFTU1_ECOLI_2_178_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 395.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "GLMU_STRPN_2_459_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 1577.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "HDAC8_HUMAN_1_377_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 388.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "IMA1_HUMAN_68_497_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 456.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "LMBL1_HUMAN_198_526_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 368.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "MURA_ECOLI_1_419_catalytic_0",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed_s": 1894.3,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NOS2_HUMAN_78_505_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 965.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NR1H4_HUMAN_258_486_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 275.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PA21B_PIG_23_146_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 143.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PHKG1_RABIT_6_296_ATPsite_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 317.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "POL_FOAMV_861_1060_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 615.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PYRE_BACAN_1_210_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 442.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "ROCO4_DICDI_1009_1292_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 316.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TBK1_HUMAN_1_303_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 1546.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TRAR_RHIRD_1_234_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 258.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "XANLY_BACGL_26_777_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 810.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    }
+  ]
+}

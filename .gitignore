@@ -30,3 +30,4 @@ results/**/*.npz
 results/**/*.pt
 results/**/*.sdf
 # Everything else in results/ is tracked (JSON, CSV, TXT, PNG)
+results/**/*.npy

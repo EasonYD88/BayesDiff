@@ -387,3 +387,53 @@ slurm/logs/*.err
 1. `doc/hpc_execution_plan.md`：完整阶段执行计划
 2. `doc/plan_opendata.md`：公开数据策略与实验背景
 3. `doc/nyu_torch_coding_agent_guide.md`：NYU Torch 通用使用规则
+
+---
+
+## 2026-03-05 增补：官方推荐并行入口（新增，不替换原脚本）
+
+为提升 S3 采样效率，新增并行脚本组，且不修改原有 `slurm/sample_job.sh`：
+
+- `slurm/sample_array_job.sh`
+- `scripts/07_merge_sampling_shards.py`
+- `slurm/merge_sample_shards_job.sh`
+
+### 并行采样（4 卡示例）
+
+```bash
+cd /scratch/${USER}/BayesDiff
+
+ARRAY_JOB_ID=$(sbatch --parsable \
+  --account="${SLURM_ACCOUNT}" \
+  --array=0-3 \
+  --export=ALL,POCKET_LIST=${POCKET_LIST},NUM_SAMPLES=${NUM_SAMPLES},NUM_STEPS=${NUM_STEPS},DEVICE=cuda,PDBBIND_DIR=${PDBBIND_DIR},TARGETDIFF_DIR=${TARGETDIFF_DIR},OUTPUT_ROOT=results/generated_molecules_parallel \
+  slurm/sample_array_job.sh)
+
+echo "ARRAY_JOB_ID=${ARRAY_JOB_ID}"
+```
+
+### 合并分片
+
+```bash
+RUN_TAG="<your_run_tag>"  # 默认格式: <timestamp>_j<ARRAY_JOB_ID>
+
+sbatch \
+  --account="${SLURM_ACCOUNT}" \
+  --dependency=afterok:${ARRAY_JOB_ID} \
+  --export=ALL,RUN_DIR=results/generated_molecules_parallel/${RUN_TAG},EXPECTED_SHARDS=4 \
+  slurm/merge_sample_shards_job.sh
+```
+
+### 后处理入口
+
+把后续 `04/05/06` 的 `--embeddings` 改为：
+
+```bash
+results/generated_molecules_parallel/<your_run_tag>/all_embeddings.npz
+```
+
+### 不覆盖已有结果
+
+并行输出使用 `OUTPUT_ROOT/<RUN_TAG>/...`，`RUN_TAG` 含时间戳与 job id，默认不会覆盖已有 `results/generated_molecules/` 数据。
+
+补充：并行作业通过 `scripts/08_sample_molecules_shard.py` 做 pocket 列表切片，再调用原 `scripts/02_sample_molecules.py`。

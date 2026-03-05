@@ -1,0 +1,257 @@
+{
+  "args": {
+    "pocket_list": "/state/partition1/job-3361595/bayesdiff_shard_y2ea0wle/pockets_shard.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 64,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_0of4",
+    "num_steps": 100
+  },
+  "n_pockets": 24,
+  "n_sampled": 24,
+  "timing": [
+    {
+      "pdb_code": "ABL2_HUMAN_274_551_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 318.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "AROE_THET8_1_263_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 558.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BAZ2A_HUMAN_1795_1898_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 126.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BTRN_BACCI_2_250_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 277.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CDK6_HUMAN_1_312_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 562.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CHOD_BREST_46_552_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 529.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CPXB_BACMB_2_464_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 522.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "DPO4_SULSO_1_347_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 373.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "EXG1_CANAL_41_438_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 447.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "GRK4_HUMAN_1_578_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 1152.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "HDHA_ECOLI_1_255_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 1068.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "IPMK_HUMAN_49_416_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 271.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "M3K14_HUMAN_321_678_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 345.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NAGZ_VIBCH_1_330_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 351.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NOS3_HUMAN_65_480_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 910.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "ODBB_THET8_1_324_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 1631.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PA2B8_DABRR_1_121_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 147.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PHP_SULSO_1_314_0",
+      "n_valid": 4,
+      "n_total": 64,
+      "elapsed_s": 697.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PPIA_HUMAN_1_165_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 2369.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "QPCT_HUMAN_33_361_0",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed_s": 366.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "SDIA_ECOLI_1_171_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 543.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TIAM1_HUMAN_840_931_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 108.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "UBE2T_HUMAN_1_156_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 177.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "Y635_MYCTU_1_158_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 637.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    }
+  ]
+}

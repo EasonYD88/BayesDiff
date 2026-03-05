@@ -1,0 +1,17 @@
+=== BayesDiff Merge Shards Job ===
+Date:            Thu Mar  5 06:11:59 EST 2026
+Node:            cs637.hpc.nyu.edu
+Run dir:         results/generated_molecules_parallel/20260305_005601_parallel_realrun
+Shards dir:      results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards
+Expected shards: 4
+
+=== Merge complete ===
+Shards dir:         results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards
+Shard dirs merged:  4
+Merged pocket keys: 93
+Merged npz:         results/generated_molecules_parallel/20260305_005601_parallel_realrun/all_embeddings.npz
+Merged summary:     results/generated_molecules_parallel/20260305_005601_parallel_realrun/sampling_summary.json
+
+Merge complete.
+-rw-r--r--. 1 yd2915 yd2915 3.0M Mar  5 06:12 results/generated_molecules_parallel/20260305_005601_parallel_realrun/all_embeddings.npz
+-rw-r--r--. 1 yd2915 yd2915  19K Mar  5 06:12 results/generated_molecules_parallel/20260305_005601_parallel_realrun/sampling_summary.json

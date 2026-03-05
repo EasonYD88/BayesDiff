@@ -1,0 +1,247 @@
+{
+  "args": {
+    "pocket_list": "/state/partition1/job-3361609/bayesdiff_shard_2ygpwr1m/pockets_shard.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 64,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_1of4",
+    "num_steps": 100
+  },
+  "n_pockets": 23,
+  "n_sampled": 23,
+  "timing": [
+    {
+      "pdb_code": "ACE_HUMAN_650_1230_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 677.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "ATS5_HUMAN_262_480_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 238.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "BGAT_HUMAN_63_353_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 319.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CAT_ECOLX_1_219_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 753.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "CHIA_SERMA_19_563_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 1235.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "COAA_MYCTU_1_312_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 688.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "DFPA_LOLVU_2_314_0",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed_s": 345.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "DPP2_HUMAN_27_492_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 982.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "F16P1_HUMAN_1_338_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 1475.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "GSTP1_HUMAN_2_210_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 426.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "HMD_METJA_1_358_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 728.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "KS6A3_HUMAN_41_357_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 321.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "MCCF_ECOLX_1_344_0",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed_s": 743.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NEP_HUMAN_54_750_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 793.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NPD_THEMA_1_246_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 277.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "OLIAC_CANSA_1_101_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 242.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PAC_ECOLX_27_846_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 861.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PLCD1_RAT_134_756_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 569.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PTGIS_HUMAN_20_500_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 535.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "RG1_RAUSE_1_513_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 5611.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "SIR3_HUMAN_117_398_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 302.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TNKS1_HUMAN_1099_1319_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 240.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "UPPS_ECOLI_1_253_0",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed_s": 453.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    }
+  ]
+}

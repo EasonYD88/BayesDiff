@@ -472,3 +472,86 @@ pip install torch-geometric  # 按 PyG 官方指引装 CUDA 版
 | GP 在 $d=128$ 上表现差 | 加 PCA 降到 $d=32 \sim 64$；或用 DKL |
 | 校准集太小（485 个） | 用 5-fold 交叉校准 |
 | Mac MPS 对 PyG 不稳定 | 全部用 CPU，采样部分上 HPC |
+
+---
+
+## 2026-03-05 并行执行更新（不改原脚本，新增并行脚本）
+
+为满足“多卡并行 + 批量 sample + 不覆盖已有结果”，新增并行入口：
+
+- `slurm/sample_array_job.sh`：Slurm array 多卡并行采样（每个 task 占 1 张 GPU，按 shard 切分 pocket）
+- `scripts/07_merge_sampling_shards.py`：合并分片产物
+- `slurm/merge_sample_shards_job.sh`：CPU 合并作业入口
+
+### 并行提交示例（4 卡）
+
+```bash
+cd /scratch/$USER/BayesDiff
+
+ARRAY_JOB_ID=$(sbatch --parsable \
+  --account=torch_pr_281_chemistry \
+  --array=0-3 \
+  --export=ALL,POCKET_LIST=data/splits/test_pockets.txt,NUM_SAMPLES=64,NUM_STEPS=100,OUTPUT_ROOT=results/generated_molecules_parallel \
+  slurm/sample_array_job.sh)
+
+echo "ARRAY_JOB_ID=${ARRAY_JOB_ID}"
+```
+
+### 合并示例
+
+```bash
+# run_tag 默认格式: <timestamp>_j<ARRAY_JOB_ID>
+RUN_TAG="<your_run_tag>"
+
+sbatch \
+  --account=torch_pr_281_chemistry \
+  --dependency=afterok:${ARRAY_JOB_ID} \
+  --export=ALL,RUN_DIR=results/generated_molecules_parallel/${RUN_TAG},EXPECTED_SHARDS=4 \
+  slurm/merge_sample_shards_job.sh
+```
+
+### 防覆盖策略
+
+默认输出到：
+
+- `results/generated_molecules_parallel/<RUN_TAG>/shards/`（每 shard 独立）
+- `results/generated_molecules_parallel/<RUN_TAG>/all_embeddings.npz`（合并后）
+
+`RUN_TAG` 默认包含时间戳 + job id，因此不会覆盖当前已有 `results/generated_molecules/` 或历史并行结果。
+
+补充：并行执行使用 `scripts/08_sample_molecules_shard.py` 作为分片包装器，内部调用原 `scripts/02_sample_molecules.py`，因此原采样代码保持不变。
+
+---
+
+## 2026-03-05 项目结构更新
+
+> 本次更新聚焦“并行代码另写，不修改原采样脚本”。
+
+当前与并行采样直接相关的结构如下：
+
+```text
+BayesDiff/
+├── scripts/
+│   ├── 02_sample_molecules.py        # 原单卡采样入口（保持不变）
+│   ├── 07_merge_sampling_shards.py   # 新增：合并分片结果
+│   └── 08_sample_molecules_shard.py  # 新增：分片包装器（调用 02）
+├── slurm/
+│   ├── sample_job.sh                 # 原单卡作业脚本（保持不变）
+│   ├── sample_array_job.sh           # 新增：多卡 array 并行采样
+│   └── merge_sample_shards_job.sh    # 新增：CPU 合并作业
+└── results/
+    ├── generated_molecules/          # 既有单卡结果目录
+    └── generated_molecules_parallel/ # 新增并行输出根目录（按 run_tag 隔离）
+```
+
+## 2026-03-05 项目进度更新
+
+- [x] 并行采样脚本新增完成（`sample_array_job.sh`）
+- [x] 分片包装器新增完成（`08_sample_molecules_shard.py`）
+- [x] 分片合并工具新增完成（`07_merge_sampling_shards.py` + `merge_sample_shards_job.sh`）
+- [x] 文档并行流程补充完成（含防覆盖输出策略）
+- [ ] 待提交并执行新并行作业（4 卡或更多）
+- [ ] 待产出并验证并行 run 的 `all_embeddings.npz` 与合并 summary
+- [ ] 待进入 S5/S6/S7（GP 训练、评估、消融）
+
+当前状态可视为：**代码与文档已就绪，等待正式并行任务执行与结果回填**。

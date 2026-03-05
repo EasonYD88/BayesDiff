@@ -1,0 +1,24 @@
+=== BayesDiff Multi-GPU Sampling (Array Task) ===
+Date:         Thu Mar  5 00:57:23 EST 2026
+Node:         ga009.hpc.nyu.edu
+GPU:          NVIDIA A100-SXM4-80GB
+Array job id: 3361536
+Task id:      0
+Task count:   4
+Run dir:      results/generated_molecules_parallel/20260305_005601_parallel_realrun
+Shard dir:    results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_0of4
+Shard:        0/4
+Pocket list:  data/splits/test_pockets.txt
+Samples/pkt:  64
+Steps:        100
+
+=== Shard selection ===
+Total pockets:  93
+Num shards:     4
+Shard index:    0
+Shard pockets:  24
+Running: /scratch/yd2915/conda_envs/bayesdiff/bin/python scripts/02_sample_molecules.py --pocket_list /state/partition1/job-3361595/bayesdiff_shard_y2ea0wle/pockets_shard.txt --pdbbind_dir external/targetdiff/data/test_set --targetdiff_dir external/targetdiff --num_samples 64 --num_steps 100 --device cuda --output_dir results/generated_molecules_parallel/20260305_005601_parallel_realrun/shards/shard_0of4
+
+Task complete: shard 0/4
+Run dir: results/generated_molecules_parallel/20260305_005601_parallel_realrun
+Next: submit merge job after all array tasks succeed.

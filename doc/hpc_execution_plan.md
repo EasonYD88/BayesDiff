@@ -906,3 +906,91 @@ except Exception as e:
 - [ ] conda 激活命令适配（`eval "$(conda shell.bash hook)"` 或 `source activate`）
 - [ ] `slurm/logs/` 目录已创建
 - [ ] 磁盘空间充足（至少 5GB 用于 results/）
+
+---
+
+## 2026-03-05 更新：多卡并行采样（新增脚本，原脚本保留）
+
+> 本更新遵循“并行代码另写，不修改原有采样脚本”的约束。
+
+### 新增文件
+
+- `slurm/sample_array_job.sh`：并行采样主入口（Slurm job array）
+- `scripts/07_merge_sampling_shards.py`：分片 embeddings/summary 合并器
+- `slurm/merge_sample_shards_job.sh`：合并作业模板（CPU）
+
+### 推荐执行流程（替代手动 split/merge）
+
+1. 提交 array 采样（例：4 GPU）
+
+```bash
+cd /scratch/$USER/BayesDiff
+ARRAY_JOB_ID=$(sbatch --parsable \
+  --account=torch_pr_281_chemistry \
+  --array=0-3 \
+  --export=ALL,POCKET_LIST=data/splits/test_pockets.txt,NUM_SAMPLES=64,NUM_STEPS=100,OUTPUT_ROOT=results/generated_molecules_parallel \
+  slurm/sample_array_job.sh)
+
+echo "ARRAY_JOB_ID=${ARRAY_JOB_ID}"
+```
+
+2. 采样结束后提交合并作业
+
+```bash
+# 默认 run_tag = <timestamp>_j<ARRAY_JOB_ID>
+RUN_TAG="<your_run_tag>"
+
+sbatch \
+  --account=torch_pr_281_chemistry \
+  --dependency=afterok:${ARRAY_JOB_ID} \
+  --export=ALL,RUN_DIR=results/generated_molecules_parallel/${RUN_TAG},EXPECTED_SHARDS=4 \
+  slurm/merge_sample_shards_job.sh
+```
+
+3. 验收
+
+```bash
+python - <<'PY'
+import numpy as np, json
+from pathlib import Path
+run_dir = Path('results/generated_molecules_parallel/<your_run_tag>')
+d = np.load(run_dir / 'all_embeddings.npz', allow_pickle=True)
+s = json.load(open(run_dir / 'sampling_summary.json'))
+print('merged_keys:', len(d.files))
+print('n_errors:', s.get('n_errors'))
+print('n_shard_npz:', s.get('n_shard_npz'))
+PY
+```
+
+### 输出覆盖保护
+
+并行流程默认写入 `results/generated_molecules_parallel/<run_tag>/`，不会覆盖：
+
+- 现有单卡目录 `results/generated_molecules/`
+- 其他并行 run 的目录
+
+补充：`sample_array_job.sh` 通过 `scripts/08_sample_molecules_shard.py` 分片后再调用原 `scripts/02_sample_molecules.py`，原采样代码不改动。
+
+---
+
+## 2026-03-05 项目结构与进度补丁
+
+### 结构补丁（并行相关）
+
+- 新增 `slurm/sample_array_job.sh`（多卡并行采样）
+- 新增 `scripts/08_sample_molecules_shard.py`（分片包装，调用原 `02_sample_molecules.py`）
+- 新增 `scripts/07_merge_sampling_shards.py`（分片合并）
+- 新增 `slurm/merge_sample_shards_job.sh`（CPU 合并作业）
+- 原 `scripts/02_sample_molecules.py` / `slurm/sample_job.sh` 保持不变
+
+### 进度补丁
+
+| 项目 | 状态 |
+|------|------|
+| 并行脚本落地 | ✅ 完成 |
+| 并行文档落地 | ✅ 完成 |
+| 并行实跑提交 | ⬜ 待执行 |
+| 并行产物验收 | ⬜ 待执行 |
+| S5/S6/S7 | ⬜ 待执行 |
+
+推荐下一步：先提 4 卡 array 任务，完成后合并并把后处理 `--embeddings` 指向并行 run 目录。

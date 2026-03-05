@@ -157,3 +157,48 @@ Figures:    6 PNG saved to results/figures/
 - Prior results in `results/` are from Mac CPU debug run (3 pockets, 2 samples)
 - HPC production runs (S3+) will overwrite/extend these results
 - For sbatch, always specify `--account=torch_pr_281_chemistry --partition=a100_chemistry`
+
+---
+
+## 2026-03-05 Workflow Update (Parallel Sampling Added)
+
+### New parallel artifacts
+
+- `slurm/sample_array_job.sh` (multi-GPU Slurm array sampling)
+- `scripts/07_merge_sampling_shards.py` (merge shard outputs)
+- `slurm/merge_sample_shards_job.sh` (CPU merge job)
+
+### Data safety
+
+Parallel runs now default to isolated run folders:
+
+- `results/generated_molecules_parallel/<run_tag>/shards/`
+- `results/generated_molecules_parallel/<run_tag>/all_embeddings.npz`
+
+This avoids overwriting existing outputs under `results/generated_molecules/`.
+
+- `scripts/08_sample_molecules_shard.py` (shard wrapper; calls original `scripts/02_sample_molecules.py` unchanged)
+
+---
+
+## 2026-03-05 Structure & Progress Update
+
+### Structure delta
+
+- Added: `slurm/sample_array_job.sh`
+- Added: `scripts/08_sample_molecules_shard.py`
+- Added: `scripts/07_merge_sampling_shards.py`
+- Added: `slurm/merge_sample_shards_job.sh`
+- Unchanged: `scripts/02_sample_molecules.py`, `slurm/sample_job.sh`
+
+### Progress delta
+
+| Item | Status |
+|------|--------|
+| Parallel workflow implementation | ✅ Ready |
+| Parallel workflow docs | ✅ Ready |
+| Parallel S3 execution | ⬜ Pending submit |
+| Merged parallel embeddings validation | ⬜ Pending |
+| S5/S6/S7 downstream tasks | ⬜ Pending |
+
+Note: parallel outputs are isolated under `results/generated_molecules_parallel/<run_tag>/` to avoid overwriting existing results.
