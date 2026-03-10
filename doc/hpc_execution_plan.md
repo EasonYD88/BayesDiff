@@ -36,12 +36,14 @@ git clone --recurse-submodules https://github.com/EasonYD88/BayesDiff.git
 | **S0** | 环境搭建 | 30 min | ~30 min | 登录节点 | `torch.cuda.is_available()` → `True` | ✅ 完成 |
 | **S1** | 代码部署 | 15 min | ~20 min | 登录节点 | `_check_deps.py` 7/7 通过 | ✅ 完成 |
 | **S2** | 数据准备 | 10 min | ~5 min | 登录节点 | `test_pockets.txt` 93 行 | ✅ 完成 |
-| **S3** | 批量采样 | ~12–48h | 19h02m | 1×A100 | `all_embeddings.npz` 93 keys | ✅ 完成 (job 3284523) |
+| **S3** | 批量采样 (100-step) | ~12–48h | 19h02m | 1×A100 | `all_embeddings.npz` 93 keys | ✅ 完成 (job 3284523) |
 | **S4** | Embedding 再提取 | 2–4h | — | — | — | ⏭ 跳过（S3 已含） |
-| **S5** | GP 训练 | 15 min | **14.1s** | 1×A100 (GPU) | `gp_model.pt` 存在 | ✅ 完成 (job 3386803) |
-| **S6** | 评估 + 校准 | 10 min | ~3 min | 1×A100 | `eval_metrics.json` 含 7 项指标 | ✅ 完成 (job 3386892) |
-| **S7** | 消融实验 | 15 min | ~13 min | 1×A100 | `ablation_summary.json` 含 7 个 ablation | ✅ 完成 (job 3386892) |
+| **S5** | GP 训练 (100-step) | 15 min | **14.1s** | 1×A100 (GPU) | `gp_model.pt` 存在 | ✅ 完成 (job 3386803) |
+| **S6** | 评估 + 校准 (100-step) | 10 min | ~3 min | 1×A100 | `eval_metrics.json` 含 7 项指标 | ✅ 完成 (job 3386892) |
+| **S7** | 消融实验 (100-step) | 15 min | ~13 min | 1×A100 | `ablation_summary.json` 含 7 个 ablation | ✅ 完成 (job 3386892) |
 | **S8** | 结果回收 | 10 min | — | Git push | commit `146bf70` → GitHub | ✅ 完成 |
+| **S9** | 1000-step 批量采样 | ~72h | ~48h+ | 4×A100 | `all_embeddings.npz` 93 keys (1000-step) | 🔄 进行中 (88/93, job 3902319) |
+| **S10** | 1000-step GP+Eval+Ablation | ~30 min | — | 1×A100 | 1000-step eval_metrics.json | ⏳ 等待 S9 (含在 job 3902319) |
 
 ---
 

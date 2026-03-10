@@ -1,14 +1,15 @@
 # BayesDiff NYU Torch 定制 HPC 指南（给 Coding Agent）
 
-更新时间：2026-03-04（America/New_York）
+更新时间：2026-03-10（America/New_York）
 
-## 0. HPC 实测要点（2026-03-04 验证）
+## 0. HPC 实测要点（2026-03-10 更新）
 
 1. **不要用 `--partition=gpu`** — Torch 没有名为 `gpu` 的分区，分区按 GPU 型号命名。
 2. **推荐分区**：`--partition=a100_chemistry`（已验证可用）。
 3. **QOSGrpGRES 问题**：不指定分区时 SLURM 默认走 `l40s_public`，此分区 GPU 配额与其他用户共享，常被占满。指定 `a100_chemistry` 可绕过。
 4. **缺少 openbabel**：TargetDiff 的 `reconstruct.py` 依赖 openbabel，需 `conda install -c conda-forge openbabel` 才能完整运行 smoke test。
 5. **GPU 验证通过**：A100-SXM4-80GB, PyTorch 2.5.1+cu121, cuda=True ✅
+6. **1000-step 采样耗时**：单 pocket × 64 samples × 1000 steps ≈ 4-6h on A100。93 pockets 需要多卡并行 + 续跑。
 
 ## 1. 适用范围
 
@@ -437,3 +438,57 @@ results/generated_molecules_parallel/<your_run_tag>/all_embeddings.npz
 并行输出使用 `OUTPUT_ROOT/<RUN_TAG>/...`，`RUN_TAG` 含时间戳与 job id，默认不会覆盖已有 `results/generated_molecules/` 数据。
 
 补充：并行作业通过 `scripts/08_sample_molecules_shard.py` 做 pocket 列表切片，再调用原 `scripts/02_sample_molecules.py`。
+
+---
+
+## 2026-03-10 增补：1000-Step 采样流程
+
+### 背景
+
+100-step 采样仅产生 1.5% 有效分子率，embedding 质量受限。1000-step 预计可达 60-80% 有效率，是论文正式实验的必要条件。
+
+### 已完成的 1000-step 采样 Jobs
+
+| Job ID | 类型 | 完成 | 状态 |
+|--------|------|------|------|
+| 3387783 (array 0-3) | 首次 4 卡并行 | 88/93 | 4 shard 均 TIMEOUT (24h) |
+| 3546121 (array 0-3) | 续跑 | shard 0,3 完成; 1,2 TIMEOUT | 部分完成 |
+| **3902319** | **最终: 5 remaining + merge + GP + eval + ablation** | — | **🔄 已提交** |
+
+### 成果目录布局
+
+```text
+results/embedding_1000step/
+├── 20260305_085825_j3387783/shards/shard_0of4/  (24 pockets)
+├── 20260305_085827_j3387783/shards/shard_1of4/  (19 pockets)
+├── 20260305_085834_j3387783/shards/shard_2of4/  (22 pockets)
+├── 20260305_085839_j3387783/shards/shard_3of4/  (23 pockets)
+└── merged/  (待合并: all_embeddings.npz + GP + eval + ablation)
+```
+
+### 关键脚本
+
+| 脚本 | 用途 |
+|------|------|
+| `slurm/embedding_1000step_array.sh` | 首次 4-shard 1000-step array 作业 |
+| `slurm/resume_1000step_array.sh` | 续跑超时 shard |
+| `slurm/finish_1000step_pipeline.sh` | 最终: 完成剩余 5 pockets + merge + GP + eval + ablation |
+
+### 验收标准（job 3902319 完成后）
+
+```bash
+# 检查 merged embeddings
+python3 -c "
+import numpy as np
+d = np.load('results/embedding_1000step/merged/all_embeddings.npz')
+print(f'Pockets: {len(d.files)}, expected: 93')
+for k in list(d.files)[:3]:
+    print(f'  {k}: {d[k].shape}')
+"
+
+# 检查 eval metrics
+cat results/embedding_1000step/merged/evaluation/eval_metrics.json | python3 -m json.tool
+
+# 检查 ablation
+cat results/embedding_1000step/merged/ablation/ablation_summary.json | python3 -m json.tool
+```

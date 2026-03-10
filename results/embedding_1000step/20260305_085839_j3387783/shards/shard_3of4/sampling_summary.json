@@ -1,0 +1,127 @@
+{
+  "args": {
+    "pocket_list": "data/splits/remaining_shard3.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 64,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/embedding_1000step/20260305_085839_j3387783/shards/shard_3of4",
+    "num_steps": 1000
+  },
+  "n_pockets": 11,
+  "n_sampled": 11,
+  "timing": [
+    {
+      "pdb_code": "MURA_ECOLI_1_419_catalytic_0",
+      "n_valid": 33,
+      "n_total": 64,
+      "elapsed_s": 18902.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NOS2_HUMAN_78_505_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 9594.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NR1H4_HUMAN_258_486_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 2726.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PA21B_PIG_23_146_0",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed_s": 1397.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PHKG1_RABIT_6_296_ATPsite_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 3125.6,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "POL_FOAMV_861_1060_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 6094.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PYRE_BACAN_1_210_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 4379.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "ROCO4_DICDI_1009_1292_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 3113.2,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TBK1_HUMAN_1_303_0",
+      "n_valid": 46,
+      "n_total": 64,
+      "elapsed_s": 15365.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TRAR_RHIRD_1_234_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 2546.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "XANLY_BACGL_26_777_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 8039.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    }
+  ]
+}

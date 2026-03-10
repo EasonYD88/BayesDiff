@@ -1,0 +1,16 @@
+═══════════════════════════════════════════════════════════
+ BayesDiff: 1000-step Embedding Extraction (Shard 1/4)
+═══════════════════════════════════════════════════════════
+Date:         Thu Mar  5 08:58:27 EST 2026
+Node:         ga026.hpc.nyu.edu
+GPU:          NVIDIA A100-SXM4-80GB, 81920 MiB
+Array job id: 3387783
+Task id:      1
+Run dir:      results/embedding_1000step/20260305_085827_j3387783
+Shard dir:    results/embedding_1000step/20260305_085827_j3387783/shards/shard_1of4
+Pocket list:  data/splits/test_pockets.txt
+Samples/pkt:  64
+Steps:        1000
+
+Command: python scripts/08_sample_molecules_shard.py --pocket_list data/splits/test_pockets.txt --num_shards 4 --shard_index 1 --pdbbind_dir external/targetdiff/data/test_set --targetdiff_dir external/targetdiff --num_samples 64 --num_steps 1000 --device cuda --output_dir results/embedding_1000step/20260305_085827_j3387783/shards/shard_1of4
+

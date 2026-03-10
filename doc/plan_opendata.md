@@ -550,8 +550,9 @@ BayesDiff/
 - [x] 分片包装器新增完成（`08_sample_molecules_shard.py`）
 - [x] 分片合并工具新增完成（`07_merge_sampling_shards.py` + `merge_sample_shards_job.sh`）
 - [x] 文档并行流程补充完成（含防覆盖输出策略）
-- [ ] 待提交并执行新并行作业（4 卡或更多）
-- [ ] 待产出并验证并行 run 的 `all_embeddings.npz` 与合并 summary
-- [ ] 待进入 S5/S6/S7（GP 训练、评估、消融）
+- [x] 100-step 全 pipeline 完成（S0-S8），结果回收到 GitHub
+- [x] 1000-step 采样: 88/93 pockets 完成（jobs 3387783 + 3546121）
+- [ ] 1000-step 最终 5 pockets + merge + GP + eval + ablation（job 3902319 已提交）
+- [ ] 100-step vs 1000-step 对比分析
 
-当前状态可视为：**代码与文档已就绪，等待正式并行任务执行与结果回填**。
+当前状态：**100-step pipeline 完整完成。1000-step 采样 88/93 完成，job 3902319 将完成剩余 5 pockets 并自动执行 merge + GP + eval + ablation。**

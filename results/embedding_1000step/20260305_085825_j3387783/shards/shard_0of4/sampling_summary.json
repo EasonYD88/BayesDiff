@@ -1,0 +1,107 @@
+{
+  "args": {
+    "pocket_list": "data/splits/remaining_shard0.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 64,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/embedding_1000step/20260305_085825_j3387783/shards/shard_0of4",
+    "num_steps": 1000
+  },
+  "n_pockets": 9,
+  "n_sampled": 9,
+  "timing": [
+    {
+      "pdb_code": "ODBB_THET8_1_324_0",
+      "n_valid": 6,
+      "n_total": 64,
+      "elapsed_s": 16186.3,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PA2B8_DABRR_1_121_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 1425.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PHP_SULSO_1_314_0",
+      "n_valid": 52,
+      "n_total": 64,
+      "elapsed_s": 6899.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PPIA_HUMAN_1_165_0",
+      "n_valid": 36,
+      "n_total": 64,
+      "elapsed_s": 23482.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "QPCT_HUMAN_33_361_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 3620.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "SDIA_ECOLI_1_171_0",
+      "n_valid": 12,
+      "n_total": 64,
+      "elapsed_s": 5370.8,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TIAM1_HUMAN_840_931_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 1037.5,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "UBE2T_HUMAN_1_156_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 1736.4,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "Y635_MYCTU_1_158_0",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed_s": 6304.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    }
+  ]
+}

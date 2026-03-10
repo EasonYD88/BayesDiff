@@ -615,7 +615,63 @@ Code change: Added `--device auto` arg to `04_train_gp.py` (auto-detects CUDA).
 
 **Improvements for publication-quality results**:
 - [ ] Use full PDBbind train split (~3400 complexes) for GP training
-- [ ] Run 1000-step diffusion for higher-quality embeddings
+- [x] Run 1000-step diffusion for higher-quality embeddings → S9 in progress
 - [ ] PCA dimensionality reduction (128 → 32) before GP
 - [ ] Deep kernel GP (Neural + RBF) for better expressiveness
 - [ ] Scaffold-split for meaningful OOD evaluation
+
+---
+
+## 2026-03-05 → 2026-03-10: 1000-Step Diffusion Sampling
+
+### Summary
+Attempting full 1000-step diffusion sampling for all 93 pockets to improve molecule quality and embedding fidelity. The 100-step run had only 1.5% valid molecule rate; 1000 steps typically achieves 60–80% validity.
+
+### Job History
+
+| Job ID | Type | Shards Completed | Duration | Status |
+|--------|------|------------------|----------|--------|
+| 3387783 (array 0-3) | 1st attempt | 88/93 (24+19+22+23) | 24h each (TIMEOUT) | Partial |
+| 3546121 (array 0-3) | Resume | Shard 0 ✅, Shard 3 ✅, Shard 1 & 2 TIMEOUT | 18-21h each | Partial |
+| **3902319** | **Final: 5 remaining + merge + GP + eval** | — | **pending** | 🔄 Queued |
+
+### Current Progress (2026-03-10)
+- **88/93 pockets** sampled at 1000 steps across 4 shards
+- **5 remaining**: RG1_RAUSE_1_513_0, SIR3_HUMAN_117_398_0, TNKS1_HUMAN_1099_1319_0, UPPS_ECOLI_1_253_0, VAOX_PENSI_1_560_0
+- Job 3902319 submitted to finish last 5 pockets + merge + GP train + eval + ablation
+- Output: `results/embedding_1000step/merged/`
+
+### Shard Directory Layout
+```
+results/embedding_1000step/
+├── 20260305_085825_j3387783/shards/shard_0of4/  (24 pockets)
+├── 20260305_085827_j3387783/shards/shard_1of4/  (19 pockets)
+├── 20260305_085834_j3387783/shards/shard_2of4/  (22 pockets)
+├── 20260305_085839_j3387783/shards/shard_3of4/  (23 pockets)
+└── merged/  (pending: all_embeddings.npz + GP + eval + ablation)
+```
+
+### Scripts Added for 1000-Step Pipeline
+| File | Purpose |
+|------|---------|
+| `slurm/embedding_1000step_array.sh` | Initial 4-shard array job (1000 steps) |
+| `slurm/resume_1000step_array.sh` | Resume timed-out shards |
+| `slurm/finish_1000step_pipeline.sh` | Final: 5 pockets + merge + GP + eval + ablation |
+| `slurm/merge_and_evaluate_1000step.sh` | Merge + evaluate (standalone) |
+| `slurm/merge_eval_1000step_resume.sh` | Merge + evaluate (resume variant) |
+| `data/splits/remaining_1000step_final.txt` | 5 remaining pocket names |
+
+### Expected Outcome
+Once job 3902319 completes:
+- `results/embedding_1000step/merged/all_embeddings.npz` (93 keys, each (64, 128))
+- `results/embedding_1000step/merged/gp_model/` (GP trained on 1000-step embeddings)
+- `results/embedding_1000step/merged/evaluation/eval_metrics.json` (1000-step metrics)
+- `results/embedding_1000step/merged/ablation/ablation_summary.json` (1000-step ablation)
+
+### Comparison: 100-step vs 1000-step (pending)
+| Metric | 100-step | 1000-step (expected) |
+|--------|----------|---------------------|
+| Valid mol rate | 1.5% | 60–80% |
+| Embedding quality | Noisy (early termination) | High (full denoising) |
+| ECE | 0.034 | TBD |
+| AUROC | 0.500 | TBD (expect improvement) |

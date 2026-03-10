@@ -1,0 +1,17 @@
+═══════════════════════════════════════════════════════════
+ BayesDiff: RESUME 1000-step (Shard 3)
+═══════════════════════════════════════════════════════════
+Date:         Fri Mar  6 12:29:54 EST 2026
+Node:         ga007.hpc.nyu.edu
+GPU:          NVIDIA A100-SXM4-80GB, 81920 MiB
+Shard dir:    results/embedding_1000step/20260305_085839_j3387783/shards/shard_3of4
+Pocket list:  data/splits/remaining_shard3.txt
+Remaining:    11 pockets
+Samples/pkt:  64
+Steps:        1000
+
+
+═══════════════════════════════════════════════════════════
+ Shard 3 resume complete at Sat Mar  7 09:25:04 EST 2026
+ Output: results/embedding_1000step/20260305_085839_j3387783/shards/shard_3of4
+═══════════════════════════════════════════════════════════
