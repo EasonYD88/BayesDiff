@@ -1,0 +1,144 @@
+═══════════════════════════════════════════════════════════
+ BayesDiff: 1000-step Merge + GP + Eval + Ablation
+═══════════════════════════════════════════════════════════
+Date: Thu Mar 12 01:49:35 EDT 2026
+Node: ga009.hpc.nyu.edu
+
+>>> [Step 1] Verifying pocket completeness...
+Expected: 93, Found: 93, Missing: 0
+All 93 pockets present!
+
+>>> [Step 2] Merging embeddings from all shard directories...
+  ABL2_HUMAN_274_551_0: (64, 128)
+  AROE_THET8_1_263_0: (64, 128)
+  BAZ2A_HUMAN_1795_1898_0: (64, 128)
+  BTRN_BACCI_2_250_0: (64, 128)
+  CDK6_HUMAN_1_312_0: (64, 128)
+  CHOD_BREST_46_552_0: (64, 128)
+  CPXB_BACMB_2_464_0: (64, 128)
+  DPO4_SULSO_1_347_0: (64, 128)
+  EXG1_CANAL_41_438_0: (64, 128)
+  GRK4_HUMAN_1_578_0: (64, 128)
+  HDHA_ECOLI_1_255_0: (64, 128)
+  IPMK_HUMAN_49_416_0: (64, 128)
+  M3K14_HUMAN_321_678_0: (64, 128)
+  NAGZ_VIBCH_1_330_0: (64, 128)
+  NOS3_HUMAN_65_480_0: (64, 128)
+  ODBB_THET8_1_324_0: (64, 128)
+  PA2B8_DABRR_1_121_0: (64, 128)
+  PHP_SULSO_1_314_0: (64, 128)
+  PPIA_HUMAN_1_165_0: (64, 128)
+  QPCT_HUMAN_33_361_0: (64, 128)
+  RG1_RAUSE_1_513_0: (64, 128)
+  SDIA_ECOLI_1_171_0: (64, 128)
+  SIR3_HUMAN_117_398_0: (64, 128)
+  TIAM1_HUMAN_840_931_0: (64, 128)
+  TNKS1_HUMAN_1099_1319_0: (64, 128)
+  UBE2T_HUMAN_1_156_0: (64, 128)
+  UPPS_ECOLI_1_253_0: (64, 128)
+  VAOX_PENSI_1_560_0: (64, 128)
+  Y635_MYCTU_1_158_0: (64, 128)
+  ACE_HUMAN_650_1230_0: (64, 128)
+  ATS5_HUMAN_262_480_0: (64, 128)
+  BGAT_HUMAN_63_353_0: (64, 128)
+  CAT_ECOLX_1_219_0: (64, 128)
+  CHIA_SERMA_19_563_0: (64, 128)
+  COAA_MYCTU_1_312_0: (64, 128)
+  DFPA_LOLVU_2_314_0: (64, 128)
+  DPP2_HUMAN_27_492_0: (64, 128)
+  F16P1_HUMAN_1_338_0: (64, 128)
+  GSTP1_HUMAN_2_210_0: (64, 128)
+  HMD_METJA_1_358_0: (64, 128)
+  KS6A3_HUMAN_41_357_0: (64, 128)
+  MCCF_ECOLX_1_344_0: (64, 128)
+  NEP_HUMAN_54_750_0: (64, 128)
+  NPD_THEMA_1_246_0: (64, 128)
+  OLIAC_CANSA_1_101_0: (64, 128)
+  PAC_ECOLX_27_846_0: (64, 128)
+  PLCD1_RAT_134_756_0: (64, 128)
+  PTGIS_HUMAN_20_500_0: (64, 128)
+  AK1BA_HUMAN_1_316_0: (64, 128)
+  BACE2_HUMAN_76_460_0: (64, 128)
+  BGL07_ORYSJ_25_504_0: (64, 128)
+  CCPR_YEAST_69_361_0: (64, 128)
+  CHIB1_ASPFM_39_433_0: (64, 128)
+  CONA_CANCT_1_237_0: (64, 128)
+  DHAK_ECOLI_1_356_0: (64, 128)
+  DYRK2_HUMAN_145_550_0: (64, 128)
+  FKB1A_HUMAN_2_108_0: (64, 128)
+  GUX1_HYPJE_18_451_0: (64, 128)
+  IDHP_HUMAN_40_452_0: (64, 128)
+  LAT_MYCTU_1_449_0: (64, 128)
+  MENE_BACSU_2_486_0: (64, 128)
+  NOS1_HUMAN_302_723_0: (64, 128)
+  NQO1_HUMAN_2_274_0: (64, 128)
+  P2Y12_HUMAN_1_342_0: (64, 128)
+  PAK4_HUMAN_291_591_ATP_0: (64, 128)
+  PNTM_STRAE_2_398_0: (64, 128)
+  PYRD_TRYCC_2_314_catalytic_0: (64, 128)
+  RIBB_VIBCH_2_218_0: (64, 128)
+  SQHC_ALIAD_1_631_0: (64, 128)
+  TNKS2_HUMAN_948_1162_0: (64, 128)
+  AKT1_HUMAN_1_137_0: (64, 128)
+  BAPA_SPHXN_30_402_0: (64, 128)
+  BSD_ASPTE_1_130_0: (64, 128)
+  CD38_HUMAN_44_300_0: (64, 128)
+  CHIB_SERMA_1_499_0: (64, 128)
+  COTA_BACSU_1_513_0: (64, 128)
+  DIDH_RAT_1_319_0: (64, 128)
+  EFTU1_ECOLI_2_178_0: (64, 128)
+  GLMU_STRPN_2_459_0: (64, 128)
+  HDAC8_HUMAN_1_377_0: (64, 128)
+  IMA1_HUMAN_68_497_0: (64, 128)
+  LMBL1_HUMAN_198_526_0: (64, 128)
+  MURA_ECOLI_1_419_catalytic_0: (64, 128)
+  NOS2_HUMAN_78_505_0: (64, 128)
+  NR1H4_HUMAN_258_486_0: (64, 128)
+  PA21B_PIG_23_146_0: (64, 128)
+  PHKG1_RABIT_6_296_ATPsite_0: (64, 128)
+  POL_FOAMV_861_1060_0: (64, 128)
+  PYRE_BACAN_1_210_0: (64, 128)
+  ROCO4_DICDI_1009_1292_0: (64, 128)
+  TBK1_HUMAN_1_303_0: (64, 128)
+  TRAR_RHIRD_1_234_0: (64, 128)
+  XANLY_BACGL_26_777_0: (64, 128)
+
+Merged 93 pockets -> results/embedding_1000step/merged/all_embeddings.npz
+Total molecules: 5952
+    Merge complete.
+
+>>> [Step 3] Training GP oracle...
+    GP training complete.
+
+>>> [Step 4] Running evaluation...
+    Evaluation complete.
+
+>>> [Step 5] Running ablation study...
+    Ablation complete.
+
+═══════════════════════════════════════════════════════════
+ Complete at Thu Mar 12 02:02:01 EDT 2026
+═══════════════════════════════════════════════════════════
+Pockets: 93
+Total molecules: 5952
+
+=== Evaluation Metrics (1000-step) ===
+  ece: 0.0876
+  auroc: 0.5000
+  ef_1pct: 0.0000
+  hit_rate: nan
+  spearman_rho: nan
+  rmse: 1.8394
+  nll: 2.1872
+
+=== Ablation Summary (1000-step) ===
+  BayesDiff (Full): ECE=0.0876 AUROC=0.5000 EF@1%=0.00
+  No U_gen (σ²_total = σ²_oracle): ECE=0.0876 AUROC=0.5000 EF@1%=0.00
+  No U_oracle (σ²_total = σ²_gen only): ECE=0.2708 AUROC=0.5000 EF@1%=0.00
+  No calibration (raw P_success): ECE=0.0876 AUROC=0.5000 EF@1%=0.00
+  Naive covariance (no Ledoit-Wolf): ECE=0.0876 AUROC=0.5000 EF@1%=0.00
+  No multimodal detection (force K=1): ECE=0.0876 AUROC=0.5000 EF@1%=0.00
+  No OOD detection: ECE=0.0876 AUROC=0.5000 EF@1%=0.00
+
+Output: results/embedding_1000step/merged/
+Done!
