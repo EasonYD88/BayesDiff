@@ -1,0 +1,67 @@
+{
+  "args": {
+    "pocket_list": "data/splits/remaining_1000step_final.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 64,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/embedding_1000step/20260305_085825_j3387783/shards/shard_0of4",
+    "num_steps": 1000
+  },
+  "n_pockets": 5,
+  "n_sampled": 5,
+  "timing": [
+    {
+      "pdb_code": "RG1_RAUSE_1_513_0",
+      "n_valid": 25,
+      "n_total": 64,
+      "elapsed_s": 54216.0,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "SIR3_HUMAN_117_398_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 2984.9,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TNKS1_HUMAN_1099_1319_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 2366.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "UPPS_ECOLI_1_253_0",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed_s": 4487.7,
+      "emb_shape": [
+        64,
+        128
+      ]
+    },
+    {
+      "pdb_code": "VAOX_PENSI_1_560_0",
+      "n_valid": 29,
+      "n_total": 64,
+      "elapsed_s": 62935.1,
+      "emb_shape": [
+        64,
+        128
+      ]
+    }
+  ]
+}
