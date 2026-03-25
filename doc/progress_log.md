@@ -1,5 +1,44 @@
 # BayesDiff Progress Log
 
+## 2026-03-25: Project Structure Reorganization
+
+### Summary
+Cleaned up and reorganized the project file structure after completing Phase 3 (all HPC experiments done). Removed obsolete files, consolidated documentation, and renamed directories for clarity.
+
+### Changes Made
+
+| Action | Details |
+|--------|---------|
+| **Removed** `bayesdiff/_phase0_backup/` | 6 files (4 identical to current, 2 slightly different). Git history preserves old versions. |
+| **Removed** `data/splits/remaining_shard*.txt` | 5 HPC shard artifact files no longer needed (all sampling complete). |
+| **Removed** `data/embeddings/` | Empty directory; embeddings live in `results/`. |
+| **Removed** `results/generated_molecules/*/` | 3 empty debug-run pocket directories. |
+| **Removed** `results/pipeline_phase1_log.txt`, `pipeline_se3_log.txt` | Historical logs from early runs. |
+| **Removed** `results/generated_molecules_parallel/` | HPC Phase 2.5 parallel run artifacts. |
+| **Removed** `results/embedding_1000step/` | 1000-step shard tracking files + empty shard dirs. |
+| **Removed** 4 one-time SLURM scripts | `resume_1000step_array.sh`, `merge_eval_1000step_resume.sh`, `finish_1000step_pipeline.sh`, `submit_1000step_pipeline.sh` — no longer needed. |
+| **Moved** `doc/hpc/` | Grouped 4 HPC-related docs into `doc/hpc/` subdirectory. |
+| **Renamed** `notebooks/` → `tests/` | Contents are plain `.py` validation scripts, not Jupyter notebooks. |
+| **Cleaned** `__pycache__/` | Removed all bytecode cache directories. |
+| **Updated** `.gitignore` | Simplified and reorganized ignore rules. |
+| **Updated** `README.md` | Project Structure section now reflects actual layout. |
+
+### Final Structure
+```
+BayesDiff/
+├── bayesdiff/           # 8 core modules (2,173 lines)
+├── scripts/             # 13 pipeline scripts (4,138 lines)
+├── slurm/               # 11 HPC job scripts + logs/
+├── doc/                 # 5 docs + hpc/ subdirectory (4 docs)
+├── tests/               # 2 validation scripts
+├── data/splits/         # 2 pocket list files
+├── results/             # figures/, evaluation/, ablation/, gp_model/
+├── external/targetdiff/ # Git submodule
+└── requirements.txt
+```
+
+---
+
 ## 2026-03-01: End-to-End Pipeline Execution
 
 ### Summary
@@ -345,7 +384,7 @@ protein_v → protein_atom_emb (Linear) → h_protein (N_prot, 128)
 **Key observation**: SE(3) embeddings produce **much more compact covariances** (Tr(Σ) maxes at 14 vs 241). This means the generation uncertainty σ²_gen is smaller and better calibrated against the oracle uncertainty σ²_oracle. The IDHP prediction improved from 14.29 → 12.62 (closer to true 12.48).
 
 ### Next Steps
-- [ ] HPC/GPU run with 1000 diffusion steps for valid molecule generation
+- [x] HPC/GPU run with 1000 diffusion steps for valid molecule generation
 - [ ] Full PDBbind training set for GP (N ≈ 3,396) instead of augmented N=200
 - [ ] Scaffold-split OOD evaluation
 - [ ] Compare SE(3) vs placeholder embeddings on larger test set (93 pockets)

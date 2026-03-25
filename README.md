@@ -35,7 +35,7 @@ Dual uncertainty-aware confidence scoring for 3D molecular generation.
 | S6 Evaluation | ECE=0.034, RMSE=1.87, N=48 |
 | S7 Ablation | 7 variants; A2 (no oracle var) → NLL explodes |
 
-> See [doc/HPC_ENV_STATUS.md](doc/HPC_ENV_STATUS.md) for full verification details.
+> See [doc/hpc/HPC_ENV_STATUS.md](doc/hpc/HPC_ENV_STATUS.md) for full verification details.
 
 ## Quick Start
 
@@ -65,31 +65,65 @@ python scripts/06_ablation.py --embeddings data/embeddings/debug.npz --gp_model 
 
 ```
 BayesDiff/
-├── bayesdiff/               # Core library (8 modules)
-│   ├── data.py              # Data loading, splits, label transforms
-│   ├── sampler.py           # TargetDiff sampling + SE(3) embedding extraction
-│   ├── gen_uncertainty.py   # Σ_gen, Ledoit-Wolf, GMM multimodal detection
-│   ├── gp_oracle.py         # SVGP training/inference (PCA, k-means inducing)
-│   ├── fusion.py            # Delta method + MC fallback uncertainty fusion
-│   ├── calibration.py       # Isotonic/Platt/Temperature + ECE/ACE
-│   ├── ood.py               # Mahalanobis OOD detection + confidence modifier
-│   └── evaluate.py          # Full metrics + bootstrap CI + multi-threshold
-├── scripts/                 # Numbered pipeline scripts + monolithic runner
-│   ├── 01_prepare_data.py   # Parse PDBbind INDEX → splits + labels
+├── bayesdiff/                  # Core library (8 modules)
+│   ├── data.py                 # Data loading, splits, label transforms
+│   ├── sampler.py              # TargetDiff sampling + SE(3) embedding extraction
+│   ├── gen_uncertainty.py      # Σ_gen, Ledoit-Wolf, GMM multimodal detection
+│   ├── gp_oracle.py            # SVGP training/inference (PCA, k-means inducing)
+│   ├── fusion.py               # Delta method + MC fallback uncertainty fusion
+│   ├── calibration.py          # Isotonic/Platt/Temperature + ECE/ACE
+│   ├── ood.py                  # Mahalanobis OOD detection + confidence modifier
+│   └── evaluate.py             # Full metrics + bootstrap CI + multi-threshold
+├── scripts/                    # Pipeline scripts
+│   ├── 01_prepare_data.py      # Parse PDBbind INDEX → splits + labels
 │   ├── 02_sample_molecules.py  # TargetDiff batch sampling
 │   ├── 03_extract_embeddings.py  # SE(3) embedding extraction
-│   ├── 04_train_gp.py       # Train SVGP oracle (--device auto for GPU)
-│   ├── 05_evaluate.py       # Full evaluation pipeline
-│   ├── 06_ablation.py       # Ablation experiments (A1-A5, A7)
+│   ├── 04_train_gp.py          # Train SVGP oracle (--device auto for GPU)
+│   ├── 05_evaluate.py          # Full evaluation pipeline
+│   ├── 06_ablation.py          # Ablation experiments (A1-A5, A7)
 │   ├── 07_merge_sampling_shards.py  # Merge parallel shard outputs
 │   ├── 08_sample_molecules_shard.py # Shard wrapper for array jobs
-│   └── run_full_pipeline.py # End-to-end debug pipeline
-├── external/                # TargetDiff clone (not tracked)
-├── data/                    # Data directory (not tracked)
-├── results/                 # Pipeline outputs (JSON tracked, binaries ignored)
-├── doc/                     # Plans & progress log
-├── notebooks/               # Validation & debugging
-├── slurm/                   # HPC job scripts (sample, train_gp, eval_ablation)
+│   ├── 09_generate_figures.py  # Generate publication figures
+│   ├── 10_merge_and_train_eval.py   # Merge 1000-step + retrain + visualize
+│   ├── run_full_pipeline.py    # End-to-end debug pipeline
+│   ├── torch_scatter_shim.py   # Compatibility shim for older torch_scatter API
+│   └── _check_deps.py          # Verify dependency imports
+├── slurm/                      # HPC job scripts (NYU Torch)
+│   ├── sample_job.sh           # Single-node sampling
+│   ├── sample_array_job.sh     # 4-shard parallel sampling
+│   ├── embedding_1000step_array.sh  # 1000-step embedding extraction
+│   ├── train_gp.sh             # GP training on GPU
+│   ├── eval_ablation.sh        # Evaluation + ablation
+│   ├── gp_train_eval_viz.sh    # Combined GP + eval + viz
+│   ├── full_pipeline_job.sh    # Full pipeline on single GPU
+│   ├── merge_*.sh              # Merge shard outputs
+│   ├── gpu_verify.slurm        # GPU availability check
+│   ├── smoke_test.slurm        # Quick smoke test
+│   └── logs/                   # SLURM job logs
+├── doc/                        # Documentation
+│   ├── overall_plan.md         # High-level project plan
+│   ├── plan_opendata.md        # Open-data execution plan
+│   ├── progress_log.md         # Chronological progress log
+│   ├── math.md                 # Mathematical formulation (tutorial)
+│   ├── math_explain.md         # Mathematical formulation (reference)
+│   └── hpc/                    # HPC-specific docs
+│       ├── bayesdiff_nyu_torch_hpc_agent_guide.md
+│       ├── nyu_torch_coding_agent_guide.md
+│       ├── hpc_execution_plan.md
+│       └── HPC_ENV_STATUS.md
+├── tests/                      # Validation scripts
+│   ├── debug_pipeline.py       # Phase 0 sanity check
+│   └── validate_phase1.py      # Phase 1 module validation (41 checks)
+├── data/                       # Data directory (not tracked)
+│   ├── pdbbind/                # PDBbind raw data (download manually)
+│   └── splits/                 # Pocket lists for pipeline
+├── results/                    # Pipeline outputs (JSON/PNG tracked, binaries ignored)
+│   ├── figures/                # 6 publication figures
+│   ├── evaluation/             # Evaluation metrics (JSON)
+│   ├── ablation/               # Ablation study results (JSON)
+│   ├── gp_model/               # GP model metadata
+│   └── generated_molecules/    # Sampling summary
+├── external/                   # TargetDiff submodule (not tracked)
 └── requirements.txt
 ```
 
