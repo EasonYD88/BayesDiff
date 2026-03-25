@@ -37,6 +37,7 @@ class EvalResults:
     """Container for all evaluation metrics."""
     ece: float
     auroc: float
+    brier: float
     ef_1pct: float
     hit_rate: float
     spearman_rho: float
@@ -92,6 +93,9 @@ def evaluate_all(
     # ECE
     ece = compute_ece(p_success, y_binary)
 
+    # Brier Score (math_explain §6.3)
+    brier = brier_score(p_success, y_binary)
+
     # AUROC
     auroc = _safe_auroc(y_binary, p_success)
 
@@ -140,7 +144,7 @@ def evaluate_all(
         )
 
     return EvalResults(
-        ece=ece, auroc=auroc, ef_1pct=ef_1pct, hit_rate=hit_rate,
+        ece=ece, auroc=auroc, brier=brier, ef_1pct=ef_1pct, hit_rate=hit_rate,
         spearman_rho=float(rho), spearman_pval=float(pval),
         rmse=rmse, nll=nll, n_samples=len(y_true),
         confidence_threshold=confidence_threshold, y_target=y_target,
@@ -204,6 +208,16 @@ def evaluate_per_pocket(
 
 
 # -- Core metric functions --
+
+def brier_score(p_pred, y_binary):
+    """Brier Score: mean squared error between predicted probabilities and binary outcomes.
+
+    BS = (1/N) Σ (p_i - y_i)²
+    """
+    p_pred = np.asarray(p_pred, dtype=float)
+    y_binary = np.asarray(y_binary, dtype=float)
+    return float(np.mean((p_pred - y_binary) ** 2))
+
 
 def compute_ece(p_pred, y_binary, n_bins=10):
     """Expected Calibration Error."""
@@ -310,6 +324,7 @@ def print_results(results, file=None):
                  f"conf_thresh = {results.confidence_threshold}")
     lines.append("-" * 55)
     lines.append(f"  ECE:          {results.ece:.4f}")
+    lines.append(f"  Brier:        {results.brier:.4f}")
     auroc_s = f"{results.auroc:.4f}"
     if results.ci_auroc:
         auroc_s += f"  [{results.ci_auroc[0]:.4f}, {results.ci_auroc[1]:.4f}]"
@@ -376,7 +391,7 @@ def save_results_csv(results_list, path, labels=None):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     fields = [
-        "label", "y_target", "n_samples", "ece", "auroc",
+        "label", "y_target", "n_samples", "ece", "brier", "auroc",
         "ef_1pct", "hit_rate", "spearman_rho", "rmse", "nll",
     ]
     with open(path, "w", newline="") as f:
@@ -388,6 +403,7 @@ def save_results_csv(results_list, path, labels=None):
                 "y_target": r.y_target,
                 "n_samples": r.n_samples,
                 "ece": f"{r.ece:.4f}",
+                "brier": f"{r.brier:.4f}",
                 "auroc": f"{r.auroc:.4f}",
                 "ef_1pct": f"{r.ef_1pct:.2f}",
                 "hit_rate": f"{r.hit_rate:.4f}",
@@ -405,12 +421,13 @@ def comparison_table(results_dict):
     Returns a formatted string.
     """
     methods = list(results_dict.keys())
-    metrics = ["ECE", "AUROC", "EF@1%", "Hit Rate", "Spearman", "RMSE", "NLL"]
+    metrics = ["ECE", "Brier", "AUROC", "EF@1%", "Hit Rate", "Spearman", "RMSE", "NLL"]
     header = f"{'Method':<20}" + "".join(f"{m:>10}" for m in metrics)
     lines = [header, "-" * len(header)]
     for name, r in results_dict.items():
         row = f"{name:<20}"
         row += f"{r.ece:>10.4f}"
+        row += f"{r.brier:>10.4f}"
         row += f"{r.auroc:>10.4f}"
         row += f"{r.ef_1pct:>10.2f}"
         row += f"{r.hit_rate:>10.4f}"

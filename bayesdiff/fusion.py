@@ -33,6 +33,8 @@ class FusionResult:
     sigma2_total: float  # total variance
     sigma_total: float  # sqrt(sigma2_total)
     p_success: float  # P(pKd >= y_target)
+    p_final: float = 0.0  # P_final = w(z) · P_success (after OOD correction)
+    ood_confidence: float = 1.0  # w(z) from OOD module
     is_ood: bool = False  # OOD flag from Mahalanobis gate
 
 
@@ -44,6 +46,7 @@ def fuse_uncertainties(
     y_target: float = 7.0,
     hessian_correction: bool = False,
     H_mu: np.ndarray | None = None,
+    ood_confidence: float = 1.0,
 ) -> FusionResult:
     """Fuse generation and oracle uncertainties for a single pocket.
 
@@ -62,7 +65,10 @@ def fuse_uncertainties(
     hessian_correction : bool
         Whether to include 2nd-order Hessian correction.
     H_mu : np.ndarray | None, shape (d, d)
-        Hessian ∂²μ/∂z² (required if hessian_correction=True).
+        Hessian d²μ/dz² (required if hessian_correction=True).
+    ood_confidence : float
+        OOD confidence weight w(z) from MahalanobisOOD.score().
+        P_final = w(z) * P_success (math_explain §7.2).
 
     Returns
     -------
@@ -78,7 +84,10 @@ def fuse_uncertainties(
         correction = 0.5 * np.trace(H_mu @ cov_gen)
         mu_oracle = mu_oracle + correction
 
-    # Law of Total Variance
+    # Law of Total Variance (math_explain §4):
+    #   σ²_total ≈ E_z[σ²_oracle(z)] + J_μᵀ Σ̂_gen J_μ
+    # Approximation: E_z[σ²_oracle(z)] ≈ σ²_oracle(z̄), valid when oracle
+    # variance varies slowly relative to the generation distribution spread.
     sigma2_total = sigma2_oracle + sigma2_gen
 
     sigma_total = np.sqrt(max(sigma2_total, 1e-10))
@@ -88,6 +97,9 @@ def fuse_uncertainties(
     z_score = (y_target - mu_oracle) / sigma_total
     p_success = 1.0 - stats.norm.cdf(z_score)
 
+    # P_final = w(z) · P_success (math_explain §7.2, §8)
+    p_final = ood_confidence * p_success
+
     return FusionResult(
         mu=mu_oracle,
         sigma2_oracle=sigma2_oracle,
@@ -95,6 +107,9 @@ def fuse_uncertainties(
         sigma2_total=sigma2_total,
         sigma_total=sigma_total,
         p_success=p_success,
+        p_final=p_final,
+        ood_confidence=ood_confidence,
+        is_ood=ood_confidence < 1.0,
     )
 
 
@@ -104,6 +119,7 @@ def fuse_batch(
     J_mu: np.ndarray,
     cov_gen_list: list[np.ndarray],
     y_target: float = 7.0,
+    ood_confidences: np.ndarray | None = None,
 ) -> list[FusionResult]:
     """Fuse uncertainties for a batch of pockets.
 
@@ -114,6 +130,8 @@ def fuse_batch(
     J_mu : np.ndarray, shape (N, d)
     cov_gen_list : list of (d, d) arrays, length N
     y_target : float
+    ood_confidences : np.ndarray | None, shape (N,)
+        Per-pocket OOD confidence weights. Defaults to 1.0 (no OOD correction).
 
     Returns
     -------
@@ -121,12 +139,14 @@ def fuse_batch(
     """
     results = []
     for i in range(len(mu_oracle)):
+        ood_c = float(ood_confidences[i]) if ood_confidences is not None else 1.0
         r = fuse_uncertainties(
             mu_oracle=mu_oracle[i],
             sigma2_oracle=sigma2_oracle[i],
             J_mu=J_mu[i],
             cov_gen=cov_gen_list[i],
             y_target=y_target,
+            ood_confidence=ood_c,
         )
         results.append(r)
     return results

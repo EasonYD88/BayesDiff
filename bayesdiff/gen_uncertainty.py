@@ -119,8 +119,22 @@ def estimate_gen_uncertainty(
                 n_init=3,
             ).fit(embeddings)
             n_modes = best_k
-            gmm_means = gmm_final.means_
-            gmm_weights = gmm_final.weights_
+            gmm_means = gmm_final.means_  # (K, d)
+            gmm_weights = gmm_final.weights_  # (K,)
+            gmm_covs = gmm_final.covariances_  # (K, d, d)
+
+            # Aggregate GMM global mean and covariance (math_explain §2.3):
+            #   z̄ = Σ π_k μ_k
+            #   Σ_gen = Σ π_k [Σ_k + (μ_k - z̄)(μ_k - z̄)ᵀ]
+            z_bar = gmm_weights @ gmm_means  # (d,)
+            cov_gen = np.zeros((d, d))
+            for k in range(best_k):
+                diff_k = gmm_means[k] - z_bar
+                cov_gen += gmm_weights[k] * (
+                    gmm_covs[k] + np.outer(diff_k, diff_k)
+                )
+            trace_cov = np.trace(cov_gen)
+
             logger.info(
                 f"  GMM detected {n_modes} modes (BIC improvement: "
                 f"{bics[0] - bics[best_k - 1]:.1f})"
