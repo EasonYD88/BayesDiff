@@ -394,6 +394,65 @@ Output: A single comparison table showing which embedding carries the most predi
 
 **Deliverable**: `scripts/13_embedding_comparison.py` — extracts all embeddings, runs comparison, generates table + figures.
 
+### 7.2.4 Embedding Comparison Results (Completed)
+
+**Run**: HPC job 4988787 on L40S GPU (gl048), completed in ~30s.
+
+#### Matérn Kernel LOOCV (PCA to 20 dims)
+
+| Embedding | d (orig→PCA) | RMSE | R² | Spearman ρ | CI-95% |
+|-----------|:------------:|:----:|:---:|:---------:|:------:|
+| ECFP4-128 | 128→20 | 3.53 | -2.17 | -0.28 | 71% |
+| ECFP4-2048 | 2048→20 | 5.52 | -6.76 | 0.31 | 46% |
+| ECFP6-2048 | 2048→20 | 5.52 | -6.76 | 0.31 | 46% |
+| FCFP4-2048 | 2048→20 | 5.40 | -6.42 | 0.14 | 50% |
+| RDKit-2D | 217→20 | 3.47 | -2.07 | -0.15 | 75% |
+| Combined | 2265→20 | 5.52 | -6.76 | 0.31 | 46% |
+
+#### Tanimoto Kernel LOOCV (binary FPs only, raw dimensions)
+
+| Embedding | RMSE | R² | Spearman ρ | CI-95% |
+|-----------|:----:|:---:|:---------:|:------:|
+| ECFP4-128 | 2.22 | -0.25 | -0.37 | 92% |
+| ECFP4-2048 | 2.43 | -0.51 | -0.30 | 96% |
+| ECFP6-2048 | 2.49 | -0.58 | -0.32 | 96% |
+| FCFP4-2048 | 2.31 | -0.36 | -0.23 | 96% |
+
+#### 30× Repeated Split (70/30, Matérn)
+
+| Embedding | RMSE (mean±std) | Spearman ρ (mean±std) |
+|-----------|:---------------:|:---------------------:|
+| ECFP4-128 | 2.41±0.39 | -0.21±0.31 |
+| ECFP4-2048 | 2.48±0.57 | nan (constant pred) |
+| ECFP6-2048 | 2.48±0.57 | nan (constant pred) |
+| FCFP4-2048 | 2.48±0.57 | -0.10±0.26 |
+| RDKit-2D | 2.40±0.49 | -0.04±0.40 |
+| Combined | 2.48±0.57 | nan (constant pred) |
+
+#### Key Findings
+
+1. **🔴 ALL embeddings fail** — No embedding produces meaningful predictions. All R² < 0 (worse than predicting the mean). All ρ ≈ 0 or negative.
+
+2. **🔴 High-dim FPs collapse after PCA** — ECFP4-2048, ECFP6-2048, Combined all give identical results (RMSE=5.52, R²=-6.76). PCA 2048→20 destroys the sparse binary structure. LOOCV scatter plots show constant ~0 predictions.
+
+3. **🟡 Tanimoto kernel helps but not enough** — For ECFP4-128, Tanimoto reduces RMSE from 3.53→2.22 and improves CI coverage to 92%. But ρ is still -0.37 (anti-correlated). The kernel choice alone cannot rescue a representation without signal.
+
+4. **🟡 RDKit-2D is "least bad"** — Best CI-95% coverage (75%), lowest RMSE with Matérn (3.47), but ρ=-0.15 (random).
+
+5. **🔴 The bottleneck is NOT embedding type** — We tested 6 fundamentally different representations (circular FPs, pharmacophore FPs, physicochemical descriptors, and combinations). None carry predictive signal for pKd. This confirms the bottleneck is either:
+   - **Data quantity**: N=24 is too small for any GP to learn structure→affinity mapping
+   - **Information gap**: Mean-pooled features of *generated* molecules may not encode the pocket-level binding affinity at all — the GP oracle assumption may be flawed
+
+#### Figures
+
+All figures in `results/embedding_comparison/figures/`:
+
+| File | Description |
+|------|-------------|
+| `embedding_comparison_bars.png` | 4-panel comparison: RMSE, R², Spearman ρ, CI-95% for all embeddings (Matérn + Tanimoto) |
+| `loocv_scatter_all.png` | 6-panel LOOCV predicted vs true pKd — high-dim FPs clearly collapse to constant predictions |
+| `comparison_table.png` | Summary table with all metrics |
+
 ### Phase 3: GP Model Improvements (Priority: 🥈 Important)
 
 Apply these **after** determining the best embedding from Phase 2.
@@ -503,16 +562,28 @@ All figures are in `results/embedding_rdkit/gp_analysis/figures/`:
 
 ## 10. Key Takeaway
 
-The current GP model achieves good **training** fit (R²=0.51, ρ=0.72) but **fails to generalize** (test R²=-16.5). Two structural issues dominate:
+### Original Hypothesis
+The current GP model achieves good **training** fit (R²=0.51, ρ=0.72) but **fails to generalize** (test R²=-16.5). Two structural issues were hypothesized:
+1. **Embedding ceiling**: ECFP4-128 cannot encode the chemistry that determines binding affinity.
+2. **Evaluation noise**: N=24 with a single random split produces results dominated by sampling noise.
 
-1. **Embedding ceiling**: ECFP4-128 cannot encode the chemistry that determines binding affinity. This is the biggest bottleneck — no GP trick will overcome a representation that doesn't contain the signal.
+### What We Found (After Phases 1–2)
 
-2. **Evaluation noise**: N=24 with a single random split produces results dominated by sampling noise. Any single-split conclusion is unreliable.
+✅ **Phase 1 (Robust Evaluation)**: Confirmed — single-split results are unreliable. LOOCV and repeated splits show ECFP4-128 has ρ≈-0.2 to -0.3, not the +0.72 seen in training.
 
-The path forward:
+✅ **Phase 2 (Embedding Comparison)**: **All 6 embeddings fail equally.** The bottleneck is NOT embedding type. ECFP4, ECFP6, FCFP4, RDKit-2D, and Combined all produce ρ ≈ 0 ± 0.3 under LOOCV. The Tanimoto kernel helps RMSE but cannot rescue a fundamentally missing signal.
 
-1. **First**: Build robust evaluation (LOOCV + repeated splits) → trustworthy metrics
-2. **Then**: Compare embeddings (ECFP4 vs RDKit-2D vs GNN) under identical evaluation → find the best representation
-3. **Finally**: Tune the GP (Exact GP, Tanimoto kernel, priors) on the winning embedding
+### Revised Conclusion
 
-Until we do steps 1–2, any GP optimization is premature. The embedding comparison will either show that richer representations dramatically improve prediction (confirming embedding is the bottleneck) or that all embeddings perform similarly (suggesting the bottleneck is data quantity, not quality).
+The GP oracle as currently designed **cannot predict pKd from mean-pooled molecular features** with N=24 samples. The failure is not in the GP or the embedding — it is in the **information pathway**:
+
+1. Generated molecules → mean-pooled embedding → pKd is too lossy
+2. N=24 is below the threshold where any nonparametric method can learn a useful mapping
+3. The variance in generated molecular properties within a pocket may wash out inter-pocket differences
+
+### Recommended Next Steps
+
+1. **Increase data**: More pockets with pKd labels (target N ≥ 100)
+2. **Richer information pathway**: Instead of mean-pooling, consider distribution-level features (variance, percentiles) or attention-weighted pooling
+3. **Learned embeddings**: GNN on 3D molecular graphs (SchNet/DimeNet, PyG available) may capture what fixed fingerprints miss
+4. **Alternative oracle design**: Consider per-molecule scoring (not per-pocket mean) or direct docking score prediction

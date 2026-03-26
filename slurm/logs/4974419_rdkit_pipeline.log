@@ -1,0 +1,276 @@
+=== BayesDiff ECFP4 Pipeline ===
+Date   : Thu Mar 26 10:21:20 EDT 2026
+Host   : gl065.hpc.nyu.edu
+GPU    : NVIDIA L40S
+Python : /scratch/yd2915/conda_envs/bayesdiff/bin/python
+Embeddings: results/embedding_rdkit/all_embeddings.npz
+=================================
+
+>>> Step 1/4: Training GP...
+>>> GP training complete.
+total 143K
+-rw-r--r--. 1 yd2915 yd2915  40K Mar 26 10:21 gp_model.pt
+-rw-r--r--. 1 yd2915 yd2915 102K Mar 26 10:21 train_data.npz
+-rw-r--r--. 1 yd2915 yd2915  898 Mar 26 10:21 train_meta.json
+
+>>> Step 2/4: Evaluating...
+>>> Evaluation complete.
+{
+    "ece": 0.2642951196276616,
+    "auroc": 1.0,
+    "brier": 0.10284437328960887,
+    "ef_1pct": 6.0,
+    "hit_rate": 1.0,
+    "spearman_rho": 0.7573913043478261,
+    "spearman_pval": 1.8255331709071236e-05,
+    "rmse": 1.6214808749697631,
+    "nll": 1.9460011472955845,
+    "n_samples": 24,
+    "confidence_threshold": 0.5,
+    "y_target": 7.0,
+    "ci_auroc": [
+        0.9999999999999999,
+        1.0
+    ],
+    "ci_ef_1pct": [
+        3.0,
+        24.0
+    ],
+    "ci_hit_rate": [
+        1.0,
+        1.0
+    ]
+}
+
+>>> Step 3/4: Running ablation study...
+>>> Ablation complete.
+{
+    "full": {
+        "description": "BayesDiff (Full)",
+        "ece": 0.2642951187370194,
+        "auroc": 1.0,
+        "brier": 0.10284437246712141,
+        "ef_1pct": 6.0,
+        "hit_rate": 1.0,
+        "spearman_rho": 0.7573913043478261,
+        "spearman_pval": 1.8255331709071236e-05,
+        "rmse": 1.6214808749697631,
+        "nll": 1.9460011485815034,
+        "n_samples": 24,
+        "confidence_threshold": 0.5,
+        "y_target": 7.0,
+        "ci_auroc": [
+            0.9999999999999999,
+            1.0
+        ],
+        "ci_ef_1pct": [
+            3.0,
+            24.0
+        ],
+        "ci_hit_rate": [
+            1.0,
+            1.0
+        ]
+    },
+    "A1": {
+        "description": "No U_gen (\u03c3\u00b2_total = \u03c3\u00b2_oracle)",
+        "ece": 0.229664874242819,
+        "auroc": 1.0,
+        "brier": 0.07418474919909647,
+        "ef_1pct": 6.0,
+        "hit_rate": 1.0,
+        "spearman_rho": 0.7573913043478261,
+        "spearman_pval": 1.8255331709071236e-05,
+        "rmse": 1.6214808749697631,
+        "nll": 1.9517184790326478,
+        "n_samples": 24,
+        "confidence_threshold": 0.5,
+        "y_target": 7.0,
+        "ci_auroc": [
+            0.9999999999999999,
+            1.0
+        ],
+        "ci_ef_1pct": [
+            3.0,
+            24.0
+        ],
+        "ci_hit_rate": [
+            1.0,
+            1.0
+        ]
+    },
+    "A2": {
+        "description": "No U_oracle (\u03c3\u00b2_total = \u03c3\u00b2_gen only)",
+        "ece": 0.2384337780945982,
+        "auroc": 1.0,
+        "brier": 0.08057981630398957,
+        "ef_1pct": 6.0,
+        "hit_rate": 1.0,
+        "spearman_rho": 0.7573913043478261,
+        "spearman_pval": 1.8255331709071236e-05,
+        "rmse": 1.6214808749697631,
+        "nll": 10335095043.848547,
+        "n_samples": 24,
+        "confidence_threshold": 0.5,
+        "y_target": 7.0,
+        "ci_auroc": [
+            0.9999999999999999,
+            1.0
+        ],
+        "ci_ef_1pct": [
+            3.0,
+            24.0
+        ],
+        "ci_hit_rate": [
+            1.0,
+            1.0
+        ]
+    },
+    "A3": {
+        "description": "No calibration (raw P_success)",
+        "ece": 0.2642951187370194,
+        "auroc": 1.0,
+        "brier": 0.10284437246712141,
+        "ef_1pct": 6.0,
+        "hit_rate": 1.0,
+        "spearman_rho": 0.7573913043478261,
+        "spearman_pval": 1.8255331709071236e-05,
+        "rmse": 1.6214808749697631,
+        "nll": 1.9460011485815034,
+        "n_samples": 24,
+        "confidence_threshold": 0.5,
+        "y_target": 7.0,
+        "ci_auroc": [
+            0.9999999999999999,
+            1.0
+        ],
+        "ci_ef_1pct": [
+            3.0,
+            24.0
+        ],
+        "ci_hit_rate": [
+            1.0,
+            1.0
+        ]
+    },
+    "A4": {
+        "description": "Naive covariance (no Ledoit-Wolf)",
+        "ece": 0.27535559914933416,
+        "auroc": 1.0,
+        "brier": 0.10855620475418964,
+        "ef_1pct": 6.0,
+        "hit_rate": 1.0,
+        "spearman_rho": 0.7573913043478261,
+        "spearman_pval": 1.8255331709071236e-05,
+        "rmse": 1.6214808749697631,
+        "nll": 1.9796142844886269,
+        "n_samples": 24,
+        "confidence_threshold": 0.5,
+        "y_target": 7.0,
+        "ci_auroc": [
+            0.9999999999999999,
+            1.0
+        ],
+        "ci_ef_1pct": [
+            3.0,
+            24.0
+        ],
+        "ci_hit_rate": [
+            1.0,
+            1.0
+        ]
+    },
+    "A5": {
+        "description": "No multimodal detection (force K=1)",
+        "ece": 0.2642951187370194,
+        "auroc": 1.0,
+        "brier": 0.10284437246712141,
+        "ef_1pct": 6.0,
+        "hit_rate": 1.0,
+        "spearman_rho": 0.7573913043478261,
+        "spearman_pval": 1.8255331709071236e-05,
+        "rmse": 1.6214808749697631,
+        "nll": 1.9460011485815034,
+        "n_samples": 24,
+        "confidence_threshold": 0.5,
+        "y_target": 7.0,
+        "ci_auroc": [
+            0.9999999999999999,
+            1.0
+        ],
+        "ci_ef_1pct": [
+            3.0,
+            24.0
+        ],
+        "ci_hit_rate": [
+            1.0,
+            1.0
+        ]
+    },
+    "A7": {
+        "description": "No OOD detection",
+        "ece": 0.2642951187370194,
+        "auroc": 1.0,
+        "brier": 0.10284437246712141,
+        "ef_1pct": 6.0,
+        "hit_rate": 1.0,
+        "spearman_rho": 0.7573913043478261,
+        "spearman_pval": 1.8255331709071236e-05,
+        "rmse": 1.6214808749697631,
+        "nll": 1.9460011485815034,
+        "n_samples": 24,
+        "confidence_threshold": 0.5,
+        "y_target": 7.0,
+        "ci_auroc": [
+            0.9999999999999999,
+            1.0
+        ],
+        "ci_ef_1pct": [
+            3.0,
+            24.0
+        ],
+        "ci_hit_rate": [
+            1.0,
+            1.0
+        ]
+    }
+}
+
+>>> Step 4/4: Generating figures...
+Loading data...
+  Eval: 24 pockets
+  Ablation: 7 variants
+  Embeddings: 49 pockets
+
+Generating figures...
+  Saved results/embedding_rdkit/figures/fig1_dashboard.png
+  Saved results/embedding_rdkit/figures/fig2_embeddings.png
+  Saved results/embedding_rdkit/figures/fig3_uncertainty.png
+  Saved results/embedding_rdkit/figures/fig4_ablation.png
+  Saved results/embedding_rdkit/figures/fig5_calibration.png
+  Saved results/embedding_rdkit/figures/fig6_pocket_ranking.png
+
+All 6 figures saved to results/embedding_rdkit/figures/
+  fig1_dashboard.png     — Overview dashboard
+  fig2_embeddings.png    — PCA + t-SNE embeddings
+  fig3_uncertainty.png   — Uncertainty decomposition + OOD
+  fig4_ablation.png      — Ablation comparison
+  fig5_calibration.png   — Calibration + residuals
+  fig6_pocket_ranking.png — Per-pocket ranking
+>>> Figures generated.
+total 770K
+-rw-r--r--. 1 yd2915 yd2915 202K Mar 26 10:24 fig1_dashboard.png
+-rw-r--r--. 1 yd2915 yd2915 160K Mar 26 10:24 fig2_embeddings.png
+-rw-r--r--. 1 yd2915 yd2915 117K Mar 26 10:24 fig3_uncertainty.png
+-rw-r--r--. 1 yd2915 yd2915  80K Mar 26 10:24 fig4_ablation.png
+-rw-r--r--. 1 yd2915 yd2915 107K Mar 26 10:24 fig5_calibration.png
+-rw-r--r--. 1 yd2915 yd2915 106K Mar 26 10:24 fig6_pocket_ranking.png
+
+==============================================
+Pipeline complete! Results in: results/embedding_rdkit/
+  gp_model/    → gp_model.pt, train_meta.json
+  evaluation/  → eval_metrics.json
+  ablation/    → ablation_summary.json
+  figures/     → fig1-fig6 PNG files
+==============================================
+Finished at: Thu Mar 26 10:24:32 EDT 2026

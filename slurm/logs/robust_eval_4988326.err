@@ -1,0 +1,45 @@
+19:06:32 INFO: Dataset: 24 labeled pockets, d=128
+19:06:32 INFO: pKd range: [1.87, 8.96], mean=5.15, std=1.98
+19:06:32 INFO: 
+============================================================
+19:06:32 INFO: Protocol 1: Analytic LOOCV (Exact GP)
+19:06:32 INFO: ============================================================
+19:06:32 INFO:   Training Exact GP on all data for analytic LOOCV...
+19:06:46 INFO:     Epoch 25/80: MLL=-2.6528, noise=1.9475
+19:06:46 INFO:     Epoch 50/80: MLL=-2.3583, noise=2.5619
+19:06:46 INFO:     Epoch 75/80: MLL=-2.2831, noise=2.8878
+19:06:46 INFO:   LOOCV: RMSE=2.623, ρ=-0.332, R²=-0.753, NLL=2.459, CI95%=88%
+19:06:46 INFO: 
+============================================================
+19:06:46 INFO: Protocol 2: 50× Repeated 70/30 Split
+19:06:46 INFO: ============================================================
+19:06:47 INFO:     Split 10/50: RMSE=2.406, ρ=-0.357
+19:06:48 INFO:     Split 20/50: RMSE=2.455, ρ=-0.357
+19:06:49 INFO:     Split 30/50: RMSE=1.764, ρ=-0.393
+19:06:49 INFO:     Split 40/50: RMSE=2.358, ρ=-0.357
+19:06:50 INFO:     Split 50/50: RMSE=2.075, ρ=-0.786
+19:06:50 INFO:   Repeated split (50×): RMSE=2.236±0.332, ρ=-0.186±0.347, R²=-0.546±0.753
+19:06:50 INFO: 
+============================================================
+19:06:50 INFO: Protocol 3: 200× Pocket-Level Bootstrap
+19:06:50 INFO: ============================================================
+19:07:04 INFO:     Bootstrap 200/200: RMSE=2.240, ρ=0.462
+19:07:04 INFO:   Bootstrap (200/200 successful): RMSE=2.084 [1.539, 2.558], ρ=0.273 [-0.145, 0.624]
+19:07:04 INFO: 
+Results saved to results/embedding_rdkit/robust_eval/robust_eval_results.json
+19:07:04 INFO: 
+Generating figures...
+19:07:05 INFO:   Saved results/embedding_rdkit/robust_eval/figures/robust_evaluation.png
+19:07:05 INFO:   Saved results/embedding_rdkit/robust_eval/figures/loocv_diagnostics.png
+19:07:05 INFO:   Saved results/embedding_rdkit/robust_eval/figures/summary_table.png
+19:07:05 INFO: 
+============================================================
+19:07:05 INFO: ROBUST EVALUATION SUMMARY
+19:07:05 INFO: ============================================================
+19:07:05 INFO:   Protocol                        RMSE         R²          ρ        NLL    CI95%
+19:07:05 INFO:   ------------------------- ---------- ---------- ---------- ---------- --------
+19:07:05 INFO:   LOOCV                          2.623     -0.753     -0.332      2.459     88%
+19:07:05 INFO:   Repeated Split (mean)          2.236     -0.546     -0.186      2.307     89%
+19:07:05 INFO:   Repeated Split (std)           0.332      0.753      0.347      0.223     11%
+19:07:05 INFO:   Bootstrap (mean)               2.084     -0.224      0.273      2.147     92%
+19:07:05 INFO:   Bootstrap [2.5,97.5]      [1.54,2.56] [-0.82,0.23] [-0.14,0.62]

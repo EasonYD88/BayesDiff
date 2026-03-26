@@ -1,0 +1,191 @@
+{
+  "full": {
+    "description": "BayesDiff (Full)",
+    "ece": 0.2642951187370194,
+    "auroc": 1.0,
+    "brier": 0.10284437246712141,
+    "ef_1pct": 6.0,
+    "hit_rate": 1.0,
+    "spearman_rho": 0.7573913043478261,
+    "spearman_pval": 1.8255331709071236e-05,
+    "rmse": 1.6214808749697631,
+    "nll": 1.9460011485815034,
+    "n_samples": 24,
+    "confidence_threshold": 0.5,
+    "y_target": 7.0,
+    "ci_auroc": [
+      0.9999999999999999,
+      1.0
+    ],
+    "ci_ef_1pct": [
+      3.0,
+      24.0
+    ],
+    "ci_hit_rate": [
+      1.0,
+      1.0
+    ]
+  },
+  "A1": {
+    "description": "No U_gen (\u03c3\u00b2_total = \u03c3\u00b2_oracle)",
+    "ece": 0.229664874242819,
+    "auroc": 1.0,
+    "brier": 0.07418474919909647,
+    "ef_1pct": 6.0,
+    "hit_rate": 1.0,
+    "spearman_rho": 0.7573913043478261,
+    "spearman_pval": 1.8255331709071236e-05,
+    "rmse": 1.6214808749697631,
+    "nll": 1.9517184790326478,
+    "n_samples": 24,
+    "confidence_threshold": 0.5,
+    "y_target": 7.0,
+    "ci_auroc": [
+      0.9999999999999999,
+      1.0
+    ],
+    "ci_ef_1pct": [
+      3.0,
+      24.0
+    ],
+    "ci_hit_rate": [
+      1.0,
+      1.0
+    ]
+  },
+  "A2": {
+    "description": "No U_oracle (\u03c3\u00b2_total = \u03c3\u00b2_gen only)",
+    "ece": 0.2384337780945982,
+    "auroc": 1.0,
+    "brier": 0.08057981630398957,
+    "ef_1pct": 6.0,
+    "hit_rate": 1.0,
+    "spearman_rho": 0.7573913043478261,
+    "spearman_pval": 1.8255331709071236e-05,
+    "rmse": 1.6214808749697631,
+    "nll": 10335095043.848547,
+    "n_samples": 24,
+    "confidence_threshold": 0.5,
+    "y_target": 7.0,
+    "ci_auroc": [
+      0.9999999999999999,
+      1.0
+    ],
+    "ci_ef_1pct": [
+      3.0,
+      24.0
+    ],
+    "ci_hit_rate": [
+      1.0,
+      1.0
+    ]
+  },
+  "A3": {
+    "description": "No calibration (raw P_success)",
+    "ece": 0.2642951187370194,
+    "auroc": 1.0,
+    "brier": 0.10284437246712141,
+    "ef_1pct": 6.0,
+    "hit_rate": 1.0,
+    "spearman_rho": 0.7573913043478261,
+    "spearman_pval": 1.8255331709071236e-05,
+    "rmse": 1.6214808749697631,
+    "nll": 1.9460011485815034,
+    "n_samples": 24,
+    "confidence_threshold": 0.5,
+    "y_target": 7.0,
+    "ci_auroc": [
+      0.9999999999999999,
+      1.0
+    ],
+    "ci_ef_1pct": [
+      3.0,
+      24.0
+    ],
+    "ci_hit_rate": [
+      1.0,
+      1.0
+    ]
+  },
+  "A4": {
+    "description": "Naive covariance (no Ledoit-Wolf)",
+    "ece": 0.27535559914933416,
+    "auroc": 1.0,
+    "brier": 0.10855620475418964,
+    "ef_1pct": 6.0,
+    "hit_rate": 1.0,
+    "spearman_rho": 0.7573913043478261,
+    "spearman_pval": 1.8255331709071236e-05,
+    "rmse": 1.6214808749697631,
+    "nll": 1.9796142844886269,
+    "n_samples": 24,
+    "confidence_threshold": 0.5,
+    "y_target": 7.0,
+    "ci_auroc": [
+      0.9999999999999999,
+      1.0
+    ],
+    "ci_ef_1pct": [
+      3.0,
+      24.0
+    ],
+    "ci_hit_rate": [
+      1.0,
+      1.0
+    ]
+  },
+  "A5": {
+    "description": "No multimodal detection (force K=1)",
+    "ece": 0.2642951187370194,
+    "auroc": 1.0,
+    "brier": 0.10284437246712141,
+    "ef_1pct": 6.0,
+    "hit_rate": 1.0,
+    "spearman_rho": 0.7573913043478261,
+    "spearman_pval": 1.8255331709071236e-05,
+    "rmse": 1.6214808749697631,
+    "nll": 1.9460011485815034,
+    "n_samples": 24,
+    "confidence_threshold": 0.5,
+    "y_target": 7.0,
+    "ci_auroc": [
+      0.9999999999999999,
+      1.0
+    ],
+    "ci_ef_1pct": [
+      3.0,
+      24.0
+    ],
+    "ci_hit_rate": [
+      1.0,
+      1.0
+    ]
+  },
+  "A7": {
+    "description": "No OOD detection",
+    "ece": 0.2642951187370194,
+    "auroc": 1.0,
+    "brier": 0.10284437246712141,
+    "ef_1pct": 6.0,
+    "hit_rate": 1.0,
+    "spearman_rho": 0.7573913043478261,
+    "spearman_pval": 1.8255331709071236e-05,
+    "rmse": 1.6214808749697631,
+    "nll": 1.9460011485815034,
+    "n_samples": 24,
+    "confidence_threshold": 0.5,
+    "y_target": 7.0,
+    "ci_auroc": [
+      0.9999999999999999,
+      1.0
+    ],
+    "ci_ef_1pct": [
+      3.0,
+      24.0
+    ],
+    "ci_hit_rate": [
+      1.0,
+      1.0
+    ]
+  }
+}

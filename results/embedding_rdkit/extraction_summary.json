@@ -1,0 +1,808 @@
+{
+  "method": "ECFP4 Morgan fingerprints",
+  "radius": 2,
+  "n_bits": 128,
+  "n_pockets": 49,
+  "n_pockets_total": 93,
+  "n_pockets_empty": 44,
+  "stats": [
+    {
+      "pocket": "ABL2_HUMAN_274_551_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "AROE_THET8_1_263_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "BAZ2A_HUMAN_1795_1898_0",
+      "n_mols": 2,
+      "shape": [
+        2,
+        128
+      ],
+      "mean": 0.50390625,
+      "std": 0.4999847412109375
+    },
+    {
+      "pocket": "BTRN_BACCI_2_250_0",
+      "n_mols": 1,
+      "shape": [
+        1,
+        128
+      ],
+      "mean": 0.3671875,
+      "std": 0.4820381999015808
+    },
+    {
+      "pocket": "CDK6_HUMAN_1_312_0",
+      "n_mols": 1,
+      "shape": [
+        1,
+        128
+      ],
+      "mean": 0.28125,
+      "std": 0.4496092200279236
+    },
+    {
+      "pocket": "CHOD_BREST_46_552_0",
+      "n_mols": 47,
+      "shape": [
+        47,
+        128
+      ],
+      "mean": 0.38929522037506104,
+      "std": 0.4875904619693756
+    },
+    {
+      "pocket": "CPXB_BACMB_2_464_0",
+      "n_mols": 25,
+      "shape": [
+        25,
+        128
+      ],
+      "mean": 0.38593751192092896,
+      "std": 0.4868159294128418
+    },
+    {
+      "pocket": "DPO4_SULSO_1_347_0",
+      "n_mols": 47,
+      "shape": [
+        47,
+        128
+      ],
+      "mean": 0.3868018686771393,
+      "std": 0.4870176911354065
+    },
+    {
+      "pocket": "EXG1_CANAL_41_438_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "GRK4_HUMAN_1_578_0",
+      "n_mols": 48,
+      "shape": [
+        48,
+        128
+      ],
+      "mean": 0.384765625,
+      "std": 0.4865398705005646
+    },
+    {
+      "pocket": "HDHA_ECOLI_1_255_0",
+      "n_mols": 50,
+      "shape": [
+        50,
+        128
+      ],
+      "mean": 0.37937501072883606,
+      "std": 0.48523154854774475
+    },
+    {
+      "pocket": "IPMK_HUMAN_49_416_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "M3K14_HUMAN_321_678_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "NAGZ_VIBCH_1_330_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "NOS3_HUMAN_65_480_0",
+      "n_mols": 3,
+      "shape": [
+        3,
+        128
+      ],
+      "mean": 0.3723958432674408,
+      "std": 0.483443021774292
+    },
+    {
+      "pocket": "ODBB_THET8_1_324_0",
+      "n_mols": 6,
+      "shape": [
+        6,
+        128
+      ],
+      "mean": 0.3346354067325592,
+      "std": 0.47186291217803955
+    },
+    {
+      "pocket": "PA2B8_DABRR_1_121_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "PHP_SULSO_1_314_0",
+      "n_mols": 52,
+      "shape": [
+        52,
+        128
+      ],
+      "mean": 0.3973858058452606,
+      "std": 0.489357054233551
+    },
+    {
+      "pocket": "PPIA_HUMAN_1_165_0",
+      "n_mols": 36,
+      "shape": [
+        36,
+        128
+      ],
+      "mean": 0.3975694477558136,
+      "std": 0.4893955588340759
+    },
+    {
+      "pocket": "QPCT_HUMAN_33_361_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "RG1_RAUSE_1_513_0",
+      "n_mols": 24,
+      "shape": [
+        24,
+        128
+      ],
+      "mean": 0.4156900942325592,
+      "std": 0.49284058809280396
+    },
+    {
+      "pocket": "SDIA_ECOLI_1_171_0",
+      "n_mols": 12,
+      "shape": [
+        12,
+        128
+      ],
+      "mean": 0.3717447817325592,
+      "std": 0.4832707345485687
+    },
+    {
+      "pocket": "SIR3_HUMAN_117_398_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "TIAM1_HUMAN_840_931_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "TNKS1_HUMAN_1099_1319_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "UBE2T_HUMAN_1_156_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "UPPS_ECOLI_1_253_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "VAOX_PENSI_1_560_0",
+      "n_mols": 29,
+      "shape": [
+        29,
+        128
+      ],
+      "mean": 0.40678879618644714,
+      "std": 0.49123483896255493
+    },
+    {
+      "pocket": "Y635_MYCTU_1_158_0",
+      "n_mols": 2,
+      "shape": [
+        2,
+        128
+      ],
+      "mean": 0.3984375,
+      "std": 0.48957639932632446
+    },
+    {
+      "pocket": "ACE_HUMAN_650_1230_0",
+      "n_mols": 37,
+      "shape": [
+        37,
+        128
+      ],
+      "mean": 0.3984375,
+      "std": 0.48957639932632446
+    },
+    {
+      "pocket": "ATS5_HUMAN_262_480_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "BGAT_HUMAN_63_353_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "CAT_ECOLX_1_219_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "CHIA_SERMA_19_563_0",
+      "n_mols": 49,
+      "shape": [
+        49,
+        128
+      ],
+      "mean": 0.4196428656578064,
+      "std": 0.4935005009174347
+    },
+    {
+      "pocket": "COAA_MYCTU_1_312_0",
+      "n_mols": 49,
+      "shape": [
+        49,
+        128
+      ],
+      "mean": 0.3882334232330322,
+      "std": 0.48734810948371887
+    },
+    {
+      "pocket": "DFPA_LOLVU_2_314_0",
+      "n_mols": 3,
+      "shape": [
+        3,
+        128
+      ],
+      "mean": 0.3255208432674408,
+      "std": 0.4685690701007843
+    },
+    {
+      "pocket": "DPP2_HUMAN_27_492_0",
+      "n_mols": 25,
+      "shape": [
+        25,
+        128
+      ],
+      "mean": 0.37031251192092896,
+      "std": 0.4828883409500122
+    },
+    {
+      "pocket": "F16P1_HUMAN_1_338_0",
+      "n_mols": 53,
+      "shape": [
+        53,
+        128
+      ],
+      "mean": 0.3873820900917053,
+      "std": 0.4871521294116974
+    },
+    {
+      "pocket": "GSTP1_HUMAN_2_210_0",
+      "n_mols": 41,
+      "shape": [
+        41,
+        128
+      ],
+      "mean": 0.3805259168148041,
+      "std": 0.48551613092422485
+    },
+    {
+      "pocket": "HMD_METJA_1_358_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "KS6A3_HUMAN_41_357_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "MCCF_ECOLX_1_344_0",
+      "n_mols": 22,
+      "shape": [
+        22,
+        128
+      ],
+      "mean": 0.36399146914482117,
+      "std": 0.4811461865901947
+    },
+    {
+      "pocket": "NEP_HUMAN_54_750_0",
+      "n_mols": 46,
+      "shape": [
+        46,
+        128
+      ],
+      "mean": 0.3851902186870575,
+      "std": 0.48664018511772156
+    },
+    {
+      "pocket": "NPD_THEMA_1_246_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "OLIAC_CANSA_1_101_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "PAC_ECOLX_27_846_0",
+      "n_mols": 50,
+      "shape": [
+        50,
+        128
+      ],
+      "mean": 0.39921873807907104,
+      "std": 0.4897378385066986
+    },
+    {
+      "pocket": "PLCD1_RAT_134_756_0",
+      "n_mols": 1,
+      "shape": [
+        1,
+        128
+      ],
+      "mean": 0.2734375,
+      "std": 0.4457235038280487
+    },
+    {
+      "pocket": "PTGIS_HUMAN_20_500_0",
+      "n_mols": 26,
+      "shape": [
+        26,
+        128
+      ],
+      "mean": 0.4224759638309479,
+      "std": 0.4939534664154053
+    },
+    {
+      "pocket": "AK1BA_HUMAN_1_316_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "BACE2_HUMAN_76_460_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "BGL07_ORYSJ_25_504_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "CCPR_YEAST_69_361_0",
+      "n_mols": 9,
+      "shape": [
+        9,
+        128
+      ],
+      "mean": 0.3836805522441864,
+      "std": 0.4862815737724304
+    },
+    {
+      "pocket": "CHIB1_ASPFM_39_433_0",
+      "n_mols": 1,
+      "shape": [
+        1,
+        128
+      ],
+      "mean": 0.4765625,
+      "std": 0.4994503855705261
+    },
+    {
+      "pocket": "CONA_CANCT_1_237_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "DHAK_ECOLI_1_356_0",
+      "n_mols": 51,
+      "shape": [
+        51,
+        128
+      ],
+      "mean": 0.374387264251709,
+      "std": 0.48396429419517517
+    },
+    {
+      "pocket": "DYRK2_HUMAN_145_550_0",
+      "n_mols": 8,
+      "shape": [
+        8,
+        128
+      ],
+      "mean": 0.38671875,
+      "std": 0.4869983196258545
+    },
+    {
+      "pocket": "FKB1A_HUMAN_2_108_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "GUX1_HYPJE_18_451_0",
+      "n_mols": 6,
+      "shape": [
+        6,
+        128
+      ],
+      "mean": 0.3619791567325592,
+      "std": 0.4805728495121002
+    },
+    {
+      "pocket": "IDHP_HUMAN_40_452_0",
+      "n_mols": 47,
+      "shape": [
+        47,
+        128
+      ],
+      "mean": 0.3823138177394867,
+      "std": 0.4859526455402374
+    },
+    {
+      "pocket": "LAT_MYCTU_1_449_0",
+      "n_mols": 22,
+      "shape": [
+        22,
+        128
+      ],
+      "mean": 0.4044744372367859,
+      "std": 0.4907900393009186
+    },
+    {
+      "pocket": "MENE_BACSU_2_486_0",
+      "n_mols": 1,
+      "shape": [
+        1,
+        128
+      ],
+      "mean": 0.265625,
+      "std": 0.4416654407978058
+    },
+    {
+      "pocket": "NOS1_HUMAN_302_723_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "NQO1_HUMAN_2_274_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "P2Y12_HUMAN_1_342_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "PAK4_HUMAN_291_591_ATP_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "PNTM_STRAE_2_398_0",
+      "n_mols": 36,
+      "shape": [
+        36,
+        128
+      ],
+      "mean": 0.4040798544883728,
+      "std": 0.49071308970451355
+    },
+    {
+      "pocket": "PYRD_TRYCC_2_314_catalytic_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "RIBB_VIBCH_2_218_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "SQHC_ALIAD_1_631_0",
+      "n_mols": 25,
+      "shape": [
+        25,
+        128
+      ],
+      "mean": 0.4337500035762787,
+      "std": 0.49559149146080017
+    },
+    {
+      "pocket": "TNKS2_HUMAN_948_1162_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "AKT1_HUMAN_1_137_0",
+      "n_mols": 19,
+      "shape": [
+        19,
+        128
+      ],
+      "mean": 0.35074013471603394,
+      "std": 0.47720175981521606
+    },
+    {
+      "pocket": "BAPA_SPHXN_30_402_0",
+      "n_mols": 40,
+      "shape": [
+        40,
+        128
+      ],
+      "mean": 0.3994140625,
+      "std": 0.48977798223495483
+    },
+    {
+      "pocket": "BSD_ASPTE_1_130_0",
+      "n_mols": 5,
+      "shape": [
+        5,
+        128
+      ],
+      "mean": 0.38749998807907104,
+      "std": 0.48717936873435974
+    },
+    {
+      "pocket": "CD38_HUMAN_44_300_0",
+      "n_mols": 44,
+      "shape": [
+        44,
+        128
+      ],
+      "mean": 0.38760653138160706,
+      "std": 0.487203985452652
+    },
+    {
+      "pocket": "CHIB_SERMA_1_499_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "COTA_BACSU_1_513_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "DIDH_RAT_1_319_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "EFTU1_ECOLI_2_178_0",
+      "n_mols": 41,
+      "shape": [
+        41,
+        128
+      ],
+      "mean": 0.4182545840740204,
+      "std": 0.49327242374420166
+    },
+    {
+      "pocket": "GLMU_STRPN_2_459_0",
+      "n_mols": 4,
+      "shape": [
+        4,
+        128
+      ],
+      "mean": 0.333984375,
+      "std": 0.471634179353714
+    },
+    {
+      "pocket": "HDAC8_HUMAN_1_377_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "IMA1_HUMAN_68_497_0",
+      "n_mols": 48,
+      "shape": [
+        48,
+        128
+      ],
+      "mean": 0.4080403745174408,
+      "std": 0.49147066473960876
+    },
+    {
+      "pocket": "LMBL1_HUMAN_198_526_0",
+      "n_mols": 49,
+      "shape": [
+        49,
+        128
+      ],
+      "mean": 0.3960459232330322,
+      "std": 0.489074170589447
+    },
+    {
+      "pocket": "MURA_ECOLI_1_419_catalytic_0",
+      "n_mols": 32,
+      "shape": [
+        32,
+        128
+      ],
+      "mean": 0.396240234375,
+      "std": 0.4891154170036316
+    },
+    {
+      "pocket": "NOS2_HUMAN_78_505_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "NR1H4_HUMAN_258_486_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "PA21B_PIG_23_146_0",
+      "n_mols": 3,
+      "shape": [
+        3,
+        128
+      ],
+      "mean": 0.3359375,
+      "std": 0.4723171591758728
+    },
+    {
+      "pocket": "PHKG1_RABIT_6_296_ATPsite_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "POL_FOAMV_861_1060_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "PYRE_BACAN_1_210_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "ROCO4_DICDI_1009_1292_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "TBK1_HUMAN_1_303_0",
+      "n_mols": 46,
+      "shape": [
+        46,
+        128
+      ],
+      "mean": 0.403192937374115,
+      "std": 0.49053889513015747
+    },
+    {
+      "pocket": "TRAR_RHIRD_1_234_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    },
+    {
+      "pocket": "XANLY_BACGL_26_777_0",
+      "n_mols": 0,
+      "shape": null,
+      "mean": 0,
+      "std": 0
+    }
+  ]
+}
