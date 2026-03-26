@@ -24,3 +24,6 @@ results/**/*.npz
 results/**/*.npy
 results/**/*.pt
 results/**/*.sdf
+
+# ── Exception: track all embedding_1000step results (small enough) ──
+!results/embedding_1000step/**
