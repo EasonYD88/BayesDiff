@@ -268,6 +268,36 @@ These two bottlenecks must be addressed **simultaneously** — better embeddings
 
 ---
 
+## 6.1 Robust Evaluation Results (Completed)
+
+> Run: HPC job 4988326 on L40S (gl027), 1 min 34 sec  
+> Script: `scripts/12_robust_evaluation.py`  
+> Output: `results/embedding_rdkit/robust_eval/`
+
+Three protocols were executed using **Exact GP** (isotropic Matérn-5/2) on ECFP4-128 embeddings (N=24 labeled pockets, no augmentation):
+
+| Protocol | RMSE | R² | Spearman ρ | NLL | CI-95% Coverage |
+|----------|:----:|:--:|:----------:|:---:|:---------------:|
+| **LOOCV (analytic)** | 2.62 | -0.75 | -0.33 | 2.46 | 88% |
+| **50× Repeated 70/30** | 2.24±0.33 | -0.55±0.75 | -0.19±0.35 | 2.31±0.22 | 89%±11% |
+| **200× Bootstrap** | 2.08 [1.54,2.56] | -0.22 [-0.82,0.23] | 0.27 [-0.14,0.62] | 2.15 | 92% |
+
+**Key findings**:
+
+1. **ECFP4-128 carries NO predictive signal for pKd** — Spearman ρ is negative or near-zero across all protocols. The bootstrap 95% CI for ρ is [-0.14, 0.62], spanning zero.
+2. **Previous train ρ=0.72 was pure overfitting** — LOOCV (which prevents data leakage) gives ρ=-0.33.
+3. **The GP is essentially predicting the mean** — R² is negative in all protocols (worse than a constant predictor).
+4. **Uncertainty calibration is decent** — 88-92% CI coverage, but only because the predicted intervals are extremely wide (~5.5 pKd units).
+
+**Conclusion**: Bottleneck A (embedding expressiveness) is confirmed as the dominant issue. No GP trick will help — we need richer molecular representations.
+
+Figures: `results/embedding_rdkit/robust_eval/figures/`
+- `robust_evaluation.png` — LOOCV scatter, repeated-split violin, bootstrap CI bars
+- `loocv_diagnostics.png` — Residuals, calibration plot, QQ plot
+- `summary_table.png` — Side-by-side protocol comparison
+
+---
+
 ## 7. Revised Optimization Plan (with Embedding Upgrade & Robust Evaluation)
 
 ### Phase 1: Robust Evaluation Framework (Priority: 🥇 Critical)
