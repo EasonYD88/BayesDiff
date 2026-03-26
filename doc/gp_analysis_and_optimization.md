@@ -567,23 +567,40 @@ The current GP model achieves good **training** fit (R²=0.51, ρ=0.72) but **fa
 1. **Embedding ceiling**: ECFP4-128 cannot encode the chemistry that determines binding affinity.
 2. **Evaluation noise**: N=24 with a single random split produces results dominated by sampling noise.
 
-### What We Found (After Phases 1–2)
+### What We Found (After Phases 1–3)
 
 ✅ **Phase 1 (Robust Evaluation)**: Confirmed — single-split results are unreliable. LOOCV and repeated splits show ECFP4-128 has ρ≈-0.2 to -0.3, not the +0.72 seen in training.
 
 ✅ **Phase 2 (Embedding Comparison)**: **All 6 embeddings fail equally.** The bottleneck is NOT embedding type. ECFP4, ECFP6, FCFP4, RDKit-2D, and Combined all produce ρ ≈ 0 ± 0.3 under LOOCV. The Tanimoto kernel helps RMSE but cannot rescue a fundamentally missing signal.
 
+✅ **Phase 3 (Bayesian Optimization of GP Hyperparameters)**: **Exhaustive search confirms no GP config works.**
+- 200 Optuna trials searching over: 6 embeddings × 5 kernels × PCA dims × ARD × priors × LR × epochs
+- Best config: **FCFP4-2048 + RQ kernel + PCA→10, isotropic, outputscale prior**
+- Best LOOCV: RMSE=2.07, **ρ=-0.42** (anti-correlated!), R²=-0.09
+- 50× repeated split validation: RMSE=2.09±0.33, **ρ=0.11±0.33** (not significant)
+- All top-5 trials are FCFP4-2048 + RQ kernel variants with nearly identical RMSE≈2.07
+- Key insight from BO: **RQ kernel >> Matérn/RBF** (RMSE 2.1 vs 5.2), but even the best kernel only achieves mean-prediction level performance
+
+**BO Figures**: `results/bo_gp/figures/`
+| File | Description |
+|------|-------------|
+| `bo_optimization_history.png` | 4-panel: optimization convergence, RMSE by embedding, RMSE by kernel, ρ by embedding |
+| `bo_best_config_loocv.png` | LOOCV scatter (flat predictions ≈ mean pKd), residuals, calibration plot |
+| `bo_validation_splits.png` | 50× split metrics with error bars |
+| `bo_summary_table.png` | Best configuration parameters and performance metrics |
+
 ### Revised Conclusion
 
-The GP oracle as currently designed **cannot predict pKd from mean-pooled molecular features** with N=24 samples. The failure is not in the GP or the embedding — it is in the **information pathway**:
+After three systematic phases (robust evaluation → embedding comparison → Bayesian optimization), we can **definitively conclude**:
 
-1. Generated molecules → mean-pooled embedding → pKd is too lossy
-2. N=24 is below the threshold where any nonparametric method can learn a useful mapping
-3. The variance in generated molecular properties within a pocket may wash out inter-pocket differences
+1. **The GP oracle cannot predict pKd from mean-pooled molecular features with N=24.** This is not a hyperparameter tuning problem — 200 Optuna trials across the full search space could not find a single configuration with positive LOOCV Spearman ρ.
+2. **The information pathway is broken**: Generated molecules → mean-pooled embedding → pKd is too lossy. The GP essentially learns to predict the mean pKd (≈5.0) for every pocket.
+3. **Calibration is acceptable**: CI-95% coverage ≈ 92% (conservative), meaning the GP at least "knows what it doesn't know" — but knowing nothing useful.
 
 ### Recommended Next Steps
 
-1. **Increase data**: More pockets with pKd labels (target N ≥ 100)
+1. **Increase data**: More pockets with pKd labels (target N ≥ 100) — this is the single most impactful change
 2. **Richer information pathway**: Instead of mean-pooling, consider distribution-level features (variance, percentiles) or attention-weighted pooling
 3. **Learned embeddings**: GNN on 3D molecular graphs (SchNet/DimeNet, PyG available) may capture what fixed fingerprints miss
 4. **Alternative oracle design**: Consider per-molecule scoring (not per-pocket mean) or direct docking score prediction
+5. **Use the GP as uncertainty estimator, not predictor**: Since calibration is decent, the GP can still be useful for ranking pockets by uncertainty even if it can't predict pKd accurately

@@ -1,0 +1,20 @@
+=========================================
+Bayesian Optimization of GP Hyperparameters
+Node: gl038.hpc.nyu.edu, GPU: 0
+=========================================
+[W 2026-03-26 19:37:28,451] Trial 1 failed with parameters: {'embedding': 'Combined', 'pca_dim': 5} because of the following error: ValueError('CategoricalDistribution does not support dynamic value space.').
+Traceback (most recent call last):
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/optuna/study/_optimize.py", line 206, in _run_trial
+    value_or_values = func(trial)
+  File "/scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-26T13-27-15/scripts/14_bo_gp_hyperparams.py", line 431, in objective
+    kernel_type = trial.suggest_categorical(
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/optuna/trial/_trial.py", line 414, in suggest_categorical
+    return self._suggest(name, CategoricalDistribution(choices=choices))
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/optuna/trial/_trial.py", line 649, in _suggest
+    storage.set_trial_param(trial_id, name, param_value_in_internal_repr, distribution)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/optuna/storages/_in_memory.py", line 205, in set_trial_param
+    distributions.check_distribution_compatibility(
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/optuna/distributions.py", line 656, in check_distribution_compatibility
+    raise ValueError(
+ValueError: CategoricalDistribution does not support dynamic value space.
+[W 2026-03-26 19:37:28,479] Trial 1 failed with value None.
