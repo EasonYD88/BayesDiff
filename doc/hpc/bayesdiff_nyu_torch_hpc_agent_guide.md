@@ -492,3 +492,85 @@ cat results/embedding_1000step/merged/evaluation/eval_metrics.json | python3 -m 
 # 检查 ablation
 cat results/embedding_1000step/merged/ablation/ablation_summary.json | python3 -m json.tool
 ```
+
+---
+
+## 2026-03-26 增补：ECFP4 指纹重建流程
+
+### 背景
+
+1000-step 采样的 SE(3) embedding 全为零向量（TargetDiff 不返回 embedding），导致 GP 坍缩。
+改用 RDKit ECFP4 分子指纹从 SDF 文件提取 128-bit 表征，成功修复。
+
+### 数据现状
+
+- 49/93 pocket 有有效 SDF 文件（每个 1–53 个有效分子）
+- 24 pocket 匹配到 pK 标签（用于评估）
+- Embedding 存储在 `results/embedding_rdkit/all_embeddings.npz`
+
+### 一键流水线
+
+```bash
+cd /scratch/${USER}/BayesDiff
+
+sbatch slurm/rdkit_pipeline.sh
+```
+
+此脚本依次执行：
+1. GP 训练 (`04_train_gp.py`)
+2. 评估 (`05_evaluate.py`)
+3. 消融 (`06_ablation.py`)
+4. 可视化 (`09_generate_figures.py`)
+
+### 手动提取 ECFP4 指纹（如需重新提取）
+
+```python
+# 在登录节点或作业中运行
+import numpy as np
+from pathlib import Path
+from rdkit import Chem
+from rdkit.Chem import AllChem
+
+NBITS, RADIUS = 128, 2  # ECFP4
+all_embeddings = {}
+for sdf_path in sorted(Path('results/embedding_1000step').rglob('*.sdf')):
+    if sdf_path.stat().st_size == 0:
+        continue
+    pocket = sdf_path.parent.name
+    fps = []
+    for mol in Chem.SDMolSupplier(str(sdf_path), removeHs=True, sanitize=True):
+        if mol is not None:
+            fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius=RADIUS, nBits=NBITS)
+            fps.append(np.array(fp, dtype=np.float32))
+    if fps:
+        all_embeddings[pocket] = np.stack(fps)
+
+Path('results/embedding_rdkit').mkdir(parents=True, exist_ok=True)
+np.savez('results/embedding_rdkit/all_embeddings.npz', **all_embeddings)
+```
+
+### 成果验收
+
+```bash
+python3 -c "
+import numpy as np, json
+d = np.load('results/embedding_rdkit/all_embeddings.npz')
+print(f'Pockets: {len(d.files)}')
+all_e = np.vstack([d[k] for k in d.files])
+print(f'Total embeddings: {all_e.shape}, non-zero: {(all_e != 0).mean():.1%}')
+
+em = json.load(open('results/embedding_rdkit/evaluation/eval_metrics.json'))
+print(f'AUROC={em[\"auroc\"]}, Spearman={em[\"spearman_rho\"]:.3f}, RMSE={em[\"rmse\"]:.3f}')
+"
+
+ls results/embedding_rdkit/figures/fig*.png
+```
+
+### 结果参考值
+
+| Metric | Zero-Emb (旧) | ECFP4 (新) |
+|--------|:---:|:---:|
+| AUROC | 0.500 | **1.000** |
+| Spearman ρ | NaN | **0.757** |
+| RMSE | 1.839 | **1.621** |
+| NLL | 2.187 | **1.946** |

@@ -752,3 +752,118 @@ Once job 3902319 completes:
 | Embedding quality | Noisy (early termination) | High (full denoising) |
 | ECE | 0.034 | TBD |
 | AUROC | 0.500 | TBD (expect improvement) |
+
+---
+
+## 2026-03-26: ECFP4 Fingerprint Re-embedding & Full Pipeline Re-run
+
+### Root Cause: Zero Embeddings
+
+**发现**：所有 93 个 pocket 的 `all_embeddings.npz` 中 embedding 全为零向量。
+
+**原因**：TargetDiff 的 `sample_diffusion_ligand()` 返回 7 个值（不含 `mol_embeddings`），
+`bayesdiff/sampler.py` line 226 回退到 `mol_embeddings = [None] * len(all_pred_pos)`，
+最终在 line 383 中被替换为 `np.zeros(128)`。GP 在全零向量上训练，posterior 坍缩为
+常数 μ=5.83，AUROC=0.5（随机水平）。
+
+### 修复方案：ECFP4 分子指纹替代
+
+从 1000-step 采样产生的 SDF 文件中提取 RDKit Morgan 指纹 (ECFP4, radius=2, 128-bit)
+作为分子表征：
+
+- **49/93 pocket** 有有效 SDF 文件（非空且含可解析分子）
+- **44/93 pocket** SDF 为空（分子重建失败）
+- 每个 pocket 有 1–53 个有效分子（mean=27）
+- **24 个 pocket** 匹配到 affinity_info.pkl 中的 pK 标签
+
+### HPC 执行
+
+| Job ID | 分区 | 节点 | 耗时 | 状态 |
+|--------|------|------|------|------|
+| 4974419 | l40s_public | gl065 (L40S) | 3min 36s | ✅ COMPLETED |
+
+流水线：GP 训练 → 评估 → 消融 → 可视化，一次提交完成。
+
+脚本：`slurm/rdkit_pipeline.sh`
+
+### 结果对比：Zero Embeddings → ECFP4
+
+| Metric | Zero-Emb (旧) | ECFP4 (新) | 变化 |
+|--------|:---:|:---:|:---:|
+| **AUROC** | 0.500 | **1.000** | +0.500 |
+| **Spearman ρ** | NaN | **0.757** | — |
+| **EF@1%** | 0.0 | **6.0** | +6.0 |
+| **Hit Rate** | NaN | **1.000** | — |
+| **RMSE** | 1.839 | **1.621** | −0.218 |
+| **NLL** | 2.187 | **1.946** | −0.241 |
+| **ECE** | 0.088 | 0.264 | +0.177 |
+| **N pockets** | 48 | 24 | −24 |
+
+**关键改善**：
+- μ_pred 从常数 5.83 变为 [4.30, 7.67]，std=0.76
+- GP 能够区分不同 pocket 的亲和力
+
+### 不确定性分解
+
+| 项 | 均值 | 占比 |
+|---|---|---|
+| σ²_oracle | 2.130 | 43.4% |
+| σ²_gen | 2.777 | 56.6% |
+| σ²_total | 4.907 | 100% |
+
+**发现**：
+- σ²_gen 现在是主要不确定性来源（之前为 0）
+- M 与 σ²_gen 强相关 (ρ=0.94, p<1e-10)
+- 95% CI 覆盖率 100%
+
+### 消融结果
+
+| Variant | ECE | AUROC | NLL | RMSE | 说明 |
+|---------|-----|-------|-----|------|------|
+| **full** | 0.264 | 1.000 | 1.95 | 1.62 | 完整 BayesDiff |
+| A1 (no σ²_gen) | 0.230 | 1.000 | 1.95 | 1.62 | σ²_gen 被移除 |
+| **A2 (no σ²_oracle)** | **0.238** | **1.000** | **1.03e10** | **1.62** | **NLL 爆炸** |
+| A3 (no calibration) | 0.264 | 1.000 | 1.95 | 1.62 | 无校准数据 |
+| A4 (naive cov) | 0.275 | 1.000 | 1.98 | 1.62 | Ledoit-Wolf 有改善 |
+| A5 (no multimodal) | 0.264 | 1.000 | 1.95 | 1.62 | 均为单模态 |
+| A7 (no OOD) | 0.264 | 1.000 | 1.95 | 1.62 | 无 OOD 检测数据 |
+
+**关键发现**：A2 (去掉 oracle 方差) NLL 爆炸至 10¹⁰，证实 oracle 方差是不可替代的核心组件。
+
+### 产物目录
+
+```text
+results/embedding_rdkit/
+├── all_embeddings.npz              # 49 pockets × ECFP4 (128-bit)
+├── extraction_summary.json         # 指纹提取元数据
+├── gp_model/
+│   ├── gp_model.pt                 # SVGP (d=128, J=48, loss=2.37)
+│   ├── train_meta.json             # 训练元数据
+│   └── train_data.npz              # OOD 检测训练数据
+├── evaluation/
+│   ├── eval_metrics.json           # 聚合指标
+│   ├── eval_multi_threshold.json   # 多阈值 (y≥7, y≥8)
+│   └── per_pocket_results.json     # 24 个 pocket 详细结果
+├── ablation/
+│   ├── ablation_summary.json       # 7 变体对比
+│   └── ablation_per_pocket.json    # 逐 pocket 消融结果
+└── figures/
+    ├── fig1_dashboard.png          # 4-panel 概览
+    ├── fig2_embeddings.png         # PCA + t-SNE
+    ├── fig3_uncertainty.png        # 不确定性分解
+    ├── fig4_ablation.png           # 消融条形图
+    ├── fig5_calibration.png        # 校准曲线
+    ├── fig6_pocket_ranking.png     # P_success 排名
+    ├── fig7_comparison_dashboard.png   # 修复前后对比 Dashboard
+    ├── fig8_ablation_comparison.png    # 消融对比 (Zero vs ECFP4)
+    ├── fig9_embedding_comparison.png   # Embedding 质量对比 (PCA/t-SNE)
+    └── fig10_pocket_analysis.png       # 逐 pocket 详细分析
+```
+
+### 已知局限 & 后续方向
+
+1. **样本量**：仅 24 pocket 有标签匹配（49 有 embedding，93 在 test set 中）
+2. **ECE 较高 (0.264)**：校准仍有改善空间，可能需要更多训练数据或 Platt scaling
+3. **GP 预测偏向均值**：对极端 pKd (< 3 或 > 8) 预测欠佳，因 48 inducing points + 200 增强样本仍显稀疏
+4. **ECFP4 vs SE(3) embedding**：指纹丢失了 3D 信息，需修复 TargetDiff 的 embedding 提取以获得真正的 SE(3) 表征
+5. **修复方向**：修改 TargetDiff `sample_diffusion_ligand()` 以返回 encoder hidden states 作为第 8 个返回值
