@@ -604,3 +604,161 @@ After three systematic phases (robust evaluation → embedding comparison → Ba
 3. **Learned embeddings**: GNN on 3D molecular graphs (SchNet/DimeNet, PyG available) may capture what fixed fingerprints miss
 4. **Alternative oracle design**: Consider per-molecule scoring (not per-pocket mean) or direct docking score prediction
 5. **Use the GP as uncertainty estimator, not predictor**: Since calibration is decent, the GP can still be useful for ranking pockets by uncertainty even if it can't predict pKd accurately
+
+---
+
+## 11. Data Acquisition Plan
+
+### 11.1 Current Data Pipeline Bottleneck
+
+```
+93 test pockets ──┬── 48 with pKd ──┬── 24 with SDF ✅ (current GP training set)
+                  │                 └── 24 WITHOUT SDF ← Easy Win (Tier 1)
+                  └── 45 without pKd ── 25 with SDF (wasted generation)
+```
+
+**Root cause**: Only 24 pockets have BOTH generated molecules (SDF) AND binding affinity labels (pKd). We lose data at two stages:
+1. **Generation failure**: 44/93 pockets fail during TargetDiff 1000-step sampling (52.7% success)
+2. **Label mismatch**: Only 48/93 test pockets have valid pKd in `affinity_info.pkl`
+
+**Full data inventory** (from `affinity_info.pkl`):
+
+| Scope | Entries | Pocket families | With pKd |
+|-------|---------|-----------------|----------|
+| Full affinity_info.pkl | 184,087 | 2,474 | 1,041 |
+| Test set (93 pockets) | - | 93 | 48 |
+| CrossDocked train split | 100,000 | ~1,000+ | ~993 |
+
+### 11.2 Three-Tier Data Expansion Strategy
+
+#### Tier 1: Recover Missing SDFs for 24 Labeled Pockets (24 → 48, 2× gain)
+
+**Goal**: Double the GP training set by regenerating molecules for the 24 pockets that have pKd but failed SDF generation.
+
+**Effort**: Low (rerun existing pipeline) | **Impact**: High (N doubles) | **Time**: ~4-8 hours on A100
+
+**Missing pockets** (all have valid pKd):
+
+| Pocket | pKd | Pocket | pKd |
+|--------|:---:|--------|:---:|
+| ABL2_HUMAN_274_551_0 | 8.13 | M3K14_HUMAN_321_678_0 | 7.28 |
+| ATS5_HUMAN_262_480_0 | 6.78 | NAGZ_VIBCH_1_330_0 | 6.64 |
+| BACE2_HUMAN_76_460_0 | 6.12 | NPD_THEMA_1_246_0 | 3.00 |
+| BGAT_HUMAN_63_353_0 | 3.25 | NR1H4_HUMAN_258_486_0 | 7.37 |
+| BGL07_ORYSJ_25_504_0 | 3.92 | P2Y12_HUMAN_1_342_0 | 7.36 |
+| CHIB_SERMA_1_499_0 | 4.17 | PA2B8_DABRR_1_121_0 | 6.80 |
+| CONA_CANCT_1_237_0 | 5.48 | PAK4_HUMAN_291_591_ATP_0 | 6.88 |
+| FKB1A_HUMAN_2_108_0 | 7.58 | POL_FOAMV_861_1060_0 | 7.27 |
+| HDAC8_HUMAN_1_377_0 | 6.67 | QPCT_HUMAN_33_361_0 | 4.94 |
+| KS6A3_HUMAN_41_357_0 | 7.88 | ROCO4_DICDI_1009_1292_0 | 4.81 |
+| SIR3_HUMAN_117_398_0 | 7.59 | UPPS_ECOLI_1_253_0 | 5.13 |
+| TNKS1_HUMAN_1099_1319_0 | 7.65 | TNKS2_HUMAN_948_1162_0 | 6.99 |
+
+**Implementation plan**:
+1. Create `data/splits/missing_pk_pockets.txt` with these 24 pocket names
+2. Run `scripts/02_sample_molecules.py --pocket_list data/splits/missing_pk_pockets.txt --num_steps 1000 --num_samples 64`
+3. Use lower step count (500) or different seeds as fallback for stubborn pockets
+4. Extract ECFP4/FCFP4/RDKit embeddings from new SDFs
+5. Merge into existing dataset → N=48 for GP retraining
+
+**Why they failed initially**: Likely causes include:
+- Invalid atom types or valence errors in generated molecules
+- Pocket geometry incompatible with TargetDiff's SE(3) diffusion
+- Numerical instability during 1000-step denoising
+
+**Recovery strategies**:
+- Try fewer steps (500, 200) — less accurate but more stable
+- Try more samples with filtering (128 samples, keep best 64)
+- Different random seeds
+- Relax molecule sanitization (allow partial hydrogens)
+
+#### Tier 2: Mine CrossDocked Training Data (48 → 150+, 3× gain)
+
+**Goal**: Extend beyond the 93-pocket test set by mining the CrossDocked2020 training LMDB for additional pockets with pKd labels.
+
+**Effort**: Medium | **Impact**: Very High | **Time**: 1-2 days
+
+**Data source**: `external/targetdiff/data/data/crossdocked_v1.1_rmsd1.0_pocket10_processed_final.lmdb` (4.1GB)
+- 100,000 train entries across ~1,000+ pocket families
+- **993 non-test pocket families with valid pKd** in `affinity_info.pkl`
+
+**Implementation plan**:
+1. **Extract pocket structures from LMDB**:
+   ```python
+   import lmdb
+   env = lmdb.open(lmdb_path, readonly=True)
+   # Decode entries → pocket PDB + ligand SDF
+   # Group by pocket family → select representative structure per family
+   ```
+2. **Filter pockets with pKd**: Cross-reference with `affinity_info.pkl` → ~993 families
+3. **Select diverse subset**: Use pocket-family clustering (mmseqs2) to pick ~100-200 diverse pockets
+4. **Generate molecules**: Run TargetDiff sampling on selected pockets (A100 array job)
+5. **Extract embeddings + train GP**: With N≈150+, GP has much better chance of learning
+
+**Key considerations**:
+- Must ensure no **data leakage**: TargetDiff model was trained on these pockets, so generated molecules may be biased
+- Solution: Use the **test-split pockets only** for final evaluation; training-split pockets for GP training
+- Alternative: Use TargetDiff's own train/val/test splits to maintain integrity
+
+**Risk**: TargetDiff was trained on these pockets → generated molecules may memorize training ligands rather than exploring novel chemistry. This is actually OK for the GP oracle (we want representative molecules), but must be acknowledged.
+
+#### Tier 3: External Label Expansion via PDBbind (150+ → 300+)
+
+**Goal**: Add more pKd labels from PDBbind v2020 for pockets that exist in CrossDocked but lack labels in `affinity_info.pkl`.
+
+**Effort**: Medium-High | **Impact**: High | **Time**: 2-3 days
+
+**Data source**: PDBbind v2020 refined set (~3,600 complexes with experimental Kd/Ki/IC50)
+- Files present: `external/targetdiff/data/data/pdbbind_v2020/`
+- Parser exists: `bayesdiff/data.py::parse_pdbbind_index()` — already handles all affinity types
+- Script exists: `scripts/01_prepare_data.py` — designed for PDBbind parsing but not used in current pipeline
+
+**Implementation plan**:
+1. Parse PDBbind v2020 INDEX file with existing `parse_pdbbind_index()`
+2. Map PDBbind PDB codes → CrossDocked pocket families (by UniProt ID or pocket overlap)
+3. For each new labeled pocket:
+   - Check if structure exists in LMDB or test set
+   - If yes → generate molecules → extract embeddings
+   - If no → extract pocket from PDB file using `scripts/01_prepare_data.py`
+4. Merge all labels into unified dataset
+
+**Challenge**: Mapping between PDBbind PDB codes and CrossDocked pocket family names requires protein-level matching (sequence or structure alignment).
+
+### 11.3 Expected Impact on GP Performance
+
+| Tier | N (train) | Expected LOOCV ρ | Rationale |
+|:----:|:---------:|:-----------------:|-----------|
+| Current | 24 | ≈ 0 (random) | N too small for any signal |
+| Tier 1 | 48 | 0.1-0.3 (maybe) | Still small; main value is tighter confidence intervals |
+| Tier 2 | 150+ | 0.3-0.5 (hopeful) | Enough data for simple structure-activity patterns |
+| Tier 3 | 300+ | 0.4-0.6 (target) | Sufficient for GP with RQ kernel + FCFP4 (best BO config) |
+
+**Important caveat**: More data only helps if the **information pathway** (generated molecules → embedding → pKd) contains signal. If TargetDiff generates similar molecules for all pockets regardless of binding affinity, then N=300 will still fail. Tier 1 (N=48) will quickly test this hypothesis.
+
+### 11.4 Recommended Execution Order
+
+| Step | Action | Deliverable | Prerequisite |
+|:----:|--------|-------------|:------------:|
+| **1** | Create missing pocket list | `data/splits/missing_pk_pockets.txt` | None |
+| **2** | Regenerate SDFs for 24 missing pockets | New SDF files in `results/` | Step 1 |
+| **3** | Extract embeddings + retrain GP | LOOCV with N=48 | Step 2 |
+| **4** | Evaluate: does doubling N improve ρ? | Updated results | Step 3 |
+| **5** | If yes → proceed to Tier 2 (LMDB mining) | 150+ pocket dataset | Step 4 confirms signal |
+| **6** | If no → pivot to information pathway (mean-pool alternatives, GNN) | New architecture | Step 4 shows no signal |
+
+**Step 4 is the critical decision point**: If N=48 shows meaningfully better ρ than N=24 (e.g., ρ > 0.15 with p < 0.05), then data quantity is the bottleneck and Tiers 2-3 are worth pursuing. If ρ remains ≈ 0, then the problem is fundamental and more data won't help.
+
+### 11.5 Computational Budget Estimate
+
+| Task | GPU Hours | Queue | Notes |
+|------|:---------:|:-----:|-------|
+| Tier 1: Regenerate 24 pockets (1000 steps × 64 samples) | 8-12h | A100 | Array job, 4 shards |
+| Tier 1: Embedding extraction + GP training | 0.5h | L40S | Quick |
+| Tier 2: LMDB parsing + pocket selection | 1h | CPU | No GPU needed |
+| Tier 2: Generate for ~150 pockets | 24-36h | A100 | Array job, 8-16 shards |
+| Tier 2: Embedding extraction + GP training | 1h | L40S | |
+| Tier 3: PDBbind mapping + structure prep | 2-4h | CPU | Manual alignment needed |
+
+**Total for Tier 1**: ~12 GPU hours (can complete in 1 day)
+**Total for Tier 1+2**: ~48 GPU hours (2-3 days with queue waits)
+
