@@ -124,7 +124,126 @@ At each stage, information is lost. The final 16 real training points in 128-dim
 
 ---
 
-## 4. Two Fundamental Bottlenecks
+## 4. Initial Optimization Plan
+
+### 4.1 Phase 1: Quick Fixes (no code changes to core GP)
+
+#### 4.1.1 Early Stopping
+- Stop training at the epoch with minimum validation loss (epoch 28)
+- Saves 91% of training time and prevents overfitting
+- **Expected impact:** Val RMSE should improve significantly
+
+#### 4.1.2 Reduce Augmentation Noise
+- Lower σ_x from 0.3 to 0.05–0.1 (respect binary feature scale)
+- Lower σ_y from 0.5 to 0.1–0.2 (pKd std ≈ 1.9, so σ_y=0.5 is ~26% relative noise)
+- Or disable augmentation entirely and rely on GP's built-in small-sample capability
+
+#### 4.1.3 Use Stratified Splitting
+- Sort pockets by pKd, then assign to train/val/test in a round-robin fashion
+- Ensures each split covers the full pKd range
+- With only 24 samples, use **Leave-One-Out Cross-Validation (LOOCV)** instead of fixed splits
+
+### 4.2 Phase 2: Model Architecture Changes
+
+#### 4.2.1 Switch to Exact GP
+- Replace SVGP with `ExactGP` — only 24 points, no approximation needed
+- Use type-II maximum likelihood (marginal likelihood optimization) for hyperparameters
+- This is the gold standard for small datasets and eliminates variational approximation error
+
+```python
+class ExactGPModel(gpytorch.models.ExactGP):
+    def __init__(self, train_x, train_y, likelihood):
+        super().__init__(train_x, train_y, likelihood)
+        self.mean_module = gpytorch.means.ConstantMean()
+        self.covar_module = gpytorch.kernels.ScaleKernel(
+            gpytorch.kernels.MaternKernel(nu=2.5, ard_num_dims=train_x.shape[1])
+        )
+    def forward(self, x):
+        return gpytorch.distributions.MultivariateNormal(
+            self.mean_module(x), self.covar_module(x)
+        )
+```
+
+#### 4.2.2 Dimensionality Reduction Before GP
+- Apply PCA to reduce 128-dim ECFP4 → 5–10 principal components before GP
+- Reduces effective parameters (128 ARD lengthscales → 5–10)
+- Avoids curse of dimensionality with 16 training points
+- Alternative: Use a fixed Tanimoto kernel (no lengthscale learning) on raw fingerprints
+
+#### 4.2.3 Tanimoto / Jaccard Kernel for Binary Fingerprints
+- ECFP4 fingerprints are **binary** → Euclidean distance (used by Matérn/RBF) is suboptimal
+- Tanimoto similarity is the standard metric for molecular fingerprints
+- Implement a custom Tanimoto kernel:
+
+```python
+class TanimotoKernel(gpytorch.kernels.Kernel):
+    def forward(self, x1, x2, **params):
+        x1x2 = x1 @ x2.T
+        x1_sq = (x1 ** 2).sum(dim=-1, keepdim=True)
+        x2_sq = (x2 ** 2).sum(dim=-1, keepdim=True)
+        return x1x2 / (x1_sq + x2_sq.T - x1x2 + 1e-8)
+```
+
+#### 4.2.4 Informative Priors on Hyperparameters
+- Place priors on lengthscales to prevent them from collapsing or exploding:
+  - `LogNormal(0, 1)` prior on lengthscales
+  - `Gamma(2, 0.5)` prior on output variance
+- This constrains the model when data is scarce
+
+### 4.3 Phase 3: Data & Evaluation Strategy
+
+#### 4.3.1 Leave-One-Out Cross-Validation (LOOCV)
+- With N=24, LOOCV trains 24 models, each on 23 points, predicting the held-out one
+- Provides 24 test predictions with minimal data waste
+- Computes robust metrics across all folds
+- For exact GP, LOOCV can be computed analytically (no retraining needed)
+
+#### 4.3.2 Increase Labeled Data
+- 25 of 49 non-empty pockets lack pKd labels — check if labels exist in alternative databases (ChEMBL, PDBbind, BindingDB)
+- Some of the 44 empty-SDF pockets might have valid molecules if TargetDiff sampling is re-run with different parameters
+
+#### 4.3.3 Higher-Dimensional Fingerprints
+- Current: ECFP4 with 128 bits — very compressed, high collision rate
+- Try: 1024 or 2048 bits (standard for ML on fingerprints) + PCA down to 20–50 dims
+- Also consider: ECFP6 (radius=3) or FCFP4 (pharmacophore-based)
+
+### 4.4 Phase 4: Advanced Approaches
+
+#### 4.4.1 Multi-Task GP
+- Instead of per-pocket mean embedding → per-pocket pKd, model individual molecules
+- Use molecule-level embeddings with pocket identity as a task index
+- Shares kernel structure across pockets for better generalization
+
+#### 4.4.2 Bayesian Optimization of GP Hyperparameters
+- Use a proper Bayesian approach (MCMC or HMC) instead of point-estimate MAP
+- GPyTorch supports `pyro` backend for fully Bayesian inference
+- Provides posterior uncertainty over hyperparameters, critical for small data
+
+#### 4.4.3 Ensemble GP
+- Train K GP models with different random seeds and/or kernel choices
+- Average predictions and combine uncertainties
+- Provides more robust predictions with small data
+
+---
+
+## 5. Initial Priority Order
+
+| Priority | Action | Difficulty | Expected Impact |
+|----------|--------|:----------:|:---------------:|
+| 🥇 1 | Early stopping (epoch ≈28) | Trivial | High — stops overfitting immediately |
+| 🥇 2 | LOOCV instead of fixed split | Easy | High — uses all 24 points, robust metrics |
+| 🥇 3 | Switch to Exact GP | Easy | High — better hyperparams for small data |
+| 🥈 4 | PCA(128→10) before GP | Easy | Medium — reduces curse of dimensionality |
+| 🥈 5 | Tanimoto kernel | Medium | Medium — proper similarity for fingerprints |
+| 🥈 6 | Remove or reduce augmentation | Trivial | Medium — eliminates augmentation artifacts |
+| 🥉 7 | Increase fingerprint bits (1024) | Easy | Low-Medium — less information loss |
+| 🥉 8 | Hyperparameter priors | Medium | Low-Medium — regularization |
+| 🥉 9 | Additional pKd labels | Research | High — more data always helps |
+| 🥉 10 | Fully Bayesian inference | Hard | Medium — better uncertainty |
+
+---
+
+## 6. Two Fundamental Bottlenecks (Revised Analysis)
 
 Before listing individual fixes, it's important to recognize two **structural** problems that dominate everything else:
 
@@ -149,13 +268,13 @@ These two bottlenecks must be addressed **simultaneously** — better embeddings
 
 ---
 
-## 5. Optimization Plan (Revised)
+## 7. Revised Optimization Plan (with Embedding Upgrade & Robust Evaluation)
 
 ### Phase 1: Robust Evaluation Framework (Priority: 🥇 Critical)
 
 **Goal**: Establish trustworthy metrics before changing anything else.
 
-#### 5.1.1 Leave-One-Out Cross-Validation (LOOCV)
+#### 7.1.1 Leave-One-Out Cross-Validation (LOOCV)
 
 With N=24, LOOCV is the gold standard:
 - Train 24 models, each on 23 points, predict the held-out one
@@ -173,14 +292,14 @@ loocv_var = 1.0 / K_inv.diag()
 - Reports: RMSE, Spearman ρ, NLL, calibration — each with N=24 predictions
 - **No** train/val/test split ambiguity
 
-#### 5.1.2 Repeated Random Split (complement to LOOCV)
+#### 7.1.2 Repeated Random Split (complement to LOOCV)
 
 When we want train-vs-test gap analysis:
 - 50× repeated 70/30 random split
 - Report mean ± std for each metric
 - Paired t-test or Wilcoxon for embedding comparisons
 
-#### 5.1.3 Pocket-Level Bootstrap
+#### 7.1.3 Pocket-Level Bootstrap
 
 - Draw 24 pockets with replacement, 1000× bootstrap
 - Compute metric on each bootstrap → 95% CI via percentile method
@@ -192,7 +311,7 @@ When we want train-vs-test gap analysis:
 
 **Goal**: Determine whether the bottleneck is the GP or the embedding by comparing multiple representations under identical evaluation.
 
-#### 5.2.1 Embedding Candidates
+#### 7.2.1 Embedding Candidates
 
 | # | Embedding | Dim | Type | Availability | What It Captures |
 |---|-----------|:---:|------|:------------:|------------------|
@@ -207,7 +326,7 @@ When we want train-vs-test gap analysis:
 
 **Note on availability**: RDKit is installed with 217 descriptors. PyTorch Geometric 2.7.0 is installed (supports SchNet, DimeNet, EGNN). HuggingFace `transformers` is **not** installed but can be added.
 
-#### 5.2.2 Extraction Strategy
+#### 7.2.2 Extraction Strategy
 
 All embeddings are extracted from the same 49 SDF files in `results/embedding_1000step/`:
 ```
@@ -233,7 +352,7 @@ model = SchNet.from_qm9(cutoff=10.0)  # pretrained on QM9
 # Convert SDF → Data object with atom positions
 ```
 
-#### 5.2.3 Comparison Protocol
+#### 7.2.3 Comparison Protocol
 
 For each embedding E1–E7:
 1. Extract per-pocket mean embedding
@@ -249,11 +368,11 @@ Output: A single comparison table showing which embedding carries the most predi
 
 Apply these **after** determining the best embedding from Phase 2.
 
-#### 5.3.1 Switch to Exact GP
+#### 7.3.1 Switch to Exact GP
 
 - Replace SVGP with `ExactGP` — N=24, no approximation needed
 - Type-II marginal likelihood for hyperparameters (gold standard for small data)
-- Enables analytic LOOCV (5.1.1)
+- Enables analytic LOOCV (7.1.1)
 
 ```python
 class ExactGPModel(gpytorch.models.ExactGP):
@@ -269,7 +388,7 @@ class ExactGPModel(gpytorch.models.ExactGP):
         )
 ```
 
-#### 5.3.2 Tanimoto Kernel for Binary Fingerprints
+#### 7.3.2 Tanimoto Kernel for Binary Fingerprints
 
 For E1–E4 (binary fingerprints), replace Matérn with Tanimoto:
 
@@ -285,19 +404,19 @@ class TanimotoKernel(gpytorch.kernels.Kernel):
 
 Benefits: No ARD lengthscales to overfit (0 extra parameters), proper similarity metric for fingerprints.
 
-#### 5.3.3 Dimensionality Reduction
+#### 7.3.3 Dimensionality Reduction
 
 - PCA before GP: reduce d → min(d, 10–20) for any embedding with d > 50
 - Particularly important for E2/E3/E4 (2048-dim) and E6 (2248-dim)
 - PCA variance threshold: keep components explaining 95% of variance
 
-#### 5.3.4 Remove Data Augmentation
+#### 7.3.4 Remove Data Augmentation
 
 - With Exact GP, augmentation is unnecessary — GP naturally handles small N
 - Augmentation on binary features creates out-of-distribution artifacts
 - If needed, consider bit-flip augmentation instead of Gaussian noise
 
-#### 5.3.5 Hyperparameter Priors
+#### 7.3.5 Hyperparameter Priors
 
 ```python
 model.covar_module.base_kernel.lengthscale_prior = gpytorch.priors.LogNormalPrior(0.0, 1.0)
@@ -307,25 +426,25 @@ likelihood.noise_prior = gpytorch.priors.GammaPrior(1.0, 1.0)
 
 ### Phase 4: Advanced Approaches (Priority: 🥉 Future)
 
-#### 5.4.1 Multi-Task GP
+#### 7.4.1 Multi-Task GP
 - Model individual molecules (not pocket means), using pocket ID as task index
 - Shares kernel across pockets → better generalization with more data points
 
-#### 5.4.2 Fully Bayesian GP (MCMC/HMC)
+#### 7.4.2 Fully Bayesian GP (MCMC/HMC)
 - Use `pyro` backend for posterior over hyperparameters
 - Critical for small-data uncertainty quantification
 
-#### 5.4.3 Ensemble GP
+#### 7.4.3 Ensemble GP
 - Train K models with different kernels (Tanimoto, Matérn, RBF) and seeds
 - Average predictions, combine uncertainties
 
-#### 5.4.4 Fine-tuned GNN Embedding
+#### 7.4.4 Fine-tuned GNN Embedding
 - Instead of pretrained SchNet features, fine-tune a GNN end-to-end on pKd
 - Would require more data or transfer learning from PDBbind
 
 ---
 
-## 6. Recommended Implementation Order
+## 8. Recommended Implementation Order
 
 | Step | Action | Deliverable | Why First |
 |:----:|--------|-------------|-----------|
@@ -339,7 +458,7 @@ The key insight: **Steps 1–3 are diagnostic** (they tell us *what* to fix), wh
 
 ---
 
-## 7. Generated Figures
+## 9. Generated Figures
 
 All figures are in `results/embedding_rdkit/gp_analysis/figures/`:
 
@@ -352,7 +471,7 @@ All figures are in `results/embedding_rdkit/gp_analysis/figures/`:
 
 ---
 
-## 8. Key Takeaway
+## 10. Key Takeaway
 
 The current GP model achieves good **training** fit (R²=0.51, ρ=0.72) but **fails to generalize** (test R²=-16.5). Two structural issues dominate:
 
