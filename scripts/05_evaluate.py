@@ -142,6 +142,16 @@ def main():
         print_results, results_to_dict,
     )
 
+    # ── Pre-flight diagnostics ──────────────────────────────────
+    sample_counts = {k: (v.shape if v.ndim > 1 else (1, v.shape[0]))
+                     for k, v in embeddings_dict.items()}
+    n_single = sum(1 for s in sample_counts.values() if s[0] <= 1)
+    logger.info(f"  Embedding shapes: {len(sample_counts)} pockets, "
+                f"{n_single} with M<=1 (will have zero gen uncertainty)")
+    if n_single > 0:
+        logger.warning(f"  ⚠ {n_single} pockets have <=1 sample — "
+                       "sigma2_gen will be 0 for these")
+
     results_list = []
     targets_evaluated = []
 
@@ -163,22 +173,23 @@ def main():
         z_bar = gen_r.z_bar.reshape(1, -1)
         mu_oracle, var_oracle, J_mu = gp.predict_with_jacobian(z_bar)
 
-        # Fusion
-        fusion_r = fuse_uncertainties(
-            mu_oracle=mu_oracle[0],
-            sigma2_oracle=var_oracle[0],
-            J_mu=J_mu[0],
-            cov_gen=gen_r.cov_gen,
-            y_target=args.y_target,
-        )
-
-        # OOD
+        # OOD detection (must come before fusion for P_final)
         ood_flag, ood_conf, ood_dist = False, 1.0, 0.0
         if ood_detector is not None:
             ood_r = ood_detector.score(gen_r.z_bar)
             ood_flag = ood_r.is_ood
             ood_conf = ood_r.confidence_modifier
             ood_dist = ood_r.mahalanobis_distance
+
+        # Fusion (with OOD confidence for P_final = w(z) · P_success)
+        fusion_r = fuse_uncertainties(
+            mu_oracle=mu_oracle[0],
+            sigma2_oracle=var_oracle[0],
+            J_mu=J_mu[0],
+            cov_gen=gen_r.cov_gen,
+            y_target=args.y_target,
+            ood_confidence=ood_conf,
+        )
 
         result = {
             "target": pdb_code,
@@ -189,6 +200,7 @@ def main():
             "sigma2_total": float(fusion_r.sigma2_total),
             "sigma_total": float(fusion_r.sigma_total),
             "p_success": float(fusion_r.p_success),
+            "p_final": float(fusion_r.p_final),
             "trace_cov_gen": float(gen_r.trace_cov),
             "n_modes": int(gen_r.n_modes),
             "n_samples": int(emb.shape[0]),
@@ -200,6 +212,26 @@ def main():
         targets_evaluated.append(pdb_code)
 
     logger.info(f"\n  Evaluated {len(results_list)} pockets")
+
+    # ── Post-flight diagnostics (check_01 §9) ────────────────────
+    if results_list:
+        mu_arr = np.array([r["mu_pred"] for r in results_list])
+        s2g_arr = np.array([r["sigma2_gen"] for r in results_list])
+        tr_arr = np.array([r["trace_cov_gen"] for r in results_list])
+        n_arr = np.array([r["n_samples"] for r in results_list])
+        logger.info("  ── Diagnostics ──")
+        logger.info(f"  mu_pred:  unique={len(np.unique(np.round(mu_arr,4)))}, "
+                     f"std={mu_arr.std():.6f}, range=[{mu_arr.min():.4f}, {mu_arr.max():.4f}]")
+        logger.info(f"  sigma2_gen: nonzero={np.count_nonzero(s2g_arr)}/{len(s2g_arr)}, "
+                     f"mean={s2g_arr.mean():.6f}")
+        logger.info(f"  trace_cov: nonzero={np.count_nonzero(tr_arr)}/{len(tr_arr)}, "
+                     f"mean={tr_arr.mean():.4f}")
+        logger.info(f"  n_samples: min={n_arr.min()}, max={n_arr.max()}, "
+                     f"median={np.median(n_arr):.0f}")
+        if mu_arr.std() < 1e-6:
+            logger.warning("  ⚠ ALL mu_pred identical — check pipeline upstream!")
+        if s2g_arr.max() == 0:
+            logger.warning("  ⚠ ALL sigma2_gen=0 — check embedding M per pocket!")
 
     # ── Aggregate evaluation ─────────────────────────────────────
     if len(results_list) >= 3:

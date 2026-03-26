@@ -1,5 +1,43 @@
 # BayesDiff Progress Log
 
+## 2026-03-26: Code–Math Alignment & Bug Fixes (check_01)
+
+### Summary
+Audited all code against `doc/math_explain.md` formulas, fixed 4 math-code discrepancies, then diagnosed and fixed pipeline bugs identified in `doc/check_01.md` (constant mu_pred, zero sigma2_gen).
+
+### Code–Math Alignment (commit `bbba415`)
+
+| Module | Fix | Reference |
+|--------|-----|-----------|
+| `gen_uncertainty.py` | GMM multi-modal: compute global z̄ = Σπ_k μ_k and Σ_gen aggregate | §2.3 |
+| `fusion.py` | Add `ood_confidence` param; compute P_final = w(z)·P_success | §7.2, §8 |
+| `fusion.py` | Document E[σ²_oracle] ≈ σ²_oracle(z̄) approximation | §4 |
+| `evaluate.py` | Add `brier_score()` metric | §6.3 |
+
+### Pipeline Bug Fixes (check_01 diagnostics)
+
+**Root Cause Analysis:**
+1. **`03_extract_embeddings.py` line 82: `sdf_files[0]`** — Only the first SDF file per pocket was processed, yielding M=1 embedding per pocket → zero covariance → sigma2_gen=0 for all pockets.
+2. **`05_evaluate.py`** — OOD confidence weight `w(z)` was computed but not passed into `fuse_uncertainties()`, so P_final was never actually computed.
+3. **`06_ablation.py`** — Same OOD integration gap; also missing P_final in output.
+
+**Fixes Applied:**
+
+| File | Before | After |
+|------|--------|-------|
+| `03_extract_embeddings.py` | `sdf_files[0]` (1 SDF) | Loop over ALL SDF files, concatenate embeddings |
+| `05_evaluate.py` | OOD computed after fusion | OOD computed before fusion; `ood_confidence` passed to fusion; `p_final` in output |
+| `06_ablation.py` | OOD weight not applied | OOD before fusion; `p_final = w(z) · p_success` in output |
+| `05_evaluate.py` | No diagnostics | Pre-flight (M per pocket) + post-flight (constant detection) logging |
+
+### Impact
+- With M>1 per pocket, `sigma2_gen` will now be non-zero (Ledoit-Wolf covariance computed)
+- Different pockets will produce different `mu_pred` values (z̄ varies)
+- Ablation A1 (no U_gen) will now differ from Full model
+- P_final now correctly reflects OOD penalty
+
+---
+
 ## 2026-03-25: Project Structure Reorganization
 
 ### Summary

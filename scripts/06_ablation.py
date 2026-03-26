@@ -111,6 +111,14 @@ def run_ablation(
         mu_oracle, var_oracle, J_mu = gp.predict_with_jacobian(z_bar)
         mu_o, var_o, j_mu = mu_oracle[0], var_oracle[0], J_mu[0]
 
+        # OOD detection (before fusion for P_final)
+        ood_flag = False
+        ood_conf = 1.0
+        if ablation_id != "A7" and ood_detector is not None:
+            ood_r = ood_detector.score(gen_r.z_bar)
+            ood_flag = ood_r.is_ood
+            ood_conf = ood_r.confidence_modifier
+
         # Compute variance components based on ablation
         sigma2_gen = float(j_mu @ gen_r.cov_gen @ j_mu)
         sigma2_oracle = float(var_o)
@@ -138,13 +146,8 @@ def run_ablation(
             # In debug mode, no calibrator fitted anyway, so raw = calibrated
             p_success = float(p_raw)
 
-        # OOD
-        ood_flag = False
-        ood_conf = 1.0
-        if ablation_id != "A7" and ood_detector is not None:
-            ood_r = ood_detector.score(gen_r.z_bar)
-            ood_flag = ood_r.is_ood
-            ood_conf = ood_r.confidence_modifier
+        # P_final = w(z) · P_success (math_explain §7.2)
+        p_final = ood_conf * p_success
 
         results.append({
             "target": pdb_code,
@@ -153,6 +156,7 @@ def run_ablation(
             "sigma2_total": float(sigma2_total),
             "sigma_total": float(sigma_total),
             "p_success": float(p_success),
+            "p_final": float(p_final),
             "ood_flag": bool(ood_flag),
             "ood_confidence_modifier": float(ood_conf),
         })

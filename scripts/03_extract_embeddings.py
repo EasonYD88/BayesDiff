@@ -79,9 +79,15 @@ def extract_from_generated(args):
         logger.info(f"[{i+1}/{len(pocket_dirs)}] Extracting embeddings for {pdb_code}")
 
         try:
-            embeddings = sampler.extract_embeddings(pocket_file, sdf_files[0])
+            # Process ALL SDF files per pocket (not just the first one).
+            # Each SDF may contain one or more molecules from diffusion sampling.
+            all_pocket_emb = []
+            for sdf_file in sdf_files:
+                emb = sampler.extract_embeddings(pocket_file, sdf_file)
+                all_pocket_emb.append(emb)
+            embeddings = np.concatenate(all_pocket_emb, axis=0)  # (M_total, d)
             all_embeddings[pdb_code] = embeddings
-            logger.info(f"  Shape: {embeddings.shape}")
+            logger.info(f"  Shape: {embeddings.shape} from {len(sdf_files)} SDF file(s)")
         except Exception as e:
             logger.error(f"  Failed: {e}")
 
