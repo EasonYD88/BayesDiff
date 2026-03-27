@@ -172,6 +172,124 @@ class TargetDiffSampler:
         data = self._transform(data)
         return data
 
+    # ── Data loading from .pt files ──────────────────────────────────────
+
+    def load_pocket_data(self, pt_path: str | Path):
+        """Load a pre-processed pocket Data object from a .pt file.
+
+        These files are produced by scripts/15_prepare_tier3.py from LMDB.
+        The data dict contains protein_element, protein_pos, etc.
+        We reconstruct a PyG Data object and apply FeaturizeProteinAtom.
+        """
+        self._load_model()  # Ensure transform is ready
+
+        pt_path = Path(pt_path)
+        if not pt_path.exists():
+            raise FileNotFoundError(f"Pocket data file not found: {pt_path}")
+
+        pocket_dict = torch.load(pt_path, map_location="cpu", weights_only=False)
+
+        # Import PyG Data class
+        try:
+            from datasets.pl_data import ProteinLigandData
+        except ImportError:
+            from torch_geometric.data import Data as ProteinLigandData
+
+        # Build Data object from stored protein fields
+        protein_dict = {
+            "element": pocket_dict["protein_element"],
+            "pos": pocket_dict["protein_pos"],
+            "is_backbone": pocket_dict["protein_is_backbone"],
+            "atom_name": pocket_dict["protein_atom_name"],
+            "atom_to_aa_type": pocket_dict["protein_atom_to_aa_type"],
+            "molecule_name": pocket_dict.get("protein_molecule_name", "pocket"),
+        }
+        ligand_dict = {
+            "element": torch.empty([0], dtype=torch.long),
+            "pos": torch.empty([0, 3], dtype=torch.float),
+            "atom_feature": torch.empty([0, 8], dtype=torch.float),
+            "bond_index": torch.empty([2, 0], dtype=torch.long),
+            "bond_type": torch.empty([0], dtype=torch.long),
+        }
+
+        if hasattr(ProteinLigandData, "from_protein_ligand_dicts"):
+            data = ProteinLigandData.from_protein_ligand_dicts(
+                protein_dict=protein_dict, ligand_dict=ligand_dict
+            )
+        else:
+            # Fallback: build Data manually with protein_ prefix
+            from torch_geometric.data import Data
+            data = Data()
+            for k, v in protein_dict.items():
+                setattr(data, f"protein_{k}", v)
+            for k, v in ligand_dict.items():
+                setattr(data, f"ligand_{k}", v)
+
+        # Apply protein featurizer transform
+        data = self._transform(data)
+        return data
+
+    def sample_for_data(
+        self,
+        data,
+        num_samples: int = 4,
+        batch_size: Optional[int] = None,
+    ) -> dict:
+        """Sample molecules given a pre-built PyG Data object.
+
+        Same as sample_for_pocket but skips PDB parsing.
+        The data object must already have protein_atom_feature
+        (apply FeaturizeProteinAtom first, or use load_pocket_data).
+
+        Parameters
+        ----------
+        data : PyG Data
+            Featurized pocket data with protein_atom_feature field.
+        num_samples : int
+            Number of molecules to generate.
+        batch_size : int | None
+            Batch size for sampling. Defaults to num_samples.
+
+        Returns
+        -------
+        dict with keys: pred_pos, pred_v, mol_embeddings, time_list
+        """
+        self._load_model()
+
+        if batch_size is None:
+            batch_size = num_samples
+
+        from scripts.sample_diffusion import sample_diffusion_ligand
+
+        sample_cfg = self._sample_config.sample
+
+        result = sample_diffusion_ligand(
+            self._model, data, num_samples,
+            batch_size=batch_size, device=self.device,
+            num_steps=self.num_steps,
+            pos_only=sample_cfg.pos_only,
+            center_pos_mode=sample_cfg.center_pos_mode,
+            sample_num_atoms=sample_cfg.sample_num_atoms,
+        )
+
+        if len(result) == 8:
+            all_pred_pos, all_pred_v, _, _, _, _, time_list, mol_embeddings = result
+        elif len(result) == 7:
+            all_pred_pos, all_pred_v, _, _, _, _, time_list = result
+            mol_embeddings = [None] * len(all_pred_pos)
+        else:
+            raise ValueError(
+                f"Unexpected number of return values from "
+                f"sample_diffusion_ligand: {len(result)}"
+            )
+
+        return {
+            "pred_pos": all_pred_pos,
+            "pred_v": all_pred_v,
+            "mol_embeddings": mol_embeddings,
+            "time_list": time_list,
+        }
+
     # ── Sampling ─────────────────────────────────────────────────────────
 
     def sample_for_pocket(
@@ -327,6 +445,52 @@ class TargetDiffSampler:
         return np.stack(embeddings, axis=0)
 
     # ── High-level convenience ───────────────────────────────────────────
+
+    def sample_and_embed_data(
+        self,
+        data,
+        num_samples: int = 4,
+        save_sdf: Optional[str | Path] = None,
+    ) -> tuple[list, np.ndarray]:
+        """Sample molecules from pre-built Data object and return (mols, embeddings).
+
+        Same as sample_and_embed but takes a PyG Data object instead of PDB path.
+        Use load_pocket_data() to create the Data object from a .pt file.
+        """
+        batch_size = min(16, num_samples)
+        while True:
+            try:
+                result = self.sample_for_data(
+                    data, num_samples=num_samples, batch_size=batch_size,
+                )
+                break
+            except RuntimeError as e:
+                if "out of memory" in str(e).lower() and batch_size > 1:
+                    torch.cuda.empty_cache()
+                    batch_size = max(1, batch_size // 2)
+                    logger.warning(
+                        f"CUDA OOM – retrying with batch_size={batch_size}"
+                    )
+                else:
+                    raise
+
+        mols = self.reconstruct_molecules(result["pred_pos"], result["pred_v"])
+
+        embeddings = []
+        for emb in result["mol_embeddings"]:
+            if emb is not None:
+                embeddings.append(emb)
+            else:
+                embeddings.append(np.zeros(self.hidden_dim, dtype=np.float32))
+        embeddings = np.stack(embeddings, axis=0)
+
+        if save_sdf is not None:
+            save_sdf = Path(save_sdf)
+            save_sdf.parent.mkdir(parents=True, exist_ok=True)
+            self._save_sdf(mols, save_sdf)
+            logger.info(f"Saved {sum(1 for m in mols if m)} molecules to {save_sdf}")
+
+        return mols, embeddings
 
     def sample_and_embed(
         self,
