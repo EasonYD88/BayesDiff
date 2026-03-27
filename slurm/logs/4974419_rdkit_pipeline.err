@@ -1,0 +1,464 @@
+10:21:22 INFO: Loading embeddings from results/embedding_rdkit/all_embeddings.npz
+10:21:22 INFO:   Loaded 49 entries
+10:21:22 INFO:   Labels from affinity_pkl: 1041 entries
+10:21:22 INFO:   Training set: 24 samples, d=128
+10:21:22 INFO:   Augmenting from 24 to 200 samples
+10:21:22 INFO:   After augmentation: 200 samples
+10:21:22 INFO:   pKd range: [1.24, 9.71], mean=5.11
+10:21:38 INFO: 
+Training SVGP (d=128, J=48, epochs=200, device=cuda)...
+10:21:51 INFO:   Epoch 20/200: loss=11.5365, noise=1.0836
+10:21:51 INFO:   Epoch 40/200: loss=4.0139, noise=1.3211
+10:21:52 INFO:   Epoch 60/200: loss=2.9839, noise=1.4019
+10:21:52 INFO:   Epoch 80/200: loss=2.7591, noise=1.4597
+10:21:53 INFO:   Epoch 100/200: loss=2.6423, noise=1.5154
+10:21:53 INFO:   Epoch 120/200: loss=2.5547, noise=1.5649
+10:21:53 INFO:   Epoch 140/200: loss=2.4934, noise=1.6132
+10:21:54 INFO:   Epoch 160/200: loss=2.4388, noise=1.6579
+10:21:54 INFO:   Epoch 180/200: loss=2.4030, noise=1.6997
+10:21:55 INFO:   Epoch 200/200: loss=2.3707, noise=1.7398
+10:21:55 INFO:   Training done in 17.3s, final loss=2.3707
+10:21:55 INFO: GP model saved to results/embedding_rdkit/gp_model/gp_model.pt
+10:21:55 INFO:   Model saved to results/embedding_rdkit/gp_model/gp_model.pt
+10:21:55 INFO:   Training data saved to results/embedding_rdkit/gp_model/train_data.npz
+10:21:55 INFO: 
+============================================================
+10:21:55 INFO: GP training complete!
+10:21:55 INFO:   Model:    results/embedding_rdkit/gp_model/gp_model.pt
+10:21:55 INFO:   Metadata: results/embedding_rdkit/gp_model/train_meta.json
+10:21:55 INFO: ============================================================
+10:21:55 INFO: 
+Next: python scripts/05_evaluate.py \
+10:21:55 INFO:         --embeddings results/embedding_rdkit/all_embeddings.npz \
+10:21:55 INFO:         --gp_model results/embedding_rdkit/gp_model/gp_model.pt \
+10:21:55 INFO:         --labels external/targetdiff/data/affinity_info.pkl
+10:21:58 INFO: Loading embeddings from results/embedding_rdkit/all_embeddings.npz
+10:21:58 INFO:   49 pockets loaded
+10:21:58 INFO:   1041 labels available
+/scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-26T13-27-15/bayesdiff/gp_oracle.py:255: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  ckpt = torch.load(path, map_location=self.device)
+10:22:07 INFO: GP model loaded from results/embedding_rdkit/gp_model/gp_model.pt
+10:22:07 INFO:   GP model loaded from results/embedding_rdkit/gp_model/gp_model.pt
+10:22:07 INFO: OOD detector: N=200, d=128, threshold(p95)=12.39, mean_d=11.09
+10:22:07 INFO:   OOD detector fitted on 200 training points
+10:22:12 INFO:   Embedding shapes: 49 pockets, 5 with M<=1 (will have zero gen uncertainty)
+10:22:12 WARNING:   ⚠ 5 pockets have <=1 sample — sigma2_gen will be 0 for these
+10:22:12 WARNING: Only 1 sample; returning zero covariance
+10:22:18 INFO:   Ledoit-Wolf shrinkage: α=0.8841
+10:22:20 INFO:   Unimodal (K=1)
+10:22:20 INFO:   Ledoit-Wolf shrinkage: α=0.9079
+10:22:21 INFO:   Unimodal (K=1)
+10:22:21 INFO:   Ledoit-Wolf shrinkage: α=0.8942
+10:22:22 INFO:   Unimodal (K=1)
+10:22:22 INFO:   Ledoit-Wolf shrinkage: α=0.9093
+10:22:22 INFO:   Unimodal (K=1)
+10:22:23 INFO:   Ledoit-Wolf shrinkage: α=0.0000
+10:22:23 INFO:   Ledoit-Wolf shrinkage: α=0.9350
+10:22:23 INFO:   Unimodal (K=1)
+10:22:23 INFO:   Ledoit-Wolf shrinkage: α=0.8929
+10:22:24 INFO:   Unimodal (K=1)
+10:22:24 INFO:   Ledoit-Wolf shrinkage: α=0.3310
+10:22:25 INFO:   Ledoit-Wolf shrinkage: α=0.8934
+10:22:25 INFO:   Unimodal (K=1)
+10:22:26 INFO:   Ledoit-Wolf shrinkage: α=0.8562
+10:22:27 INFO:   Unimodal (K=1)
+10:22:27 INFO:   Ledoit-Wolf shrinkage: α=0.9137
+10:22:28 INFO:   Unimodal (K=1)
+10:22:28 INFO:   Ledoit-Wolf shrinkage: α=0.9153
+10:22:29 INFO:   Unimodal (K=1)
+10:22:29 WARNING: Only 1 sample; returning zero covariance
+10:22:29 INFO:   Ledoit-Wolf shrinkage: α=0.7367
+10:22:29 INFO:   Ledoit-Wolf shrinkage: α=0.6705
+10:22:29 INFO:   Ledoit-Wolf shrinkage: α=0.8948
+10:22:30 INFO:   Unimodal (K=1)
+10:22:30 INFO:   Ledoit-Wolf shrinkage: α=0.8454
+10:22:31 INFO:   Unimodal (K=1)
+10:22:31 INFO:   Ledoit-Wolf shrinkage: α=0.5881
+10:22:32 INFO:   Ledoit-Wolf shrinkage: α=0.9058
+10:22:33 INFO:   Unimodal (K=1)
+10:22:33 INFO:   Ledoit-Wolf shrinkage: α=0.5057
+10:22:33 INFO:   Ledoit-Wolf shrinkage: α=0.9177
+10:22:33 INFO:   Unimodal (K=1)
+10:22:34 INFO:   Ledoit-Wolf shrinkage: α=0.8967
+10:22:34 INFO:   Unimodal (K=1)
+10:22:35 INFO:   Ledoit-Wolf shrinkage: α=0.8879
+10:22:35 INFO:   Unimodal (K=1)
+10:22:35 INFO: 
+  Evaluated 24 pockets
+10:22:35 INFO:   ── Diagnostics ──
+10:22:35 INFO:   mu_pred:  unique=24, std=0.762804, range=[4.2944, 7.6701]
+10:22:35 INFO:   sigma2_gen: nonzero=22/24, mean=2.777315
+10:22:35 INFO:   trace_cov: nonzero=22/24, mean=21.5256
+10:22:35 INFO:   n_samples: min=1, max=53, median=30
+10:22:36 INFO: 
+============================================================
+10:22:36 INFO: Evaluation Metrics (y≥7.0, N=24)
+10:22:36 INFO: ============================================================
+10:22:36 INFO: =======================================================
+10:22:36 INFO: Evaluation Results (N=24)
+10:22:36 INFO:   y_target = 7.0, conf_thresh = 0.5
+10:22:36 INFO: -------------------------------------------------------
+10:22:36 INFO:   ECE:          0.2643
+10:22:36 INFO:   Brier:        0.1028
+10:22:36 INFO:   AUROC:        1.0000  [1.0000, 1.0000]
+10:22:36 INFO:   EF@1%:        6.00  [3.00, 24.00]
+10:22:36 INFO:   Hit Rate:     1.0000  [1.0000, 1.0000]
+10:22:36 INFO:   Spearman rho: 0.7574 (p=1.83e-05)
+10:22:36 INFO:   RMSE:         1.6215
+10:22:36 INFO:   NLL:          1.9460
+10:22:36 INFO: =======================================================
+10:22:36 INFO: 
+Multi-threshold results:
+10:22:36 INFO:   y≥7.0: ECE=0.2643, AUROC=1.0000, Hit=1.0000, Spearman=0.7574
+10:22:36 INFO:   y≥8.0: ECE=0.2654, AUROC=0.9683, Hit=0.5000, Spearman=0.7574
+10:22:36 INFO: Saved results to results/embedding_rdkit/evaluation/eval_metrics.json
+10:22:36 INFO: 
+  Metrics saved to results/embedding_rdkit/evaluation/eval_metrics.json
+10:22:36 INFO:   Per-pocket results saved to results/embedding_rdkit/evaluation/per_pocket_results.json
+10:22:36 INFO: 
+============================================================
+10:22:36 INFO: Evaluation complete!
+10:22:36 INFO:   Pockets evaluated: 24
+10:22:36 INFO:   Output directory:  results/embedding_rdkit/evaluation
+10:22:36 INFO: ============================================================
+10:22:39 INFO: Loading embeddings from results/embedding_rdkit/all_embeddings.npz
+10:22:39 INFO:   49 pockets
+10:22:39 INFO:   1041 labels
+/scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-26T13-27-15/bayesdiff/gp_oracle.py:255: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  ckpt = torch.load(path, map_location=self.device)
+10:22:49 INFO: GP model loaded from results/embedding_rdkit/gp_model/gp_model.pt
+10:22:49 INFO:   GP model loaded (d=128)
+10:22:50 INFO: OOD detector: N=200, d=128, threshold(p95)=12.39, mean_d=11.09
+10:22:50 INFO:   OOD detector fitted
+10:22:53 INFO: 
+============================================================
+10:22:53 INFO: Running ablation: full — BayesDiff (Full)
+10:22:53 INFO: ============================================================
+10:22:53 WARNING: Only 1 sample; returning zero covariance
+10:22:57 INFO:   Ledoit-Wolf shrinkage: α=0.8841
+10:22:58 INFO:   Unimodal (K=1)
+10:22:58 INFO:   Ledoit-Wolf shrinkage: α=0.9079
+10:22:58 INFO:   Unimodal (K=1)
+10:22:58 INFO:   Ledoit-Wolf shrinkage: α=0.8942
+10:22:59 INFO:   Unimodal (K=1)
+10:22:59 INFO:   Ledoit-Wolf shrinkage: α=0.9093
+10:22:59 INFO:   Unimodal (K=1)
+10:22:59 INFO:   Ledoit-Wolf shrinkage: α=0.0000
+10:22:59 INFO:   Ledoit-Wolf shrinkage: α=0.9350
+10:23:00 INFO:   Unimodal (K=1)
+10:23:00 INFO:   Ledoit-Wolf shrinkage: α=0.8929
+10:23:01 INFO:   Unimodal (K=1)
+10:23:01 INFO:   Ledoit-Wolf shrinkage: α=0.3310
+10:23:01 INFO:   Ledoit-Wolf shrinkage: α=0.8934
+10:23:02 INFO:   Unimodal (K=1)
+10:23:02 INFO:   Ledoit-Wolf shrinkage: α=0.8562
+10:23:02 INFO:   Unimodal (K=1)
+10:23:02 INFO:   Ledoit-Wolf shrinkage: α=0.9137
+10:23:03 INFO:   Unimodal (K=1)
+10:23:03 INFO:   Ledoit-Wolf shrinkage: α=0.9153
+10:23:03 INFO:   Unimodal (K=1)
+10:23:04 WARNING: Only 1 sample; returning zero covariance
+10:23:04 INFO:   Ledoit-Wolf shrinkage: α=0.7367
+10:23:04 INFO:   Unimodal (K=1)
+10:23:04 INFO:   Ledoit-Wolf shrinkage: α=0.6705
+10:23:05 INFO:   Unimodal (K=1)
+10:23:05 INFO:   Ledoit-Wolf shrinkage: α=0.8948
+10:23:05 INFO:   Unimodal (K=1)
+10:23:06 INFO:   Ledoit-Wolf shrinkage: α=0.8454
+10:23:06 INFO:   Unimodal (K=1)
+10:23:06 INFO:   Ledoit-Wolf shrinkage: α=0.5881
+10:23:06 INFO:   Ledoit-Wolf shrinkage: α=0.9058
+10:23:07 INFO:   Unimodal (K=1)
+10:23:07 INFO:   Ledoit-Wolf shrinkage: α=0.5057
+10:23:07 INFO:   Ledoit-Wolf shrinkage: α=0.9177
+10:23:08 INFO:   Unimodal (K=1)
+10:23:08 INFO:   Ledoit-Wolf shrinkage: α=0.8967
+10:23:09 INFO:   Unimodal (K=1)
+10:23:09 INFO:   Ledoit-Wolf shrinkage: α=0.8879
+10:23:09 INFO:   Unimodal (K=1)
+10:23:10 INFO:   ECE=0.2643, AUROC=1.0000, EF@1%=6.00, Spearman=0.7574, RMSE=1.6215
+10:23:10 INFO: 
+============================================================
+10:23:10 INFO: Running ablation: A1 — No U_gen (σ²_total = σ²_oracle)
+10:23:10 INFO: ============================================================
+10:23:10 WARNING: Only 1 sample; returning zero covariance
+10:23:10 INFO:   Ledoit-Wolf shrinkage: α=0.8841
+10:23:11 INFO:   Unimodal (K=1)
+10:23:11 INFO:   Ledoit-Wolf shrinkage: α=0.9079
+10:23:11 INFO:   Unimodal (K=1)
+10:23:11 INFO:   Ledoit-Wolf shrinkage: α=0.8942
+10:23:12 INFO:   Unimodal (K=1)
+10:23:12 INFO:   Ledoit-Wolf shrinkage: α=0.9093
+10:23:12 INFO:   Unimodal (K=1)
+10:23:12 INFO:   Ledoit-Wolf shrinkage: α=0.0000
+10:23:12 INFO:   Ledoit-Wolf shrinkage: α=0.9350
+10:23:13 INFO:   Unimodal (K=1)
+10:23:13 INFO:   Ledoit-Wolf shrinkage: α=0.8929
+10:23:13 INFO:   Unimodal (K=1)
+10:23:14 INFO:   Ledoit-Wolf shrinkage: α=0.3310
+10:23:14 INFO:   Ledoit-Wolf shrinkage: α=0.8934
+10:23:14 INFO:   Unimodal (K=1)
+10:23:15 INFO:   Ledoit-Wolf shrinkage: α=0.8562
+10:23:15 INFO:   Unimodal (K=1)
+10:23:15 INFO:   Ledoit-Wolf shrinkage: α=0.9137
+10:23:16 INFO:   Unimodal (K=1)
+10:23:16 INFO:   Ledoit-Wolf shrinkage: α=0.9153
+10:23:16 INFO:   Unimodal (K=1)
+10:23:17 WARNING: Only 1 sample; returning zero covariance
+10:23:17 INFO:   Ledoit-Wolf shrinkage: α=0.7367
+10:23:17 INFO:   Unimodal (K=1)
+10:23:17 INFO:   Ledoit-Wolf shrinkage: α=0.6705
+10:23:18 INFO:   Unimodal (K=1)
+10:23:18 INFO:   Ledoit-Wolf shrinkage: α=0.8948
+10:23:18 INFO:   Unimodal (K=1)
+10:23:18 INFO:   Ledoit-Wolf shrinkage: α=0.8454
+10:23:19 INFO:   Unimodal (K=1)
+10:23:19 INFO:   Ledoit-Wolf shrinkage: α=0.5881
+10:23:19 INFO:   Ledoit-Wolf shrinkage: α=0.9058
+10:23:19 INFO:   Unimodal (K=1)
+10:23:20 INFO:   Ledoit-Wolf shrinkage: α=0.5057
+10:23:20 INFO:   Ledoit-Wolf shrinkage: α=0.9177
+10:23:20 INFO:   Unimodal (K=1)
+10:23:21 INFO:   Ledoit-Wolf shrinkage: α=0.8967
+10:23:21 INFO:   Unimodal (K=1)
+10:23:21 INFO:   Ledoit-Wolf shrinkage: α=0.8879
+10:23:22 INFO:   Unimodal (K=1)
+10:23:23 INFO:   ECE=0.2297, AUROC=1.0000, EF@1%=6.00, Spearman=0.7574, RMSE=1.6215
+10:23:23 INFO: 
+============================================================
+10:23:23 INFO: Running ablation: A2 — No U_oracle (σ²_total = σ²_gen only)
+10:23:23 INFO: ============================================================
+10:23:23 WARNING: Only 1 sample; returning zero covariance
+10:23:23 INFO:   Ledoit-Wolf shrinkage: α=0.8841
+10:23:23 INFO:   Unimodal (K=1)
+10:23:23 INFO:   Ledoit-Wolf shrinkage: α=0.9079
+10:23:24 INFO:   Unimodal (K=1)
+10:23:24 INFO:   Ledoit-Wolf shrinkage: α=0.8942
+10:23:24 INFO:   Unimodal (K=1)
+10:23:24 INFO:   Ledoit-Wolf shrinkage: α=0.9093
+10:23:25 INFO:   Unimodal (K=1)
+10:23:25 INFO:   Ledoit-Wolf shrinkage: α=0.0000
+10:23:25 INFO:   Ledoit-Wolf shrinkage: α=0.9350
+10:23:25 INFO:   Unimodal (K=1)
+10:23:26 INFO:   Ledoit-Wolf shrinkage: α=0.8929
+10:23:26 INFO:   Unimodal (K=1)
+10:23:26 INFO:   Ledoit-Wolf shrinkage: α=0.3310
+10:23:27 INFO:   Ledoit-Wolf shrinkage: α=0.8934
+10:23:27 INFO:   Unimodal (K=1)
+10:23:27 INFO:   Ledoit-Wolf shrinkage: α=0.8562
+10:23:27 INFO:   Unimodal (K=1)
+10:23:28 INFO:   Ledoit-Wolf shrinkage: α=0.9137
+10:23:28 INFO:   Unimodal (K=1)
+10:23:28 INFO:   Ledoit-Wolf shrinkage: α=0.9153
+10:23:29 INFO:   Unimodal (K=1)
+10:23:29 WARNING: Only 1 sample; returning zero covariance
+10:23:29 INFO:   Ledoit-Wolf shrinkage: α=0.7367
+10:23:29 INFO:   Unimodal (K=1)
+10:23:29 INFO:   Ledoit-Wolf shrinkage: α=0.6705
+10:23:30 INFO:   Unimodal (K=1)
+10:23:30 INFO:   Ledoit-Wolf shrinkage: α=0.8948
+10:23:31 INFO:   Unimodal (K=1)
+10:23:31 INFO:   Ledoit-Wolf shrinkage: α=0.8454
+10:23:31 INFO:   Unimodal (K=1)
+10:23:31 INFO:   Ledoit-Wolf shrinkage: α=0.5881
+10:23:32 INFO:   Ledoit-Wolf shrinkage: α=0.9058
+10:23:32 INFO:   Unimodal (K=1)
+10:23:32 INFO:   Ledoit-Wolf shrinkage: α=0.5057
+10:23:32 INFO:   Ledoit-Wolf shrinkage: α=0.9177
+10:23:33 INFO:   Unimodal (K=1)
+10:23:33 INFO:   Ledoit-Wolf shrinkage: α=0.8967
+10:23:34 INFO:   Unimodal (K=1)
+10:23:34 INFO:   Ledoit-Wolf shrinkage: α=0.8879
+10:23:34 INFO:   Unimodal (K=1)
+10:23:35 INFO:   ECE=0.2384, AUROC=1.0000, EF@1%=6.00, Spearman=0.7574, RMSE=1.6215
+10:23:35 INFO: 
+============================================================
+10:23:35 INFO: Running ablation: A3 — No calibration (raw P_success)
+10:23:35 INFO: ============================================================
+10:23:35 WARNING: Only 1 sample; returning zero covariance
+10:23:35 INFO:   Ledoit-Wolf shrinkage: α=0.8841
+10:23:36 INFO:   Unimodal (K=1)
+10:23:36 INFO:   Ledoit-Wolf shrinkage: α=0.9079
+10:23:36 INFO:   Unimodal (K=1)
+10:23:36 INFO:   Ledoit-Wolf shrinkage: α=0.8942
+10:23:37 INFO:   Unimodal (K=1)
+10:23:37 INFO:   Ledoit-Wolf shrinkage: α=0.9093
+10:23:37 INFO:   Unimodal (K=1)
+10:23:37 INFO:   Ledoit-Wolf shrinkage: α=0.0000
+10:23:37 INFO:   Ledoit-Wolf shrinkage: α=0.9350
+10:23:38 INFO:   Unimodal (K=1)
+10:23:38 INFO:   Ledoit-Wolf shrinkage: α=0.8929
+10:23:38 INFO:   Unimodal (K=1)
+10:23:39 INFO:   Ledoit-Wolf shrinkage: α=0.3310
+10:23:39 INFO:   Ledoit-Wolf shrinkage: α=0.8934
+10:23:39 INFO:   Unimodal (K=1)
+10:23:39 INFO:   Ledoit-Wolf shrinkage: α=0.8562
+10:23:40 INFO:   Unimodal (K=1)
+10:23:40 INFO:   Ledoit-Wolf shrinkage: α=0.9137
+10:23:40 INFO:   Unimodal (K=1)
+10:23:40 INFO:   Ledoit-Wolf shrinkage: α=0.9153
+10:23:41 INFO:   Unimodal (K=1)
+10:23:41 WARNING: Only 1 sample; returning zero covariance
+10:23:41 INFO:   Ledoit-Wolf shrinkage: α=0.7367
+10:23:41 INFO:   Unimodal (K=1)
+10:23:41 INFO:   Ledoit-Wolf shrinkage: α=0.6705
+10:23:42 INFO:   Unimodal (K=1)
+10:23:42 INFO:   Ledoit-Wolf shrinkage: α=0.8948
+10:23:42 INFO:   Unimodal (K=1)
+10:23:42 INFO:   Ledoit-Wolf shrinkage: α=0.8454
+10:23:43 INFO:   Unimodal (K=1)
+10:23:43 INFO:   Ledoit-Wolf shrinkage: α=0.5881
+10:23:43 INFO:   Ledoit-Wolf shrinkage: α=0.9058
+10:23:44 INFO:   Unimodal (K=1)
+10:23:44 INFO:   Ledoit-Wolf shrinkage: α=0.5057
+10:23:44 INFO:   Ledoit-Wolf shrinkage: α=0.9177
+10:23:44 INFO:   Unimodal (K=1)
+10:23:45 INFO:   Ledoit-Wolf shrinkage: α=0.8967
+10:23:45 INFO:   Unimodal (K=1)
+10:23:45 INFO:   Ledoit-Wolf shrinkage: α=0.8879
+10:23:46 INFO:   Unimodal (K=1)
+10:23:46 INFO:   ECE=0.2643, AUROC=1.0000, EF@1%=6.00, Spearman=0.7574, RMSE=1.6215
+10:23:46 INFO: 
+============================================================
+10:23:46 INFO: Running ablation: A4 — Naive covariance (no Ledoit-Wolf)
+10:23:46 INFO: ============================================================
+10:23:46 WARNING: Only 1 sample; returning zero covariance
+10:23:47 INFO:   Unimodal (K=1)
+10:23:48 INFO:   Unimodal (K=1)
+10:23:48 INFO:   Unimodal (K=1)
+10:23:49 INFO:   Unimodal (K=1)
+10:23:49 INFO:   Unimodal (K=1)
+10:23:50 INFO:   Unimodal (K=1)
+10:23:51 INFO:   Unimodal (K=1)
+10:23:51 INFO:   Unimodal (K=1)
+10:23:52 INFO:   Unimodal (K=1)
+10:23:52 INFO:   Unimodal (K=1)
+10:23:52 WARNING: Only 1 sample; returning zero covariance
+10:23:53 INFO:   Unimodal (K=1)
+10:23:53 INFO:   Unimodal (K=1)
+10:23:54 INFO:   Unimodal (K=1)
+10:23:54 INFO:   Unimodal (K=1)
+10:23:55 INFO:   Unimodal (K=1)
+10:23:55 INFO:   Unimodal (K=1)
+10:23:56 INFO:   Unimodal (K=1)
+10:23:56 INFO:   Unimodal (K=1)
+10:23:57 INFO:   ECE=0.2754, AUROC=1.0000, EF@1%=6.00, Spearman=0.7574, RMSE=1.6215
+10:23:57 INFO: 
+============================================================
+10:23:57 INFO: Running ablation: A5 — No multimodal detection (force K=1)
+10:23:57 INFO: ============================================================
+10:23:57 WARNING: Only 1 sample; returning zero covariance
+10:23:57 INFO:   Ledoit-Wolf shrinkage: α=0.8841
+10:23:57 INFO:   Unimodal (K=1)
+10:23:58 INFO:   Ledoit-Wolf shrinkage: α=0.9079
+10:23:58 INFO:   Unimodal (K=1)
+10:23:58 INFO:   Ledoit-Wolf shrinkage: α=0.8942
+10:23:58 INFO:   Unimodal (K=1)
+10:23:58 INFO:   Ledoit-Wolf shrinkage: α=0.9093
+10:23:58 INFO:   Unimodal (K=1)
+10:23:58 INFO:   Ledoit-Wolf shrinkage: α=0.0000
+10:23:59 INFO:   Unimodal (K=1)
+10:23:59 INFO:   Ledoit-Wolf shrinkage: α=0.9350
+10:23:59 INFO:   Unimodal (K=1)
+10:23:59 INFO:   Ledoit-Wolf shrinkage: α=0.8929
+10:23:59 INFO:   Unimodal (K=1)
+10:23:59 INFO:   Ledoit-Wolf shrinkage: α=0.3310
+10:24:00 INFO:   Unimodal (K=1)
+10:24:00 INFO:   Ledoit-Wolf shrinkage: α=0.8934
+10:24:00 INFO:   Unimodal (K=1)
+10:24:00 INFO:   Ledoit-Wolf shrinkage: α=0.8562
+10:24:00 INFO:   Unimodal (K=1)
+10:24:00 INFO:   Ledoit-Wolf shrinkage: α=0.9137
+10:24:01 INFO:   Unimodal (K=1)
+10:24:01 INFO:   Ledoit-Wolf shrinkage: α=0.9153
+10:24:01 INFO:   Unimodal (K=1)
+10:24:01 WARNING: Only 1 sample; returning zero covariance
+10:24:01 INFO:   Ledoit-Wolf shrinkage: α=0.7367
+10:24:01 INFO:   Unimodal (K=1)
+10:24:01 INFO:   Ledoit-Wolf shrinkage: α=0.6705
+10:24:02 INFO:   Unimodal (K=1)
+10:24:02 INFO:   Ledoit-Wolf shrinkage: α=0.8948
+10:24:02 INFO:   Unimodal (K=1)
+10:24:02 INFO:   Ledoit-Wolf shrinkage: α=0.8454
+10:24:02 INFO:   Unimodal (K=1)
+10:24:02 INFO:   Ledoit-Wolf shrinkage: α=0.5881
+10:24:03 INFO:   Unimodal (K=1)
+10:24:03 INFO:   Ledoit-Wolf shrinkage: α=0.9058
+10:24:03 INFO:   Unimodal (K=1)
+10:24:03 INFO:   Ledoit-Wolf shrinkage: α=0.5057
+10:24:03 INFO:   Unimodal (K=1)
+10:24:04 INFO:   Ledoit-Wolf shrinkage: α=0.9177
+10:24:04 INFO:   Unimodal (K=1)
+10:24:04 INFO:   Ledoit-Wolf shrinkage: α=0.8967
+10:24:04 INFO:   Unimodal (K=1)
+10:24:04 INFO:   Ledoit-Wolf shrinkage: α=0.8879
+10:24:04 INFO:   Unimodal (K=1)
+10:24:05 INFO:   ECE=0.2643, AUROC=1.0000, EF@1%=6.00, Spearman=0.7574, RMSE=1.6215
+10:24:05 INFO: 
+============================================================
+10:24:05 INFO: Running ablation: A7 — No OOD detection
+10:24:05 INFO: ============================================================
+10:24:05 WARNING: Only 1 sample; returning zero covariance
+10:24:05 INFO:   Ledoit-Wolf shrinkage: α=0.8841
+10:24:06 INFO:   Unimodal (K=1)
+10:24:06 INFO:   Ledoit-Wolf shrinkage: α=0.9079
+10:24:06 INFO:   Unimodal (K=1)
+10:24:06 INFO:   Ledoit-Wolf shrinkage: α=0.8942
+10:24:07 INFO:   Unimodal (K=1)
+10:24:07 INFO:   Ledoit-Wolf shrinkage: α=0.9093
+10:24:07 INFO:   Unimodal (K=1)
+10:24:07 INFO:   Ledoit-Wolf shrinkage: α=0.0000
+10:24:08 INFO:   Ledoit-Wolf shrinkage: α=0.9350
+10:24:08 INFO:   Unimodal (K=1)
+10:24:08 INFO:   Ledoit-Wolf shrinkage: α=0.8929
+10:24:09 INFO:   Unimodal (K=1)
+10:24:09 INFO:   Ledoit-Wolf shrinkage: α=0.3310
+10:24:09 INFO:   Ledoit-Wolf shrinkage: α=0.8934
+10:24:09 INFO:   Unimodal (K=1)
+10:24:09 INFO:   Ledoit-Wolf shrinkage: α=0.8562
+10:24:10 INFO:   Unimodal (K=1)
+10:24:10 INFO:   Ledoit-Wolf shrinkage: α=0.9137
+10:24:10 INFO:   Unimodal (K=1)
+10:24:11 INFO:   Ledoit-Wolf shrinkage: α=0.9153
+10:24:11 INFO:   Unimodal (K=1)
+10:24:11 WARNING: Only 1 sample; returning zero covariance
+10:24:11 INFO:   Ledoit-Wolf shrinkage: α=0.7367
+10:24:12 INFO:   Unimodal (K=1)
+10:24:12 INFO:   Ledoit-Wolf shrinkage: α=0.6705
+10:24:12 INFO:   Unimodal (K=1)
+10:24:12 INFO:   Ledoit-Wolf shrinkage: α=0.8948
+10:24:13 INFO:   Unimodal (K=1)
+10:24:13 INFO:   Ledoit-Wolf shrinkage: α=0.8454
+10:24:14 INFO:   Unimodal (K=1)
+10:24:14 INFO:   Ledoit-Wolf shrinkage: α=0.5881
+10:24:14 INFO:   Ledoit-Wolf shrinkage: α=0.9058
+10:24:14 INFO:   Unimodal (K=1)
+10:24:15 INFO:   Ledoit-Wolf shrinkage: α=0.5057
+10:24:15 INFO:   Ledoit-Wolf shrinkage: α=0.9177
+10:24:15 INFO:   Unimodal (K=1)
+10:24:15 INFO:   Ledoit-Wolf shrinkage: α=0.8967
+10:24:16 INFO:   Unimodal (K=1)
+10:24:16 INFO:   Ledoit-Wolf shrinkage: α=0.8879
+10:24:16 INFO:   Unimodal (K=1)
+10:24:17 INFO:   ECE=0.2643, AUROC=1.0000, EF@1%=6.00, Spearman=0.7574, RMSE=1.6215
+10:24:17 INFO: 
+============================================================
+10:24:17 INFO: ABLATION COMPARISON TABLE
+10:24:17 INFO: ============================================================
+10:24:17 INFO: 
+Method                     ECE     Brier     AUROC     EF@1%  Hit Rate  Spearman      RMSE       NLL
+----------------------------------------------------------------------------------------------------
+full                    0.2643    0.1028    1.0000      6.00    1.0000    0.7574    1.6215    1.9460
+A1                      0.2297    0.0742    1.0000      6.00    1.0000    0.7574    1.6215    1.9517
+A2                      0.2384    0.0806    1.0000      6.00    1.0000    0.7574    1.621510335095043.8485
+A3                      0.2643    0.1028    1.0000      6.00    1.0000    0.7574    1.6215    1.9460
+A4                      0.2754    0.1086    1.0000      6.00    1.0000    0.7574    1.6215    1.9796
+A5                      0.2643    0.1028    1.0000      6.00    1.0000    0.7574    1.6215    1.9460
+A7                      0.2643    0.1028    1.0000      6.00    1.0000    0.7574    1.6215    1.9460
+10:24:17 INFO: 
+  Results saved to results/embedding_rdkit/ablation
+10:24:17 INFO:   - ablation_summary.json
+10:24:17 INFO:   - ablation_per_pocket.json
+10:24:17 INFO: 
+============================================================
+10:24:17 INFO: Ablation study complete!

@@ -1,0 +1,39 @@
+{
+  "n_train": 200,
+  "d": 128,
+  "n_inducing": 48,
+  "n_epochs": 200,
+  "final_loss": 2.3706994819641114,
+  "elapsed_s": 17.3,
+  "pkd_range": [
+    1.2415132522583008,
+    9.712369918823242
+  ],
+  "pkd_mean": 5.105832099914551,
+  "train_codes": [
+    "CDK6_HUMAN_1_312_0",
+    "PHP_SULSO_1_314_0",
+    "PPIA_HUMAN_1_165_0",
+    "RG1_RAUSE_1_513_0",
+    "VAOX_PENSI_1_560_0",
+    "Y635_MYCTU_1_158_0",
+    "ACE_HUMAN_650_1230_0",
+    "COAA_MYCTU_1_312_0",
+    "DFPA_LOLVU_2_314_0",
+    "F16P1_HUMAN_1_338_0",
+    "GSTP1_HUMAN_2_210_0",
+    "NEP_HUMAN_54_750_0",
+    "PAC_ECOLX_27_846_0",
+    "CHIB1_ASPFM_39_433_0",
+    "DYRK2_HUMAN_145_550_0",
+    "GUX1_HYPJE_18_451_0",
+    "SQHC_ALIAD_1_631_0",
+    "AKT1_HUMAN_1_137_0",
+    "BSD_ASPTE_1_130_0",
+    "CD38_HUMAN_44_300_0",
+    "GLMU_STRPN_2_459_0",
+    "IMA1_HUMAN_68_497_0",
+    "LMBL1_HUMAN_198_526_0",
+    "MURA_ECOLI_1_419_catalytic_0"
+  ]
+}
