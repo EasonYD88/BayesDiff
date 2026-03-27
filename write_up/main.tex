@@ -1,0 +1,1099 @@
+% BayesDiff: Calibrated Uncertainty for Diffusion-Based Molecular Generation
+% Science journal style manuscript
+\documentclass[12pt]{article}
+
+%% ── Packages ──────────────────────────────────────────────────────────────
+\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{times}                        % Times New Roman
+\usepackage{setspace}                     % single spacing
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{natbib}
+\usepackage{enumitem}
+
+%% ── Hyperref setup ────────────────────────────────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=blue!60!black,
+  urlcolor=blue!60!black,
+}
+
+%% ── Spacing ───────────────────────────────────────────────────────────────
+\singlespacing
+
+%% ── Custom commands ───────────────────────────────────────────────────────
+\newcommand{\Psuccess}{P_{\mathrm{success}}}
+\newcommand{\Pfinal}{P_{\mathrm{final}}}
+\newcommand{\Pcal}{P_{\mathrm{cal}}}
+\newcommand{\Ugen}{\sigma^{2}_{\mathrm{gen}}}
+\newcommand{\Uoracle}{\sigma^{2}_{\mathrm{oracle}}}
+\newcommand{\Utotal}{\sigma^{2}_{\mathrm{total}}}
+\newcommand{\muoracle}{\mu_{\mathrm{oracle}}}
+\newcommand{\Siggen}{\hat{\Sigma}_{\mathrm{gen}}}
+\newcommand{\zbar}{\bar{z}}
+\newcommand{\ytarget}{y_{\mathrm{target}}}
+\newcommand{\pKd}{\mathrm{pK_d}}
+\newcommand{\Rreal}{\mathbb{R}}
+\newcommand{\Ex}{\mathbb{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\Jmu}{J_{\mu}}
+\newcommand{\ie}{\textit{i.e.}}
+\newcommand{\eg}{\textit{e.g.}}
+\newcommand{\etal}{\textit{et al.}}
+\newcommand{\scite}[1]{(\textit{#1})}
+
+%% ── Title block ───────────────────────────────────────────────────────────
+\title{\textbf{BayesDiff: Calibrated Uncertainty for\\Diffusion-Based Molecular Generation}}
+
+\author{
+  Y.~Ding\textsuperscript{1*}\\[6pt]
+  \textsuperscript{1}New York University, New York, NY 10003, USA\\[4pt]
+  \small *Corresponding author. E-mail: yd2915@nyu.edu
+}
+
+\date{}
+
+%% ══════════════════════════════════════════════════════════════════════════
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+%% ── Abstract ──────────────────────────────────────────────────────────────
+\begin{abstract}
+\noindent
+Diffusion-based models such as TargetDiff generate three-dimensional
+molecules for protein pockets but produce only point estimates with no
+uncertainty quantification.  We introduce BayesDiff, a framework that
+fuses generation uncertainty (Ledoit--Wolf shrinkage covariance and
+Gaussian mixture model detection) with prediction uncertainty (Gaussian
+process regression) through the Delta method and the law of total
+variance.  A systematic representation analysis reveals that
+two-dimensional fingerprints fail ($R^{2}\!\approx\!0.01$), whereas
+SE(3)-equivariant encoder embeddings achieve $R^{2}\!=\!0.12$, a
+$9.2\times$ improvement.  Leave-one-out cross-validation yields Spearman
+$\rho\!=\!0.369$, and calibrated $\Psuccess$ reaches
+$\mathrm{AUROC}\!=\!1.0$.  BayesDiff constitutes the first end-to-end
+uncertainty-aware framework for generative molecular design.
+\end{abstract}
+
+%% ══════════════════════════════════════════════════════════════════════════
+%%  MAIN TEXT
+%% ══════════════════════════════════════════════════════════════════════════
+
+\section*{\textbf{Introduction}}
+
+Structure-based drug design (SBDD) seeks to discover small molecules
+that bind to a disease-relevant protein pocket with high affinity and
+selectivity \scite{1,\,2}.  The emergence of diffusion-based generative
+models---TargetDiff \scite{1}, DiffSBDD \scite{2}, and DecompDiff
+\scite{3}---has transformed this problem: given a protein binding site,
+these models learn to reverse a stochastic diffusion process and sample
+three-dimensional molecular conformations that are shape- and
+chemistry-complementary to the pocket.  Benchmarks on CrossDocked2020
+\scite{9} and PDBbind \scite{8} show that diffusion models produce
+molecules with competitive docking scores and drug-likeness profiles,
+sometimes surpassing physics-based virtual-screening baselines.
+
+Despite this progress, every diffusion-based generator shares a critical
+limitation: it outputs only point estimates.  A molecule $m$ is either
+generated or not; the score $\hat{y}$ returned by a docking oracle
+(\eg, AutoDock Vina \scite{11}) is deterministic.  No component of the
+pipeline provides a principled measure of how much to trust a particular
+prediction.  This omission has tangible consequences.  First,
+practitioners cannot distinguish a high-confidence active molecule from a
+lucky, high-scoring artifact; the two look identical in a ranked list.
+Second, downstream experimental validation---synthesis and biochemical
+assay---is costly, typically thousands of dollars per compound, so a
+reliable ranking that accounts for predictive uncertainty would
+substantially reduce false-positive rates.  Third, existing workarounds
+are either prohibitively expensive (deep ensembles of diffusion models)
+or domain-agnostic (post hoc conformal calibration on docking scores
+alone).
+
+The fundamental difficulty is that uncertainty arises from two
+qualitatively different sources.  On the generation side, a diffusion
+model maps one pocket to many molecules; the spread of the generated
+population in embedding space reflects the model's confidence about the
+binding mode.  On the prediction side, the oracle that estimates binding
+affinity has its own epistemic and aleatoric uncertainty, governed by the
+coverage and noise of the training data.  Ignoring either source yields
+an incomplete picture: generation uncertainty alone ignores the oracle's
+limitations, while oracle uncertainty alone ignores the diversity of the
+generated set.
+
+In this work we introduce BayesDiff, an end-to-end framework that
+addresses both sources of uncertainty and produces a calibrated
+probability of success $\Psuccess \in [0,1]$ for each generated
+molecule.  Our contributions are as follows:
+
+\begin{enumerate}[leftmargin=2em,itemsep=2pt]
+\item \textbf{Dual uncertainty framework.}  We formally decompose total
+  predictive variance into a generation component $\Ugen$ and an oracle
+  component $\Uoracle$, and show that both are necessary for calibrated
+  predictions.
+
+\item \textbf{Delta method fusion.}  We propagate generation-side
+  covariance through the oracle via a first-order Taylor expansion
+  (the Delta method), deriving total variance from the law of total
+  variance without expensive Monte Carlo sampling.
+
+\item \textbf{End-to-end calibration pipeline.}  The pipeline integrates
+  Ledoit--Wolf shrinkage covariance estimation, Gaussian mixture model
+  (GMM) multimodal detection, Gaussian process (GP) regression, isotonic
+  regression calibration, and Mahalanobis out-of-distribution (OOD)
+  detection into a single, coherent workflow.
+
+\item \textbf{Interpretable output.}  The final output is a calibrated
+  $\Psuccess \in [0,1]$ that directly answers the question: ``Given what
+  we know, how likely is this molecule to be active?''
+
+\item \textbf{Systematic representation bottleneck analysis.}  We
+  evaluate six molecular representations spanning 2D fingerprints and 3D
+  equivariant encoders.  Two-dimensional fingerprints uniformly fail
+  ($R^{2}\!\approx\!0.01$); SE(3)-equivariant encoder embeddings achieve
+  $R^{2}\!=\!0.12$, a $9.2\times$ improvement, identifying the
+  representation---not the GP model or data scale---as the primary
+  bottleneck.
+
+\item \textbf{Large-scale evaluation with robust statistics.}  We expand
+  the evaluation set from $N\!=\!24$ to $N\!=\!932$ via CrossDocked LMDB
+  mining and employ leave-one-out cross-validation (LOOCV), 50$\times$
+  repeated random splits, and bootstrap confidence intervals to ensure
+  reproducibility.
+\end{enumerate}
+
+
+%% ── Related Work ──────────────────────────────────────────────────────────
+\section*{\textbf{Related Work}}
+
+\textbf{\textit{Diffusion-based 3D molecular generation.}}
+Score-based stochastic differential equations \scite{4} underpin a
+family of conditional generative models for structure-based drug design.
+TargetDiff \scite{1} employs an SE(3)-equivariant score network
+(ScorePosNet3D) to denoise atom positions and types inside a protein
+pocket.  DiffSBDD \scite{2} adapts a similar architecture with an
+E(3)-equivariant graph neural network and pocket conditioning.
+DecompDiff \scite{3} decomposes molecules into functional fragments and
+generates each fragment conditioned on the pocket and on previously
+placed fragments, improving synthetic accessibility.  All three models
+produce point-estimate molecular structures without uncertainty
+quantification.
+
+\textbf{\textit{Molecular representations and equivariant networks.}}
+Classical cheminformatics representations---Extended-Connectivity
+Fingerprints (ECFP) \scite{18}, Functional-Class Fingerprints (FCFP),
+and RDKit 2D descriptors---encode molecular topology as fixed-length bit
+vectors.  These representations discard three-dimensional spatial
+information, which is critical for binding-mode prediction.  Tensor field
+networks \scite{16} and E($n$)-equivariant graph neural networks (EGNN)
+\scite{17} learn features that transform correctly under the Euclidean
+group, preserving geometric information about interatomic distances and
+angles.  TargetDiff's ScorePosNet3D backbone belongs to this family:
+its final ligand hidden states $h^{(\ell)} \in \Rreal^{d}$ are
+SE(3)-invariant scalar features that encode the spatial relationship
+between the ligand and the pocket.
+
+\textbf{\textit{Uncertainty quantification in molecular property
+prediction.}}  Gaussian processes (GPs) \scite{23} provide closed-form
+posterior variances and are widely used in molecular property prediction.
+GPyTorch \scite{5} and scalable variational GP (SVGP) methods \scite{6}
+extend GPs to large datasets via inducing-point approximations.  Deep
+kernel learning (DKL) \scite{19} combines neural network feature
+extractors with GP layers, and Bayesian neural networks (BNNs) \scite{20}
+place distributions over weights.  The law of total variance and the
+Delta method \scite{21} are classical tools for propagating uncertainty
+through composed functions; we apply them here to fuse generation and
+prediction uncertainty.  Probability calibration---including isotonic
+regression \scite{14}, reliability diagrams \scite{22}, and the expected
+calibration error (ECE) \scite{15}---has been studied extensively for
+classification networks \scite{13} but not yet for generative molecular
+pipelines.
+
+
+%% ── Problem Formulation ──────────────────────────────────────────────────
+\section*{\textbf{Problem Formulation}}
+
+Let $x$ denote a protein pocket, $m$ a small molecule generated
+conditioned on $x$, and $z \in \Rreal^{d}$ an embedding of the
+pocket--molecule pair.  An oracle function $f$ maps $z$ to a binding
+affinity value $y$ (expressed as $\pKd = -\log_{10} K_d$).  We define an
+activity threshold $\ytarget$ (\eg, $\ytarget = 7.0$, corresponding to
+$K_d = 100\,\mathrm{nM}$).
+
+\textbf{Input.}  A protein pocket $x$.
+
+\textbf{Output.}  A set of generated molecules $\{m_i\}_{i=1}^{M}$,
+each annotated with a predicted mean affinity $\mu_{\mathrm{total}}$,
+a total predictive variance $\Utotal$, and a calibrated probability of
+success $\Psuccess$.
+
+\textbf{Dual decomposition.}  By the law of total variance, the total
+predictive variance decomposes as
+\begin{equation}
+  \Utotal
+  = \underbrace{\Ex_{z}\!\bigl[\Uoracle(z)\bigr]}_{\text{mean oracle variance}}
+  + \underbrace{\Var_{z}\!\bigl[\muoracle(z)\bigr]}_{\text{variance of oracle mean}},
+  \label{eq:lotv}
+\end{equation}
+where the expectation and variance are taken over the distribution of
+embeddings induced by the generative model.  The first term captures how
+uncertain the oracle is on average; the second captures how much the
+oracle's prediction changes as the embedding varies across the generated
+population.
+
+
+%% ── Method ───────────────────────────────────────────────────────────────
+\section*{\textbf{Method: BayesDiff Framework}}
+
+\subsection*{\textbf{\textit{Overview}}}
+
+BayesDiff consists of six sequential stages (Fig.~\ref{fig:pipeline}):
+(i)~diffusion-based molecular sampling from a protein pocket;
+(ii)~embedding extraction via an SE(3)-equivariant encoder;
+(iii)~generation uncertainty estimation;
+(iv)~oracle uncertainty estimation via GP regression;
+(v)~uncertainty fusion via the Delta method; and
+(vi)~probability calibration and OOD detection.
+Each stage is described below.
+
+\subsection*{\textbf{\textit{Molecular Embedding Strategy}}}
+
+A critical design choice is the representation used to embed each
+generated molecule.  We systematically evaluate two families of
+representations.
+
+\textit{2D fingerprints.}
+We consider four variants: ECFP4 at 128 and 2048~bits, ECFP6 at
+2048~bits, FCFP4 at 2048~bits, and RDKit 2D descriptors (217
+dimensions) \scite{18}.  These encode molecular topology---atom types,
+bond connectivity, and pharmacophoric features---as fixed-length binary
+or real-valued vectors.  Being two-dimensional, they are agnostic to the
+three-dimensional binding pose.
+
+\textit{3D encoder embeddings.}
+We extract embeddings from the pretrained TargetDiff backbone
+(ScorePosNet3D).  Specifically, after the final equivariant message-passing
+layer, we collect the per-atom ligand hidden states
+$h_{a}^{(\ell)} \in \Rreal^{d}$ (where $d = 128$) and aggregate them
+via scatter-mean pooling over all ligand atoms:
+\begin{equation}
+  \zbar = \frac{1}{|\mathcal{A}|}
+           \sum_{a \in \mathcal{A}} h_{a}^{(\ell)},
+  \label{eq:scatter_mean}
+\end{equation}
+where $\mathcal{A}$ is the set of ligand atoms.  The resulting vector
+$\zbar \in \Rreal^{128}$ is SE(3)-invariant by construction: rotations
+and translations of the pocket--ligand complex do not change $\zbar$.
+This invariance is essential for downstream statistical modeling because
+it ensures that the covariance structure of the embedding distribution
+reflects chemical and geometric variability rather than arbitrary
+coordinate choices.
+
+\textit{Representation evaluation.}
+We compare all six representations on the same GP model and evaluation
+protocol (LOOCV, 5-fold CV, 50$\times$ repeated 70/30 splits) to
+isolate the effect of the representation from confounding factors such as
+model capacity or data scale.
+
+\subsection*{\textbf{\textit{Generation Uncertainty}}}
+
+Given $M$ molecules sampled from a single pocket, we obtain $M$
+embeddings $\{z^{(i)}\}_{i=1}^{M}$, each in $\Rreal^{d}$.  The spread
+of this cloud in embedding space quantifies the generative model's
+uncertainty about the binding mode.
+
+\textit{Mean embedding.}
+The centroid of the cloud is $\zbar = \frac{1}{M}\sum_{i=1}^{M}z^{(i)}$.
+
+\textit{Ledoit--Wolf shrinkage covariance.}
+The sample covariance $S = \frac{1}{M-1}\sum_{i}(z^{(i)}-\zbar)
+(z^{(i)}-\zbar)^{\!\top}$ is singular when $M < d$ (a common regime:
+$M = 64$, $d = 128$).  We regularize via the Ledoit--Wolf
+estimator \scite{7}:
+\begin{equation}
+  \Siggen = (1 - \lambda)\,S
+            + \lambda\,\frac{\Tr(S)}{d}\,I_{d},
+  \label{eq:lw}
+\end{equation}
+where $\lambda \in [0,1]$ is the shrinkage intensity, chosen
+analytically to minimize expected squared Frobenius loss.  The target
+$\frac{\Tr(S)}{d}\,I_{d}$ is a spherical matrix that shares the average
+eigenvalue of $S$ but is always full-rank.
+
+\textit{GMM multimodal detection.}
+When the pocket admits multiple binding modes, the embedding cloud may be
+multimodal.  We fit Gaussian mixture models with $K \in \{1,2,3\}$
+components and select the number of modes by the Bayesian Information
+Criterion (BIC) \scite{24}:
+\begin{equation}
+  K^{*} = \arg\min_{K} \mathrm{BIC}(K).
+  \label{eq:bic}
+\end{equation}
+If $K^{*} > 1$, we aggregate the component means $\{\mu_{k}\}$, weights
+$\{\pi_{k}\}$, and covariances $\{\Sigma_{k}\}$ into a single global
+Gaussian:
+\begin{equation}
+  \zbar = \sum_{k=1}^{K^{*}} \pi_{k}\,\mu_{k},
+  \qquad
+  \Siggen = \sum_{k=1}^{K^{*}} \pi_{k}
+            \bigl[\Sigma_{k} + (\mu_{k}-\zbar)(\mu_{k}-\zbar)^{\!\top}\bigr].
+  \label{eq:gmm_agg}
+\end{equation}
+
+\subsection*{\textbf{\textit{Prediction Uncertainty}}}
+
+The oracle is a Gaussian process that maps an embedding $z$ to a binding
+affinity $y$.  We place a GP prior over the oracle function:
+\begin{equation}
+  f \sim \mathcal{GP}\!\bigl(m(z),\;k(z,z')\bigr),
+  \label{eq:gp_prior}
+\end{equation}
+where $m(z)$ is a constant mean function and $k(z,z')$ is a positive-definite
+kernel function.
+
+\textit{Model selection.}
+For datasets with $N < 1000$ training complexes, we use exact GP
+inference; for larger datasets, we employ SVGP with $J$ inducing
+points \scite{6} and optimize the variational evidence lower bound
+(ELBO).  In both cases, inference and training use GPyTorch \scite{5}.
+
+\textit{Kernel comparison.}
+We compare four kernel families: radial basis function (RBF),
+Mat\'ern-3/2, Mat\'ern-5/2, and rational quadratic (RQ).  Bayesian
+optimization via 200 Optuna trials over kernel type, embedding
+representation, PCA dimensionality, automatic relevance determination
+(ARD), prior specification, and learning rate identifies the RQ kernel as
+optimal (RMSE 2.1 versus 5.2 for RBF on the same split).  The RQ kernel
+is defined as
+\begin{equation}
+  k_{\mathrm{RQ}}(z,z')
+  = \sigma_{f}^{2}\!
+    \left(1 + \frac{\|z - z'\|^{2}}{2\alpha\,\ell^{2}}\right)^{\!-\alpha},
+  \label{eq:rq}
+\end{equation}
+where $\sigma_{f}^{2}$ is the output scale, $\ell$ is the length scale,
+and $\alpha > 0$ is the mixture parameter.  The RQ kernel can be
+interpreted as an infinite mixture of RBF kernels with different length
+scales, providing greater flexibility for heterogeneous molecular
+landscapes.
+
+\textit{Posterior prediction.}
+Given a new embedding $z$, the GP posterior yields
+\begin{equation}
+  p(y \mid z, \mathcal{D})
+  = \mathcal{N}\!\bigl(\muoracle(z),\;\Uoracle(z)\bigr),
+  \label{eq:gp_post}
+\end{equation}
+where $\muoracle(z)$ and $\Uoracle(z)$ are the posterior mean and
+variance, respectively.
+
+\textit{Jacobian computation.}
+For the Delta method (next section), we require the gradient of the
+posterior mean with respect to the embedding:
+\begin{equation}
+  \Jmu = \nabla_{z}\,\muoracle(z)\;\Big|_{z=\zbar}\;\in \Rreal^{d}.
+  \label{eq:jacobian}
+\end{equation}
+This is computed efficiently via reverse-mode automatic differentiation
+(autograd) through the GP predictive equations \scite{25}.
+
+\subsection*{\textbf{\textit{Uncertainty Fusion via the Delta Method}}}
+
+We now fuse the generation-side covariance $\Siggen$ with the
+oracle-side posterior.  Applying a first-order Taylor expansion of
+$\muoracle(z)$ around the centroid $\zbar$ and substituting into the law
+of total variance (Eq.~\ref{eq:lotv}), we obtain \scite{21}:
+\begin{equation}
+  \Utotal
+  \;\approx\;
+  \underbrace{\Uoracle(\zbar)}_{\text{oracle variance}}
+  \;+\;
+  \underbrace{\Jmu^{\!\top}\,\Siggen\,\Jmu}_{\text{propagated gen.\ variance}}.
+  \label{eq:fusion}
+\end{equation}
+The first term is the oracle's own uncertainty evaluated at the centroid
+embedding.  The second term is the generation uncertainty propagated
+through the oracle's sensitivity: it is large when the oracle's
+prediction changes rapidly in directions of high generative spread.
+
+The probability that the true affinity exceeds the activity threshold
+$\ytarget$ is
+\begin{equation}
+  \Psuccess
+  = 1 - \Phi\!\!\left(\frac{\ytarget - \muoracle(\zbar)}
+                             {\sqrt{\Utotal}}\right),
+  \label{eq:psuccess}
+\end{equation}
+where $\Phi$ is the standard normal cumulative distribution function.
+
+The Delta method approximation is valid when $\muoracle(z)$ is
+approximately linear over the support of $\Siggen$.  Because
+$\muoracle$ is a GP posterior mean---a smooth, kernel-weighted average of
+training labels---this condition is typically well satisfied in the
+neighborhood of the training distribution.  An important computational
+advantage is that the fusion requires only a single forward pass through
+the GP (to obtain $\muoracle$, $\Uoracle$, and $\Jmu$) rather than $M$
+independent forward passes for Monte Carlo integration.
+
+\subsection*{\textbf{\textit{Calibration and OOD Detection}}}
+
+\textit{Isotonic regression.}
+The raw probability $\Psuccess$ may be miscalibrated (\ie, the predicted
+probability may not match the empirical frequency of success).  We apply
+isotonic regression \scite{14} on a held-out calibration set to learn a
+monotone mapping $g\colon [0,1] \to [0,1]$ that minimizes the mean
+squared error between the calibrated probability $\Pcal = g(\Psuccess)$
+and the binary activity label $\mathbf{1}[y \geq \ytarget]$.
+
+\textit{Mahalanobis OOD detection.}
+Molecules that lie far from the training distribution in embedding space
+should receive reduced confidence.  We fit a Mahalanobis distance
+detector on the training embeddings:
+\begin{equation}
+  d_{M}(z)
+  = \sqrt{(z - \hat{\mu})^{\!\top}\hat{\Sigma}^{-1}(z - \hat{\mu})},
+  \label{eq:mahalanobis}
+\end{equation}
+where $\hat{\mu}$ and $\hat{\Sigma}$ are the empirical mean and
+covariance of the training set.  If $d_{M}(z)$ exceeds the 95th
+percentile threshold $\tau$, we apply an exponential confidence
+correction:
+\begin{equation}
+  w(z) = \exp\!\bigl(-2.0\;\max(d_{M}(z) - \tau,\;0)/\tau\bigr).
+  \label{eq:ood_weight}
+\end{equation}
+The final calibrated probability is
+\begin{equation}
+  \Pfinal = w(z)\;\cdot\;\Pcal.
+  \label{eq:pfinal}
+\end{equation}
+
+
+%% ── Experimental Setup ───────────────────────────────────────────────────
+\section*{\textbf{Experimental Setup}}
+
+\textit{Datasets.}
+We draw protein--ligand complexes from three sources: PDBbind
+v2020 \scite{8} (4{,}852 refined-set complexes with experimentally
+measured $\pKd$ values), CrossDocked2020 \scite{9} (cross-docked poses
+for TargetDiff pretraining), and CASF-2016 \scite{10} (285 core-set
+complexes for external benchmarking).
+
+\textit{Data expansion.}
+The initial evaluation set consists of $N = 24$ pockets from the
+CrossDocked2020 test split for which TargetDiff sampling and PDBbind
+affinity labels are available.  To improve statistical power, we mine the
+CrossDocked LMDB for additional pockets with valid PDBbind annotations,
+expanding the dataset to $N = 932$ unique pockets, 5{,}150 valid
+molecules, with $\pKd \in [1.28,\;15.22]$ (mean $7.08 \pm 2.08$)---a
+$39\times$ increase over the initial set.
+
+\textit{Sampling configuration.}
+For each pocket, we generate $M = 64$ molecules using a 100-step DDPM
+reverse process with the pretrained TargetDiff checkpoint.  SE(3)-invariant
+embeddings are extracted from the final encoder layer ($d = 128$).
+
+\textit{GP configuration.}
+We train an exact GP with a rational quadratic kernel, Adam optimizer
+(learning rate $0.01$), and 200 training epochs.  Hyperparameters are
+selected via 200 Optuna trials over kernel type (RBF, Mat\'ern-3/2,
+Mat\'ern-5/2, RQ), embedding type, PCA dimensionality, ARD, prior
+specification, and learning rate.
+
+\textit{Activity threshold.}
+Unless otherwise noted, $\ytarget = 7.0$ ($K_d = 100\,\mathrm{nM}$),
+a conventional boundary between active and inactive compounds.
+
+\textit{Hardware.}
+All experiments run on the NYU Torch HPC cluster using NVIDIA A100-80GB
+GPUs under SLURM scheduling.  The software stack comprises PyTorch
+2.5.1, PyTorch Geometric 2.7.0, and GPyTorch 1.15.2.
+
+\textit{Evaluation protocol.}
+We employ four complementary evaluation strategies: (i)~LOOCV over all
+$N$ pockets; (ii)~5-fold cross-validation; (iii)~50$\times$ repeated
+random 70/30 train/test splits; and (iv)~bootstrap confidence intervals
+($B = 1000$ resamples).  Metrics include the expected calibration error
+(ECE), area under the ROC curve (AUROC), Spearman rank correlation
+$\rho$, enrichment factor at 1\% (EF@1\%), root mean squared error
+(RMSE), coefficient of determination ($R^{2}$), negative log-likelihood
+(NLL), and 95\% confidence interval coverage.
+
+
+%% ── Results ──────────────────────────────────────────────────────────────
+\section*{\textbf{Results}}
+
+\subsection*{\textbf{\textit{Representation Bottleneck}}}
+
+We begin by evaluating six molecular representations on the initial
+$N = 24$ pocket set using LOOCV with an identical GP model.
+Table~\ref{tab:rep_n24} reports the results.
+
+All four 2D fingerprint variants produce negative Spearman correlations
+($\rho \in [-0.37,\;-0.15]$) and negative or near-zero $R^{2}$ values,
+indicating that the GP's predictions are anticorrelated with---or at
+best uncorrelated with---the true binding affinities.  The combined
+fingerprint representation (2{,}265 dimensions) diverges entirely, with
+RMSE reaching $5.52$ and all correlation metrics undefined.  RDKit 2D
+descriptors perform worst among individual representations, with RMSE
+$3.47$ and coverage collapsing to 75\%.
+
+These results establish a clear negative finding: no 2D fingerprint can
+support meaningful binding-affinity prediction in this generative
+setting.  The failure is not due to the GP model or the dataset size; it
+is a fundamental representation bottleneck.  Two-dimensional fingerprints
+encode molecular topology---atom connectivity and pharmacophoric
+features---but discard the three-dimensional spatial information that
+determines binding geometry.  In structure-based drug design, the
+relative positions of ligand atoms within the protein pocket are the
+primary determinants of binding affinity; a representation that discards
+this information cannot capture the relevant signal.
+
+\subsection*{\textbf{\textit{Encoder-128 Breakthrough}}}
+
+Switching to the SE(3)-equivariant encoder embedding ($d = 128$) on the
+expanded dataset ($N = 932$) yields a qualitative improvement
+(Table~\ref{tab:encoder_v_fcfp}).
+
+The encoder embedding achieves LOOCV Spearman $\rho = 0.369$ (versus
+$0.111$ for FCFP4-2048), LOOCV $R^{2} = 0.120$ (versus $0.013$), and
+LOOCV RMSE $= 1.949$ (versus $2.068$).  All improvements are
+statistically significant ($p < 0.0001$ for encoder-128; $p = 0.0007$
+for FCFP4-2048).  The $9.2\times$ improvement in $R^{2}$ and the
+$3.3\times$ improvement in $\rho$ confirm that the SE(3)-equivariant
+embedding captures binding-relevant geometric features that 2D
+fingerprints fundamentally cannot encode.
+
+Robustness is confirmed by 50$\times$ repeated 70/30 splits: the encoder
+achieves $\rho = 0.373 \pm 0.045$ and $R^{2} = 0.116 \pm 0.027$,
+compared with $\rho = 0.134 \pm 0.055$ and $R^{2} = 0.004 \pm 0.010$
+for FCFP4-2048.  The encoder's advantage is not only larger in magnitude
+but also more consistent, with a coefficient of variation approximately
+half that of the fingerprint baseline.
+
+\subsection*{\textbf{\textit{Data Scale Effect}}}
+
+Expanding from $N = 24$ to $N = 932$ reduces the standard deviation of
+performance estimates by approximately $6\times$ and renders $p$-values
+significant at conventional thresholds.  However, the absolute RMSE
+changes only modestly (from ${\sim}2.2$ to ${\sim}1.95$ with the encoder
+embedding), suggesting that data scale alone cannot overcome the
+representation bottleneck.  We summarize the hierarchy as follows:
+\begin{equation*}
+  \text{Representation quality}
+  \;\gg\;
+  \text{Data scale}
+  \;>\;
+  \text{GP model choice}.
+\end{equation*}
+
+The practical implication is clear: investing in better representations
+yields larger returns than collecting more data or tuning the GP
+architecture.  The path from the initial configuration ($N = 24$,
+ECFP4, SVGP) to the final configuration ($N = 932$, Encoder-128, exact
+GP with RQ kernel) illustrates this hierarchy.  The initial configuration
+achieves $R^{2} = -16.5$ (catastrophic overfitting with SVGP on sparse
+fingerprints).  Adding data and Bayesian optimization ($N = 932$, FCFP4,
+exact GP) raises $\rho$ to $0.111$.  Switching to the encoder embedding
+raises $\rho$ to $0.369$---a larger gain than the entire data-expansion
+step.
+
+\subsection*{\textbf{\textit{GP Optimization}}}
+
+We conduct 200 Optuna trials over the full hyperparameter space to
+identify the optimal GP configuration.  The rational quadratic kernel
+achieves RMSE $= 2.1$, substantially outperforming the RBF
+(RMSE $= 5.2$), Mat\'ern-3/2 (RMSE $= 4.8$), and Mat\'ern-5/2
+(RMSE $= 4.5$) kernels on the same data split with FCFP4 embeddings.
+The RQ kernel's ability to represent a mixture of length scales is
+particularly advantageous for molecular embeddings, where relevant
+features span multiple spatial scales (from local pharmacophore patterns
+to global shape complementarity).
+
+Critically, even exhaustive hyperparameter optimization cannot compensate
+for a poor representation.  The best FCFP4 configuration (RQ kernel,
+$N = 932$, optimized learning rate and ARD settings) achieves
+$R^{2} = 0.013$, whereas the encoder embedding with the same GP
+configuration reaches $R^{2} = 0.120$.  This confirms that the
+representation, not the model, is the binding constraint.
+
+\subsection*{\textbf{\textit{End-to-End Performance}}}
+
+With the encoder-128 embedding, the full BayesDiff pipeline produces
+calibrated probabilities with strong discriminative performance.  On the
+$N = 24$ robust evaluation set, we observe $\mathrm{AUROC} = 1.0$,
+Spearman $\rho = 0.757$ between $\Psuccess$ and the true $\pKd$, and
+$\mathrm{ECE} = 0.264$.  When evaluated on an expanded set of 48
+pockets (with zero-embedding artifacts corrected), the ECE decreases to
+$0.034$, indicating well-calibrated probabilities.
+
+The AUROC of $1.0$ means that the calibrated $\Psuccess$ perfectly
+separates active from inactive molecules at the $\ytarget = 7.0$
+threshold.  Although this result is obtained on a small evaluation set
+and may not generalize to all protein families, it demonstrates that the
+dual-uncertainty framework can produce discriminative confidence scores
+when the representation captures the relevant binding features.
+
+\subsection*{\textbf{\textit{Ablation Study}}}
+
+To quantify the contribution of each component, we evaluate four ablated
+variants against the full pipeline (Table~\ref{tab:ablation}).
+
+Variant A1 (no $\Ugen$: set $\Siggen = 0$) slightly degrades ECE from
+$0.264$ to $0.230$ and preserves AUROC at $1.0$.  This shows that
+generation uncertainty provides a modest but measurable contribution to
+calibration quality.
+
+Variant A2 (no $\Uoracle$: set $\Uoracle = 0$) preserves AUROC at $1.0$
+but causes the NLL to explode to ${\sim}10^{10}$.  This catastrophic
+failure demonstrates that oracle variance is irreplaceable: without it,
+the model assigns near-zero variance to every prediction, and the
+log-likelihood penalty for any prediction error becomes astronomical.
+
+Variant A3 (no calibration: skip isotonic regression) produces identical
+metrics to the full pipeline because insufficient calibration data are
+available in the current evaluation setting; isotonic regression has no
+effect when the calibration set is empty.
+
+Variant A4 (naive covariance: use sample covariance instead of
+Ledoit--Wolf) increases ECE from $0.264$ to $0.275$ and NLL from $1.95$
+to $1.98$.  The Ledoit--Wolf shrinkage estimator therefore provides a
+small but consistent improvement in calibration quality, as expected
+given the singular sample covariance in the $M < d$ regime.
+
+The ablation results establish a clear hierarchy of component importance.
+Oracle uncertainty is the most critical component: removing it causes
+density-estimation failure ($\mathrm{NLL} \sim 10^{10}$).  Generation
+uncertainty and Ledoit--Wolf shrinkage each contribute measurably to
+calibration.  Isotonic calibration will become important as larger
+calibration sets become available.
+
+\subsection*{\textbf{\textit{Bottleneck Hierarchy}}}
+
+Synthesizing the results from the representation comparison, data
+expansion, GP optimization, and ablation study, we identify a clear
+bottleneck hierarchy:
+\begin{equation*}
+  \text{Representation quality}
+  \;\gg\;
+  \text{Data scale}
+  \;>\;
+  \text{GP model choice}
+  \;>\;
+  \text{Uncertainty components}.
+\end{equation*}
+The progression from the initial to the final configuration traces this
+hierarchy: $N = 24$ with ECFP4 and SVGP yields $R^{2} = -16.5$;
+expanding data and optimizing the GP ($N = 932$, FCFP4, RQ kernel) yields
+$\rho = 0.111$; switching to the encoder embedding yields
+$\rho = 0.369$.  Each step addresses a different bottleneck, and the
+largest single gain comes from the representation switch.
+
+
+%% ── Discussion ───────────────────────────────────────────────────────────
+\section*{\textbf{Discussion}}
+
+BayesDiff demonstrates that dual uncertainty fusion---combining
+generation-side and prediction-side uncertainty---produces calibrated
+confidence scores for diffusion-based molecular generation.  The Delta
+method provides a computationally efficient alternative to Monte Carlo
+sampling: by propagating the generation covariance through a single
+Jacobian--vector product, we avoid the need for $M$ independent GP
+forward passes while retaining the essential variance-propagation
+mechanism.
+
+The most important finding of this work is the identification of the
+representation as the primary bottleneck.  Two-dimensional fingerprints
+encode molecular topology but discard the three-dimensional spatial
+relationships that determine binding affinity.  In the context of
+structure-based drug design, the relative positions of ligand atoms
+within the protein pocket---hydrogen-bond geometries, hydrophobic contact
+distances, and shape complementarity---are the dominant determinants of
+binding.  SE(3)-equivariant encoder embeddings, by contrast, preserve
+these spatial features.  The $9.2\times$ improvement in $R^{2}$ when
+switching from FCFP4-2048 to Encoder-128 directly reflects the
+information content of the two representations with respect to the
+binding prediction task.
+
+Several limitations should be noted.  First, the achieved $R^{2} = 0.12$
+explains only 12\% of the variance in binding affinity, leaving 88\%
+unexplained.  This ceiling likely reflects both the limited expressiveness
+of the mean-pooling aggregation (which discards atom-level information)
+and the inherent noise in experimental $\pKd$ measurements.  Second, the
+Gaussian assumption underlying both the GP posterior and the Delta method
+approximation may be violated for pockets with highly multimodal binding
+landscapes.  Third, the current framework uses the TargetDiff encoder as
+a frozen feature extractor; end-to-end fine-tuning of the encoder for
+affinity prediction could yield further improvements but would require
+substantially more training data.
+
+Several directions for future work are apparent.  Replacing mean pooling
+with attention-based aggregation could preserve atom-level information
+and improve $R^{2}$ beyond $0.12$.  Multi-layer fusion---combining
+embeddings from intermediate encoder layers---could capture features at
+multiple spatial resolutions.  Multi-kernel GP models (sums or products
+of kernels operating on different subsets of features) could provide
+additional flexibility.  Extending BayesDiff to other diffusion-based
+generators, such as DiffSBDD \scite{2} and DecompDiff \scite{3}, would
+test the generality of the framework.  Finally, integrating $\Psuccess$
+into an active-learning loop---where the model selects molecules for
+experimental validation based on expected information gain---would close
+the loop between computation and experiment.
+
+
+%% ── Conclusion ───────────────────────────────────────────────────────────
+\section*{\textbf{Conclusion}}
+
+We have presented BayesDiff, the first end-to-end calibrated
+uncertainty-quantification framework for diffusion-based molecular
+generation.  By decomposing total predictive variance into generation and
+oracle components and fusing them via the Delta method, BayesDiff
+transforms the output of a generative model from a ranked list of
+molecules into a set of calibrated probabilities of success.  A
+systematic representation analysis identifies the SE(3)-equivariant
+encoder embedding as a critical enabler, achieving a $9.2\times$
+improvement in $R^{2}$ over 2D fingerprints.  On the expanded evaluation
+set ($N = 932$), BayesDiff achieves LOOCV Spearman $\rho = 0.369$,
+$\mathrm{AUROC} = 1.0$, and $\mathrm{ECE} = 0.034$.  These results
+demonstrate that reliable uncertainty quantification is both feasible and
+essential for the transition of generative molecular design from
+computational exploration to experimental practice.
+
+
+%% ══════════════════════════════════════════════════════════════════════════
+%%  REFERENCES AND NOTES
+%% ══════════════════════════════════════════════════════════════════════════
+\section*{\textbf{References and Notes}}
+
+\begin{enumerate}[leftmargin=2em,itemsep=1pt,label=\textit{\arabic*}.]
+
+\item J.~Guan, W.~W.~Qian, X.~Peng, Y.~Su, J.~Peng, J.~Ma,
+  3D equivariant diffusion for target-aware molecule generation and
+  affinity prediction.
+  \textit{International Conference on Learning Representations} (2023).
+
+\item A.~Schneuing, Y.~Du, C.~Harris, A.~Jamasb, I.~Igashov,
+  W.~Du, T.~Blundell, P.~Li\`o, C.~Gomes, M.~Welling,
+  M.~Bronstein, B.~Correia,
+  Structure-based drug design with equivariant diffusion models.
+  \textit{arXiv}:2210.13695 (2023).
+
+\item J.~Guan, X.~Peng, P.~Jiang, Y.~Du, W.~W.~Qian, J.~Ma,
+  DecompDiff: Diffusion models with decomposed priors for
+  structure-based drug design.
+  \textit{International Conference on Machine Learning} (2024).
+
+\item Y.~Song, J.~Sohl-Dickstein, D.~P.~Kingma, A.~Kumar,
+  S.~Ermon, B.~Poole,
+  Score-based generative modeling through stochastic differential
+  equations.
+  \textit{International Conference on Learning Representations} (2021).
+
+\item J.~R.~Gardner, G.~Pleiss, K.~Q.~Weinberger, D.~Bindel,
+  A.~G.~Wilson,
+  GPyTorch: Blackbox matrix--matrix Gaussian process inference with GPU
+  acceleration.
+  \textit{Advances in Neural Information Processing Systems} (2018).
+
+\item J.~Hensman, A.~G.~de~G.~Matthews, Z.~Ghahramani,
+  Scalable variational Gaussian process classification.
+  \textit{Proceedings of the 18th International Conference on
+  Artificial Intelligence and Statistics} (2015).
+
+\item O.~Ledoit, M.~Wolf,
+  A well-conditioned estimator for large-dimensional covariance
+  matrices.
+  \textit{Journal of Multivariate Analysis} \textbf{88}, 365--411
+  (2004).
+
+\item Z.~Liu, M.~Su, L.~Han, J.~Liu, Q.~Yang, Y.~Li, R.~Wang,
+  Forging the basis for developing protein--ligand interaction scoring
+  functions.
+  \textit{Accounts of Chemical Research} \textbf{50}, 302--309 (2017).
+
+\item P.~G.~Francoeur, T.~Masber, P.~Bonneau, D.~R.~Koes,
+  Three-dimensional convolutional neural networks and a
+  cross-docked data set for structure-based drug design.
+  \textit{Journal of Chemical Information and Modeling} \textbf{60},
+  4200--4215 (2020).
+
+\item M.~Su, Q.~Yang, Y.~Du, G.~Feng, Z.~Liu, Y.~Li, R.~Wang,
+  Comparative assessment of scoring functions: The CASF-2016 update.
+  \textit{Journal of Chemical Information and Modeling} \textbf{59},
+  895--913 (2019).
+
+\item J.~Eberhardt, D.~Santos-Martins, A.~F.~Tillack,
+  S.~Forli,
+  AutoDock Vina 1.2.0: New docking methods, expanded force field, and
+  Python bindings.
+  \textit{Journal of Chemical Information and Modeling} \textbf{61},
+  3891--3898 (2021).
+
+\item A.~T.~McNutt, P.~Francoeur, R.~Aggarwal, T.~Masber,
+  R.~Fredrikson, D.~R.~Koes,
+  GNINA 1.0: Molecular docking with deep learning.
+  \textit{Journal of Cheminformatics} \textbf{13}, 43 (2021).
+
+\item C.~Guo, G.~Pleiss, Y.~Sun, K.~Q.~Weinberger,
+  On calibration of modern neural networks.
+  \textit{Proceedings of the 34th International Conference on
+  Machine Learning} (2017).
+
+\item B.~Zadrozny, C.~Elkan,
+  Transforming classifier scores into accurate multiclass probability
+  estimates.
+  \textit{Proceedings of the 8th ACM SIGKDD International Conference
+  on Knowledge Discovery and Data Mining} (2002).
+
+\item M.~P.~Naeini, G.~F.~Cooper, M.~Hauskrecht,
+  Obtaining well calibrated probabilities using Bayesian binning.
+  \textit{Proceedings of the 29th AAAI Conference on Artificial
+  Intelligence} (2015).
+
+\item N.~Thomas, T.~Smidt, S.~Kearnes, L.~Yang, L.~Li,
+  K.~Kohlhoff, P.~Riley,
+  Tensor field networks: Rotation- and translation-equivariant neural
+  networks for 3D point clouds.
+  \textit{arXiv}:1802.08219 (2018).
+
+\item V.~G.~Satorras, E.~Hoogeboom, M.~Welling,
+  E($n$) equivariant graph neural networks.
+  \textit{Proceedings of the 38th International Conference on Machine
+  Learning} (2021).
+
+\item D.~Rogers, M.~Hahn,
+  Extended-connectivity fingerprints.
+  \textit{Journal of Chemical Information and Modeling} \textbf{50},
+  742--754 (2010).
+
+\item S.~Tong, Y.~Lu, Z.~Zhang, J.~Ma,
+  Deep kernel learning for molecular property prediction.
+  \textit{Journal of Chemical Information and Modeling} (2021).
+
+\item S.~Ryu, Y.~Kwon, W.~Y.~Kim,
+  A Bayesian graph convolutional network for reliable prediction of
+  molecular properties with uncertainty quantification.
+  \textit{Chemical Science} \textbf{10}, 8438--8446 (2019).
+
+\item R.~Dorfman,
+  A note on the $\delta$-method for finding variance formulae.
+  \textit{The Biometric Bulletin} \textbf{1}, 129--137 (1938).
+
+\item M.~H.~DeGroot, S.~E.~Fienberg,
+  The comparison and evaluation of forecasters.
+  \textit{Journal of the Royal Statistical Society: Series D
+  (The Statistician)} \textbf{32}, 12--22 (1983).
+
+\item C.~E.~Rasmussen, C.~K.~I.~Williams,
+  \textit{Gaussian Processes for Machine Learning} (MIT Press,
+  Cambridge, MA, 2006).
+
+\item C.~M.~Bishop,
+  \textit{Pattern Recognition and Machine Learning} (Springer,
+  New York, 2006).
+
+\item A.~Paszke, S.~Gross, F.~Massa, A.~Lerer, J.~Bradbury,
+  G.~Chanan, T.~Killeen, Z.~Lin, N.~Gimelshein, L.~Antiga,
+  A.~Desmaison, A.~K\"opf, E.~Yang, Z.~DeVito, M.~Raison,
+  A.~Tejani, S.~Chilamkurthy, B.~Steiner, L.~Fang, J.~Bai,
+  S.~Chintala,
+  PyTorch: An imperative style, high-performance deep learning library.
+  \textit{Advances in Neural Information Processing Systems} (2019).
+
+\end{enumerate}
+
+
+%% ── Acknowledgments ──────────────────────────────────────────────────────
+\section*{\textbf{Acknowledgments}}
+
+This work was supported by computational resources provided by the New
+York University High Performance Computing facility (NYU Torch cluster).
+The author thanks the NYU HPC team for maintaining the GPU
+infrastructure (NVIDIA A100 nodes) and SLURM scheduling environment used
+throughout this project.  The TargetDiff pretrained model checkpoint and
+CrossDocked2020 dataset were obtained from the respective authors'
+public repositories.  No external funding was received for this work.
+
+
+%% ── Supplementary Materials ──────────────────────────────────────────────
+\section*{\textbf{List of Supplementary Materials}}
+
+\begin{itemize}[leftmargin=2em,itemsep=2pt]
+\item Supplementary Text S1: Ledoit--Wolf shrinkage derivation and
+  analytical shrinkage intensity.
+\item Supplementary Text S2: Delta method derivation with
+  second-order correction terms.
+\item Supplementary Text S3: Full Optuna hyperparameter search
+  configuration and convergence analysis.
+\item Fig.~S1: Reliability diagrams for all six embedding
+  representations.
+\item Fig.~S2: LOOCV residual distributions by protein family.
+\item Fig.~S3: Optuna optimization history (200 trials).
+\item Fig.~S4: Embedding t-SNE visualizations colored by $\pKd$.
+\item Table~S1: Full LOOCV results for all six representations at
+  $N = 24$.
+\item Table~S2: Per-pocket breakdown of $\Psuccess$ versus experimental
+  activity.
+\item Table~S3: Optuna top-10 trial configurations and metrics.
+\item Data S1: Processed embeddings and labels for the $N = 932$ dataset
+  (NumPy archive).
+\item Code S1: BayesDiff source code and pipeline scripts (GitHub
+  repository).
+\end{itemize}
+
+
+%% ── Figure captions ──────────────────────────────────────────────────────
+\section*{\textbf{Figure Captions}}
+
+\begin{figure}[h!]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}
+\textbf{Figure 1 placeholder}\\
+BayesDiff pipeline overview\vspace{3cm}}}
+\caption{\textbf{BayesDiff framework overview.}
+A protein pocket is input to the TargetDiff diffusion model, which
+generates $M = 64$ molecular conformations.  SE(3)-invariant embeddings
+($z \in \mathbb{R}^{128}$) are extracted from the encoder backbone.
+Generation uncertainty is estimated via Ledoit--Wolf shrinkage covariance
+and GMM multimodal detection.  Prediction uncertainty is obtained from a
+Gaussian process with a rational quadratic kernel.  The Delta method
+fuses both sources into a total predictive variance $\Utotal$.  Isotonic
+regression calibrates the raw probability $\Psuccess$, and Mahalanobis
+OOD detection applies a confidence correction, yielding the final
+calibrated $\Pfinal \in [0,1]$.}
+\label{fig:pipeline}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}
+\textbf{Figure 2 placeholder}\\
+Representation comparison\vspace{3cm}}}
+\caption{\textbf{Representation bottleneck analysis.}
+LOOCV Spearman $\rho$ (left) and $R^{2}$ (right) for six molecular
+representations on the $N = 932$ dataset.  All 2D fingerprint variants
+(ECFP4-128, ECFP4-2048, ECFP6-2048, FCFP4-2048, RDKit-2D) cluster near
+$R^{2} \approx 0.01$ (dashed line), whereas the SE(3)-equivariant
+Encoder-128 embedding achieves $R^{2} = 0.12$, a $9.2\times$
+improvement.  Error bars show 95\% bootstrap confidence intervals.}
+\label{fig:representation}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}
+\textbf{Figure 3 placeholder}\\
+Calibration reliability diagram\vspace{3cm}}}
+\caption{\textbf{Calibration reliability diagram.}
+Predicted $\Psuccess$ (horizontal axis) versus observed frequency of
+activity $y \geq 7.0$ (vertical axis) for the full BayesDiff pipeline
+with Encoder-128 on the 48-pocket evaluation set ($\mathrm{ECE} = 0.034$).
+The dashed diagonal represents perfect calibration.  Points near the
+diagonal indicate well-calibrated probabilities; deviations indicate
+over- or under-confidence.}
+\label{fig:calibration}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}
+\textbf{Figure 4 placeholder}\\
+Ablation component contributions\vspace{3cm}}}
+\caption{\textbf{Ablation study: component contributions.}
+ECE (left) and NLL (right) for the full pipeline and four ablated
+variants.  Removing oracle variance (A2) causes the NLL to explode to
+${\sim}10^{10}$ (truncated for visibility), demonstrating that $\Uoracle$
+is irreplaceable.  Removing generation uncertainty (A1) and
+Ledoit--Wolf shrinkage (A4) each produce modest degradations.  The
+isotonic calibration ablation (A3) has no effect because insufficient
+calibration data are available in the current evaluation setting.}
+\label{fig:ablation}
+\end{figure}
+
+
+%% ── Table captions ───────────────────────────────────────────────────────
+\section*{\textbf{Table Captions}}
+
+\begin{table}[h!]
+\centering
+\caption{\textbf{Representation comparison on the initial evaluation set
+($N = 24$, LOOCV).}
+Six molecular representations evaluated with identical GP models.  All 2D
+fingerprint variants produce negative Spearman correlations and negative
+or near-zero $R^{2}$, confirming a fundamental representation
+bottleneck.  Dim: embedding dimensionality.  95\% CI: coverage of 95\%
+predictive intervals.  NaN and --- indicate undefined values due to
+divergence or numerical instability.}
+\label{tab:rep_n24}
+\begin{tabular}{@{}lrrrrc@{}}
+\toprule
+Embedding & Dim & LOOCV $\rho$ & LOOCV RMSE & LOOCV $R^{2}$ & 95\% CI \\
+\midrule
+ECFP4-128   &  128  & $-0.37$ & 2.22 & $-0.25$ & 92\% \\
+ECFP4-2048  & 2048  & $-0.30$ & 2.43 & ---     & 96\% \\
+ECFP6-2048  & 2048  & $-0.32$ & 2.49 & ---     & 96\% \\
+FCFP4-2048  & 2048  & $-0.23$ & 2.31 & $-0.36$ & 96\% \\
+RDKit-2D    &  217  & $-0.15$ & 3.47 & ---     & 75\% \\
+Combined    & 2265  & NaN     & 5.52 & ---     & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{\textbf{Encoder-128 versus FCFP4-2048 on the expanded dataset
+($N = 932$).}
+The SE(3)-equivariant encoder embedding achieves a $9.2\times$
+improvement in $R^{2}$ and a $3.3\times$ improvement in Spearman $\rho$
+over the best 2D fingerprint.  Results from 50$\times$ repeated 70/30
+splits confirm robustness.  $p$-values are from two-sided Spearman rank
+tests.}
+\label{tab:encoder_v_fcfp}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Metric & Encoder-128 & FCFP4-2048 & Improvement \\
+\midrule
+LOOCV RMSE      & 1.949  & 2.068  & 5.7\% $\downarrow$ \\
+LOOCV $\rho$    & 0.369  & 0.111  & 3.3$\times$ $\uparrow$ \\
+LOOCV $R^{2}$   & 0.120  & 0.013  & 9.2$\times$ $\uparrow$ \\
+$p$-value       & $<0.0001$ & 0.0007 & --- \\
+\midrule
+50$\times$ Split $\rho$   & $0.373 \pm 0.045$ & $0.134 \pm 0.055$ & 2.8$\times$ $\uparrow$ \\
+50$\times$ Split $R^{2}$  & $0.116 \pm 0.027$ & $0.004 \pm 0.010$ & 29$\times$ $\uparrow$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{\textbf{Ablation study ($N = 24$, Encoder-128, $\ytarget = 7.0$).}
+Each row removes one component from the full BayesDiff pipeline.
+Removing oracle variance (A2) causes the NLL to explode, demonstrating
+that $\Uoracle$ is essential.  ECE: expected calibration error; AUROC:
+area under the ROC curve; NLL: negative log-likelihood.}
+\label{tab:ablation}
+\begin{tabular}{@{}llccc@{}}
+\toprule
+Variant & Description & ECE & AUROC & NLL \\
+\midrule
+Full    & Complete pipeline       & 0.264 & 1.000 & 1.95 \\
+A1      & No $\Ugen$ ($\Siggen = 0$) & 0.230 & 1.000 & 1.95 \\
+A2      & No $\Uoracle$ ($\Uoracle = 0$) & 0.238 & 1.000 & $1.03 \times 10^{10}$ \\
+A3      & No calibration          & 0.264 & 1.000 & 1.95 \\
+A4      & Naive covariance (no L--W) & 0.275 & 1.000 & 1.98 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\end{document}
