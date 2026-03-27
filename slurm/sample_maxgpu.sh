@@ -7,6 +7,7 @@
 #SBATCH --mem=48G
 #SBATCH --time=04:00:00
 #SBATCH --array=0-30
+#SBATCH --chdir=/scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-27T12-00-01
 #SBATCH --output=slurm/logs/%A_%a_emb50.log
 #SBATCH --error=slurm/logs/%A_%a_emb50.err
 
@@ -26,7 +27,7 @@
 
 set -euo pipefail
 
-WORKTREE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+WORKTREE_DIR="/scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-27T12-00-01"
 cd "${WORKTREE_DIR}"
 
 # ── Configuration ─────────────────────────────────────────────
