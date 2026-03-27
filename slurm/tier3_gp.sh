@@ -14,7 +14,7 @@ set -euo pipefail
 eval "$(/scratch/yd2915/miniconda3/bin/conda shell.bash hook)"
 conda activate /scratch/yd2915/conda_envs/bayesdiff
 
-cd /scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-26T13-27-15
+cd /scratch/yd2915/BayesDiff
 
 echo "=== Tier 3 GP Training ==="
 echo "Host: $(hostname)"

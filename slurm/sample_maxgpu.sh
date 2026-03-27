@@ -7,7 +7,7 @@
 #SBATCH --mem=48G
 #SBATCH --time=04:00:00
 #SBATCH --array=0-30
-#SBATCH --chdir=/scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-27T12-00-01
+#SBATCH --chdir=/scratch/yd2915/BayesDiff
 #SBATCH --output=slurm/logs/%A_%a_emb50.log
 #SBATCH --error=slurm/logs/%A_%a_emb50.err
 
@@ -18,7 +18,7 @@
 # Estimated time: ~3 × 12 min = ~36 min per task.
 #
 # Submit:
-#   cd /scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-27T12-00-01
+#   cd /scratch/yd2915/BayesDiff
 #   sbatch slurm/sample_maxgpu.sh
 #
 # After all tasks finish, merge and evaluate:
@@ -27,8 +27,8 @@
 
 set -euo pipefail
 
-WORKTREE_DIR="/scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-27T12-00-01"
-cd "${WORKTREE_DIR}"
+REPO_DIR="/scratch/yd2915/BayesDiff"
+cd "${REPO_DIR}"
 
 # ── Configuration ─────────────────────────────────────────────
 POCKET_LIST="${POCKET_LIST:-data/splits/test_pockets.txt}"
@@ -64,7 +64,7 @@ echo "Node:         $(hostname)"
 echo "GPU:          $(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null || echo 'N/A')"
 echo "Array job id: ${SLURM_ARRAY_JOB_ID:-N/A}"
 echo "Task id:      ${SLURM_ARRAY_TASK_ID:-N/A}"
-echo "Worktree:     ${WORKTREE_DIR}"
+echo "Repo dir:     ${REPO_DIR}"
 echo "Run dir:      ${RUN_DIR}"
 echo "Shard dir:    ${SHARD_DIR}"
 echo "Pocket list:  ${POCKET_LIST}"

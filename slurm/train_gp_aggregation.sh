@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-REPO="/scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-26T13-27-15"
+REPO="/scratch/yd2915/BayesDiff"
 CONDA_ENV="/scratch/yd2915/conda_envs/bayesdiff"
 
 export PATH="${CONDA_ENV}/bin:${PATH}"

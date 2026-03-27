@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G
 #SBATCH --time=02:00:00
-#SBATCH --chdir=/scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-27T12-00-01
+#SBATCH --chdir=/scratch/yd2915/BayesDiff
 #SBATCH --output=slurm/logs/%j_merge50.log
 #SBATCH --error=slurm/logs/%j_merge50.err
 
@@ -21,8 +21,8 @@
 
 set -euo pipefail
 
-WORKTREE_DIR="/scratch/yd2915/BayesDiff.worktrees/copilot-worktree-2026-03-27T12-00-01"
-cd "${WORKTREE_DIR}"
+REPO_DIR="/scratch/yd2915/BayesDiff"
+cd "${REPO_DIR}"
 
 OUTPUT_ROOT="${OUTPUT_ROOT:-results/embedding_50mol}"
 
