@@ -923,3 +923,198 @@ All figures saved to `results/tier3_gp/figures/`:
 | `diagnostics.png` | Residual analysis + uncertainty calibration curve |
 | `comparison_n24_vs_tier3.png` | Side-by-side RMSE and ρ comparison |
 
+---
+
+## 13. Next-Step Optimization Plan
+
+### 13.1 Problem Diagnosis
+
+经过系统实验，我们确认了问题的根源层次：
+
+| 层次 | 组件 | 状态 | 证据 |
+|------|------|------|------|
+| **数据量** | N=24 → N=932 | ✅ 已解决 | RMSE 不变，ρ 标准差降6倍 |
+| **GP模型** | RQ kernel + BO优化 | ✅ 已解决 | 校准完美，收敛正常 |
+| **评估方法** | LOOCV + repeated splits | ✅ 已解决 | 结果可复现且稳定 |
+| **表征质量** | ECFP/FCFP 指纹 | ❌ **瓶颈** | R²=0.01，预测≈常数 |
+
+核心问题：ECFP/FCFP 只编码分子2D拓扑，**完全丢弃了蛋白-配体3D交互信息**。TargetDiff 生成的分子是 pocket-conditioned 的，但指纹把 pocket 信息全部丢弃了。
+
+### 13.2 方案概览
+
+按优先级排序，从最可行、预期收益最高的方案开始：
+
+| 优先级 | 方案 | 预期收益 | 实现难度 | 估计时间 |
+|--------|------|---------|---------|---------|
+| **P0** | TargetDiff 编码器嵌入 | ★★★★★ | 低 | 1-2天 |
+| **P1** | Vina 对接打分 | ★★★★ | 低 | 1天 |
+| **P2** | 蛋白-配体交互指纹 (PLIF) | ★★★★ | 中 | 2-3天 |
+| **P3** | 多表征融合 | ★★★★ | 中 | 1-2天 |
+| **P4** | 端到端 GNN 回归 | ★★★★★ | 高 | 1-2周 |
+| **P5** | ChemBERTa / MolBERT | ★★ | 中 | 2-3天 |
+
+---
+
+### 13.3 P0: TargetDiff 编码器 3D 嵌入（最高优先级）
+
+**原理**：TargetDiff 内部的 `ScorePosNet3D` 模型通过 SE(3)-等变图注意力网络处理蛋白-配体复合物。其 `final_ligand_h`（维度128）编码了：
+- 蛋白-配体原子间距离（Gaussian RBF 编码，20维）
+- 多头注意力加权的交互特征
+- 经过多层 UniTransformer 块传播的上下文信息
+- 4类边类型（配体-配体、配体-蛋白、蛋白-配体、蛋白-蛋白）
+
+**现状**：`sample_diffusion_ligand()` 返回7个值（缺少嵌入），`sampler.py` 已有处理8个返回值的代码但 fallback 到零向量。
+
+**实现方案**：
+
+```python
+# 方案A：修改 sample_diffusion.py 在最终步提取嵌入
+# 在 sample_diffusion_ligand() 的扩散循环最后一步：
+preds = model(...)
+final_ligand_h = preds['final_ligand_h']  # (N_ligand, hidden_dim)
+# scatter_mean 聚合为分子级别嵌入：
+mol_embeddings = scatter_mean(final_ligand_h, batch_ligand, dim=0)  # (N_mols, 128)
+
+# 方案B：使用 ScorePosNet3D.fetch_embedding() 方法（已存在于模型中）
+# 在采样完成后，用最终位置做一次前向传播提取嵌入
+preds = model.fetch_embedding(protein_pos, protein_v, batch_protein,
+                              final_ligand_pos, final_ligand_v, batch_ligand)
+```
+
+**关键代码位置**：
+- `external/targetdiff/models/molopt_score_model.py:351` → `final_ligand_h`
+- `external/targetdiff/models/molopt_score_model.py:620-631` → `fetch_embedding()`
+- `external/targetdiff/scripts/sample_diffusion.py:72-116` → 需添加第8个返回值
+- `bayesdiff/sampler.py:275-284` → 已支持8返回值解析
+
+**预期**：这是**唯一能同时捕获3D几何 + 蛋白-配体交互 + 口袋特异性**的表征。如果 TargetDiff 的扩散模型学到了有意义的蛋白-配体交互模式，这些嵌入应该与结合亲和力高度相关。
+
+---
+
+### 13.4 P1: Vina 对接打分作为特征
+
+**原理**：AutoDock Vina 的打分函数直接建模蛋白-配体结合能，包含：
+- 高斯距离项（范德华）
+- 排斥项
+- 氢键项
+- 疏水接触
+- 旋转熵罚分
+
+**现状**：TargetDiff 代码中已有 `VinaDockingTask` 集成（`evaluate_diffusion.py:107-124`），可直接调用。
+
+**实现**：
+```python
+# 对每个生成的分子计算 Vina score
+from utils.evaluation.docking_vina import VinaDockingTask
+task = VinaDockingTask.from_generated_mol(mol, pocket_pdb, pos)
+vina_score = task.run_sync()  # kcal/mol
+# 作为特征或直接作为 pKd 预估
+```
+
+**优势**：物理驱动的打分函数，直接衡量结合强度，无需训练
+**劣势**：Vina 本身精度有限（RMSE ~2.0 kcal/mol）；需要 3D 对接构象
+
+---
+
+### 13.5 P2: 蛋白-配体交互指纹 (PLIF)
+
+**原理**：编码蛋白-配体之间的具体交互类型，而非分子本身的结构。
+
+**交互类型**：
+- 氢键供体/受体
+- π-π堆积
+- π-阳离子作用
+- 疏水接触
+- 盐桥
+- 金属配位
+
+**实现**（使用 ProLIF 或 RDKit）：
+```python
+import prolif
+# 从 SDF（配体）+ PDB（蛋白口袋）计算 PLIF
+fp = prolif.Fingerprint(interactions=["HBDonor", "HBAcceptor", "PiStacking",
+                                       "Hydrophobic", "SaltBridge", "CationPi"])
+fp.run(ligand_mol, protein_mol)
+# → 二进制向量，每位 = 一种残基-交互类型组合
+```
+
+**预期**：比 ECFP 好得多，因为直接编码结合界面信息。但依赖 3D 构象质量。
+
+---
+
+### 13.6 P3: 多表征融合
+
+**原理**：组合多种互补表征，让 GP 从不同信息源中学习。
+
+**融合策略**：
+```
+Z_fused = [ TargetDiff_emb(128) ‖ FCFP4(128) ‖ Vina_score(1) ‖ QED(1) ‖ SA(1) ]
+→ PCA → GP
+```
+
+或使用多核 GP：
+```
+K_total = w1 * K_RQ(Z_encoder) + w2 * K_tanimoto(Z_FCFP) + w3 * K_RBF(Z_vina)
+```
+
+**优势**：无需选择"最好"的表征，让模型自动加权
+**实现**：GPyTorch 支持 `AdditiveKernel` 和 `ProductKernel` 的组合
+
+---
+
+### 13.7 P4: 端到端 GNN 回归
+
+**原理**：直接在蛋白-配体复合物图上训练 GNN 预测 pKd，绕过手工特征。
+
+**架构选择**：
+- **SchNet**：连续卷积，旋转不变
+- **DimeNet++**：方向信息编码
+- **PaiNN**：等变消息传递
+- **TorchMD-NET**：专为分子属性预测设计
+
+**数据需求**：N=932 可能不够训练 GNN（通常需要 >5000）。但可以：
+1. 在 PDBbind 上预训练（~19K 复合物）
+2. Fine-tune 到我们的数据分布
+3. 使用预训练的 GNN 作为特征提取器 → GP
+
+**估计工作量**：1-2周，需要准备数据加载器、训练循环、超参搜索
+
+---
+
+### 13.8 P5: ChemBERTa / MolBERT 嵌入
+
+**原理**：使用预训练语言模型将 SMILES 编码为密集向量。
+
+**实现**：
+```python
+from transformers import AutoTokenizer, AutoModel
+model = AutoModel.from_pretrained("seyonec/ChemBERTa-zinc-base-v1")
+tokenizer = AutoTokenizer.from_pretrained("seyonec/ChemBERTa-zinc-base-v1")
+inputs = tokenizer(smiles, return_tensors="pt", padding=True)
+embeddings = model(**inputs).last_hidden_state[:, 0, :]  # CLS token, 768-dim
+```
+
+**预期收益较低**：虽然比 ECFP 表达力强（连续空间、上下文感知），但仍然**不包含蛋白口袋信息**。可作为 P3 融合方案的一个组件。
+
+---
+
+### 13.9 推荐执行顺序
+
+```
+Phase 1 (立即)：P0 — 提取 TargetDiff 编码器嵌入
+  ↓ 修改 sample_diffusion.py → 返回 final_ligand_h
+  ↓ 重新运行 Tier3 采样（或仅做 forward pass 提取嵌入）
+  ↓ 训练 GP → 评估
+
+Phase 2 (如果 P0 效果有限)：P1 + P3 — Vina 打分 + 多表征融合
+  ↓ 计算 Vina scores
+  ↓ 融合 [encoder_emb ‖ vina ‖ FCFP]
+  ↓ 多核 GP
+
+Phase 3 (长期)：P4 — 端到端 GNN
+  ↓ 需要更多数据或预训练
+  ↓ 最高上限但最大投入
+```
+
+**关键判断标准**：如果 P0 (TargetDiff 嵌入) 的 LOOCV ρ > 0.3，说明3D交互信息是有效的，可以进一步优化。如果 ρ 仍然 < 0.15，说明 TargetDiff 的扩散模型本身没有学到亲和力相关的特征，需要转向 P4（端到端训练）。
+
