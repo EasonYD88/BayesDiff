@@ -762,3 +762,164 @@ After three systematic phases (robust evaluation → embedding comparison → Ba
 **Total for Tier 1**: ~12 GPU hours (can complete in 1 day)
 **Total for Tier 1+2**: ~48 GPU hours (2-3 days with queue waits)
 
+---
+
+## 12. Tier 3 Dataset: Full-Scale Results (N=932)
+
+### 12.1 Data Acquisition Summary
+
+Successfully executed a **comprehensive data acquisition pipeline** that expanded the dataset from N=24 to N=932 (39× increase):
+
+| Step | Description | Result |
+|------|-------------|--------|
+| LMDB scan | Scanned 166,500 CrossDocked entries | 2,358 families found |
+| Affinity matching | Matched with affinity_info.pkl | 1,041 families with pKd |
+| Pocket extraction | Extracted pre-processed pocket .pt files | 1,019 LMDB + 48 test = 1,067 |
+| GPU sampling | 16-shard L40S array job, 64 mols × 100 steps | Job 4994690, ~25 GPU-hours |
+| Molecule generation | Valid SDF + embeddings produced | **932 pockets** (87.3% success) |
+| Total molecules | Valid reconstructed molecules | 5,150 (5.3 ± 3.9 per pocket) |
+| pKd coverage | Range [1.28, 15.22] | mean 7.08 ± 2.08 |
+
+**Technical innovations**:
+- Bypassed PDB file parsing entirely — loaded pre-processed protein data from LMDB `.pt` files
+- Added `load_pocket_data()`, `sample_for_data()`, `sample_and_embed_data()` to `bayesdiff/sampler.py`
+- Round-robin sharding across 16 GPUs for embarrassingly parallel generation
+
+### 12.2 GP Training Configuration
+
+Used the best configuration identified by Bayesian Optimization (§10, Phase 3):
+
+| Parameter | Value |
+|-----------|-------|
+| Fingerprint | FCFP4-2048 |
+| Kernel | Rational Quadratic (RQ) |
+| PCA | None selected (full 2048-dim best in 5-fold CV) |
+| Epochs | 150 (eval), 200 (full train) |
+| Learning rate | 0.1 |
+| Noise lower bound | 0.001 |
+
+**PCA dimension selection** (5-fold CV):
+
+| PCA dims | Variance explained | RMSE | ρ |
+|----------|-------------------|------|---|
+| 10 | 18.99% | 2.062 | 0.148 |
+| 20 | 28.84% | 2.061 | 0.154 |
+| 50 | 46.85% | 2.061 | 0.163 |
+| 100 | 63.01% | 2.061 | 0.156 |
+| Full (2048) | 100% | **2.061** | 0.147 |
+
+All PCA variants produce nearly identical RMSE (~2.061). PCA is unnecessary — the GP kernel handles high-dimensional sparsity well with the RQ kernel.
+
+### 12.3 Results
+
+#### LOOCV (Analytic)
+
+| Metric | Value |
+|--------|-------|
+| RMSE | 2.068 |
+| MAE | 1.660 |
+| Spearman ρ | 0.111 (p = 0.0007) |
+| R² | 0.013 |
+
+#### 5-Fold Cross-Validation
+
+| Fold | RMSE | ρ | p-value |
+|------|------|---|---------|
+| 1 | 2.008 | 0.047 | 0.526 |
+| 2 | 1.837 | 0.249 | 0.001 |
+| 3 | 2.208 | 0.176 | 0.016 |
+| 4 | 2.029 | 0.113 | 0.126 |
+| 5 | 2.230 | 0.094 | 0.204 |
+| **Overall** | **2.067** | **0.117** | **0.0003** |
+
+#### 50× Repeated Random Splits (80/20)
+
+| Metric | Mean ± Std |
+|--------|------------|
+| RMSE | 2.078 ± 0.099 |
+| Spearman ρ | 0.134 ± 0.055 |
+| R² | 0.011 ± 0.018 |
+
+### 12.4 Comparison: N=24 → N=932
+
+| Metric | N=24 (old) | N=932 (Tier 3) | Change |
+|--------|-----------|----------------|--------|
+| LOOCV RMSE | 2.07 | 2.07 | 0% |
+| LOOCV ρ | −0.42 | **+0.11** | ✅ Sign flip |
+| LOOCV R² | −0.09 | **+0.01** | ✅ No longer negative |
+| 50× Split ρ | 0.11 ± 0.33 | **0.13 ± 0.06** | ✅ 6× smaller std |
+| ρ significance | p > 0.05 | **p = 0.0007** | ✅ Now significant |
+
+**Key improvements**:
+1. **ρ is now consistently positive** — the repeated splits distribution never goes negative (all 50 runs ρ > 0)
+2. **Statistically significant** — LOOCV p = 0.0007 (vs. p > 0.05 at N=24)
+3. **Much more stable** — std of ρ dropped from 0.33 to 0.06
+
+### 12.5 Diagnostic Analysis
+
+#### Scatter Plot Pattern
+The LOOCV and 5-Fold scatter plots show a characteristic **"horizontal band"** pattern:
+- Predictions cluster in a narrow range [6.3, 7.5] regardless of true pKd
+- This is essentially **mean-prediction + slight modulation**
+- True pKd spans [1.28, 15.22] but predictions never exceed the [6, 7.5] range
+- R² ≈ 0.01 means only **1% of variance** is explained
+
+#### Residual Analysis
+- Residuals are approximately Gaussian (μ=0.07, σ=2.07)
+- No obvious heteroscedasticity — residual spread is uniform across predicted range
+- Slight positive skew from high-pKd outliers (pKd > 12)
+
+#### Uncertainty Calibration
+- **Near-perfect calibration** — observed coverage closely follows the ideal diagonal
+- The GP correctly reports its own uncertainty
+- This means the GP "knows" it can't predict pKd — it honestly reports high uncertainty
+- The noise variance dominates the kernel signal: σ_noise ≈ σ_data
+
+### 12.6 Definitive Conclusions
+
+**The FCFP4 fingerprint representation fundamentally cannot encode binding affinity information.** Scaling data 39× (N=24 → N=932) produced:
+- ✅ Statistical stability (results are now reliable and reproducible)
+- ✅ Correct sign on ρ (weak positive correlation exists)
+- ✅ Excellent uncertainty calibration
+- ❌ No practical predictive power (R² = 0.01, predictions ≈ constant)
+- ❌ RMSE unchanged at ~2.07 pKd units
+
+This conclusively rules out **data quantity** as the bottleneck. The problem is **representation quality**:
+
+1. **ECFP/FCFP fingerprints** encode 2D molecular topology only — they capture substructure presence/absence but contain no information about:
+   - 3D binding pose geometry
+   - Protein-ligand interaction patterns
+   - Binding pocket complementarity
+   - Electrostatic/hydrophobic matching
+
+2. **The GP model itself is not the issue** — it converges cleanly, is well-calibrated, and extracts the (tiny) signal that exists. With a better representation, the same GP could work well.
+
+3. **The generated molecules are pocket-conditioned** (TargetDiff generates molecules for specific pockets), but the ECFP fingerprint **discards all pocket context** — it treats the molecule in isolation.
+
+### 12.7 Implications for Next Steps
+
+The path forward requires **pocket-aware, 3D-aware representations**:
+
+| Approach | Information captured | Expected impact |
+|----------|---------------------|-----------------|
+| **TargetDiff encoder embeddings** | 3D protein-ligand interaction graph | High — captures binding geometry |
+| **Protein-ligand interaction fingerprints (PLIF)** | H-bonds, π-stacking, hydrophobic contacts | Medium-High |
+| **GNN on 3D complex** | Learned 3D interaction features | High |
+| **ChemBERTa/MolBERT** | Richer 1D molecular representation | Low-Medium (still no pocket info) |
+| **Concatenated [mol_fp ‖ pocket_fp]** | Independent mol + pocket features | Medium |
+
+**Priority: Extract TargetDiff encoder embeddings** — these are SE(3)-equivariant representations that encode the protein-ligand interaction geometry. The TargetDiff model already computes these internally during sampling; the current issue is that `sample_diffusion_ligand()` returns 7 values instead of 8 (the embedding output is not exposed). Modifying the sampling code to return encoder hidden states would provide a representation that inherently captures binding context.
+
+### 12.8 Generated Figures
+
+All figures saved to `results/tier3_gp/figures/`:
+
+| Figure | Description |
+|--------|-------------|
+| `training_curve.png` | NLL loss convergence (10.9 → 2.17 in 200 epochs) |
+| `loocv_scatter.png` | LOOCV predicted vs true pKd with uncertainty coloring |
+| `cv5_scatter.png` | 5-Fold CV predicted vs true pKd |
+| `repeated_splits_dist.png` | Distribution of RMSE, ρ, R² across 50 random splits |
+| `diagnostics.png` | Residual analysis + uncertainty calibration curve |
+| `comparison_n24_vs_tier3.png` | Side-by-side RMSE and ρ comparison |
+
