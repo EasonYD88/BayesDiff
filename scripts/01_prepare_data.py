@@ -214,7 +214,7 @@ def main():
     logger.info("  2. Download weights:  cd external/targetdiff && mkdir -p pretrained_models")
     logger.info("     (get pretrained_diffusion.pt from the TargetDiff release page)")
     logger.info(f"  3. Debug sampling:    python scripts/02_sample_molecules.py \\")
-    logger.info(f"       --pocket_list {debug_path} --num_samples 4 --device cpu")
+    logger.info(f"       --pocket_list {debug_path} --num_samples 20 --device cpu")
 
 
 if __name__ == "__main__":

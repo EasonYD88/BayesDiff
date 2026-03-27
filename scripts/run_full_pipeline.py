@@ -2,16 +2,21 @@
 scripts/run_full_pipeline.py
 ────────────────────────────
 End-to-end BayesDiff pipeline:
-  1. Prepare data from TargetDiff CrossDocked2020 test set + affinity_info.pkl
-  2. Sample molecules using TargetDiff (debug: M=4, 5 pockets, CPU)
+  1. Prepare data (CrossDocked2020 test set or PDBbind v2020 refined set)
+  2. Sample molecules using TargetDiff (debug: M=20, 5 pockets, CPU)
   3. Extract embeddings
   4. Train GP oracle
   5. Compute gen_uncertainty + oracle_uncertainty + fusion
   6. Calibrate
   7. Evaluate + visualize
 
+Supported datasets (--dataset flag):
+  crossdocked  TargetDiff's CrossDocked2020 test set + affinity_info.pkl (default)
+  pdbbind      PDBbind v2020 refined set — requires running 01_prepare_data.py first
+
 Usage (debug mode, Mac CPU):
     python scripts/run_full_pipeline.py --mode debug --device cpu
+    python scripts/run_full_pipeline.py --mode debug --dataset pdbbind --device cpu
 """
 
 from __future__ import annotations
@@ -118,9 +123,113 @@ def prepare_data(targetdiff_dir: Path, n_pockets: int = 5):
     return pocket_data, selected
 
 
-# ═══════════════════════════════════════════════════════════════
-# STEP 1: Molecule Sampling with TargetDiff
-# ═══════════════════════════════════════════════════════════════
+def prepare_data_pdbbind(splits_dir: Path, pdbbind_dir: Path, n_pockets: int = 5):
+    """Build dataset from PDBbind v2020 refined set (output of 01_prepare_data.py).
+
+    Reads ``data/splits/labels.csv`` and ``data/splits/splits.json`` produced by
+    ``scripts/01_prepare_data.py``.  Falls back to the ``test`` split; uses all
+    splits combined when the test split is too small.
+
+    Args:
+        splits_dir: Directory containing labels.csv and splits.json.
+        pdbbind_dir: PDBbind root directory (refined-set/).
+        n_pockets: How many pockets to select (evenly spaced by pKd).
+
+    Returns:
+        (pocket_data, selected) with the same schema as ``prepare_data()``.
+    """
+    import csv
+
+    logger.info("=" * 60)
+    logger.info("STEP 0: Data Preparation (PDBbind v2020)")
+    logger.info("=" * 60)
+
+    labels_path = splits_dir / "labels.csv"
+    splits_path = splits_dir / "splits.json"
+
+    if not labels_path.exists():
+        raise FileNotFoundError(
+            f"labels.csv not found at {labels_path}. "
+            "Run scripts/01_prepare_data.py first."
+        )
+    if not splits_path.exists():
+        raise FileNotFoundError(
+            f"splits.json not found at {splits_path}. "
+            "Run scripts/01_prepare_data.py first."
+        )
+
+    # Load labels
+    import csv as _csv
+    rows = []
+    with open(labels_path, newline="") as fh:
+        reader = _csv.DictReader(fh)
+        for row in reader:
+            rows.append(row)
+    logger.info(f"Loaded {len(rows)} complexes from {labels_path}")
+
+    pkd_map = {r["pdb_code"]: float(r["pkd"]) for r in rows}
+
+    # Load splits
+    with open(splits_path) as fh:
+        splits = json.load(fh)
+
+    # Use test split; fall back to train if too few entries
+    test_codes = splits.get("test", [])
+    if len(test_codes) < n_pockets:
+        logger.warning(
+            f"Test split has only {len(test_codes)} pockets — "
+            "combining all splits for pocket selection."
+        )
+        test_codes = [c for codes in splits.values() for c in codes]
+
+    logger.info(f"Candidate pockets from split: {len(test_codes)}")
+
+    from bayesdiff.data import find_pocket_file
+
+    pocket_data = []
+    for code in test_codes:
+        pkd = pkd_map.get(code)
+        if pkd is None:
+            continue
+        pocket_file = find_pocket_file(pdbbind_dir, code)
+        if pocket_file is None:
+            continue
+        pocket_data.append(
+            {
+                "target": code,
+                "pocket_pdb": str(pocket_file),
+                "ligand_sdf": None,
+                "pkd": pkd,
+                "n_entries": 1,
+                "n_with_pk": 1,
+                "mean_vina": 0.0,
+            }
+        )
+
+    logger.info(f"Pockets with structural files: {len(pocket_data)}")
+
+    if not pocket_data:
+        raise RuntimeError(
+            "No pockets found. Check --pdbbind_dir points to the PDBbind root "
+            "and that 01_prepare_data.py has been run."
+        )
+
+    pocket_data.sort(key=lambda x: x["pkd"])
+
+    if n_pockets < len(pocket_data):
+        indices = np.linspace(0, len(pocket_data) - 1, n_pockets, dtype=int)
+        selected = [pocket_data[i] for i in indices]
+    else:
+        selected = pocket_data
+
+    logger.info(f"Selected {len(selected)} pockets:")
+    for p in selected:
+        logger.info(f"  {p['target']}: pKd={p['pkd']:.2f}")
+
+    return pocket_data, selected
+
+
+
 
 def sample_molecules(pocket_list, device, num_samples=4, num_steps=100, output_dir=None):
     """Sample molecules for selected pockets using TargetDiff."""
@@ -908,15 +1017,38 @@ def main():
     parser.add_argument("--num_samples", type=int, default=None)
     parser.add_argument("--num_steps", type=int, default=None)
     parser.add_argument("--output_dir", type=str, default="results")
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default="crossdocked",
+        choices=["crossdocked", "pdbbind"],
+        help=(
+            "Dataset to use. 'crossdocked': TargetDiff CrossDocked2020 test set "
+            "(default). 'pdbbind': PDBbind v2020 refined set — requires "
+            "01_prepare_data.py to have been run first."
+        ),
+    )
+    parser.add_argument(
+        "--pdbbind_dir",
+        type=str,
+        default="data/pdbbind",
+        help="PDBbind root directory (used when --dataset pdbbind)",
+    )
+    parser.add_argument(
+        "--splits_dir",
+        type=str,
+        default="data/splits",
+        help="Directory with labels.csv / splits.json (used when --dataset pdbbind)",
+    )
     args = parser.parse_args()
 
     if args.mode == "debug":
         n_pockets = args.n_pockets or 5
-        num_samples = args.num_samples or 4
+        num_samples = args.num_samples or 20
         num_steps = args.num_steps or 100
     else:
         n_pockets = args.n_pockets or 20
-        num_samples = args.num_samples or 16
+        num_samples = args.num_samples or 50
         num_steps = args.num_steps or 1000
 
     output_dir = Path(args.output_dir)
@@ -926,13 +1058,20 @@ def main():
     logger.info("╔══════════════════════════════════════════════════════════╗")
     logger.info("║         BayesDiff End-to-End Pipeline                   ║")
     logger.info("╚══════════════════════════════════════════════════════════╝")
-    logger.info(f"Mode: {args.mode}, Device: {args.device}")
+    logger.info(f"Mode: {args.mode}, Device: {args.device}, Dataset: {args.dataset}")
     logger.info(f"Pockets: {n_pockets}, Samples/pocket: {num_samples}, Steps: {num_steps}")
 
     t_start = time.time()
 
     # Step 0: Data
-    pocket_data, selected = prepare_data(TARGETDIFF_DIR, n_pockets=n_pockets)
+    if args.dataset == "pdbbind":
+        pocket_data, selected = prepare_data_pdbbind(
+            splits_dir=Path(args.splits_dir),
+            pdbbind_dir=Path(args.pdbbind_dir),
+            n_pockets=n_pockets,
+        )
+    else:
+        pocket_data, selected = prepare_data(TARGETDIFF_DIR, n_pockets=n_pockets)
 
     # Step 1: Sample
     sdf_dir = output_dir / "generated_molecules"
