@@ -12,7 +12,9 @@ Dual uncertainty-aware confidence scoring for 3D molecular generation.
 | Phase 2 | HPC Batch Sampling (93 pockets × M=64) | ✅ Complete (job 3284523, 19h02m) |
 | Phase 2.5 | Parallel Sampling (4-shard array) | ✅ Complete |
 | Phase 3 | GP Training + Evaluation + Ablation | ✅ Complete (jobs 3386803, 3386892) |
-| Phase 4 | Writing | ⬜ Not started |
+| Phase 3.5 | GP Optimization (Tier 3 data, encoder embeddings, aggregation) | ✅ Complete |
+| Phase 3.6 | PDBbind Large-Scale Sampling (93 pockets × 50 mol, 31-GPU array) | ✅ Complete |
+| Phase 4 | Writing (Science-style manuscript) | ✅ Draft complete |
 
 ### HPC Environment (NYU Torch)
 
@@ -76,7 +78,7 @@ BayesDiff/
 │   └── evaluate.py             # Full metrics + bootstrap CI + multi-threshold
 ├── scripts/                    # Pipeline scripts
 │   ├── 01_prepare_data.py      # Parse PDBbind INDEX → splits + labels
-│   ├── 02_sample_molecules.py  # TargetDiff batch sampling
+│   ├── 02_sample_molecules.py  # TargetDiff batch sampling (PDBbind + CrossDocked)
 │   ├── 03_extract_embeddings.py  # SE(3) embedding extraction
 │   ├── 04_train_gp.py          # Train SVGP oracle (--device auto for GPU)
 │   ├── 05_evaluate.py          # Full evaluation pipeline
@@ -85,20 +87,34 @@ BayesDiff/
 │   ├── 08_sample_molecules_shard.py # Shard wrapper for array jobs
 │   ├── 09_generate_figures.py  # Generate publication figures
 │   ├── 10_merge_and_train_eval.py   # Merge 1000-step + retrain + visualize
-│   ├── run_full_pipeline.py    # End-to-end debug pipeline
+│   ├── 11_gp_training_analysis.py   # GP hyperparameter analysis
+│   ├── 11_reextract_embeddings.py   # Re-extract embeddings pipeline
+│   ├── 12_robust_evaluation.py      # Robust cross-validated evaluation
+│   ├── 13_embedding_comparison.py   # FCFP4 vs encoder embedding comparison
+│   ├── 14_bo_gp_hyperparams.py      # Bayesian optimization for GP hyperparams
+│   ├── 15_prepare_tier3.py          # Tier 3 LMDB pocket extraction
+│   ├── 16_sample_tier3_shard.py     # Tier 3 GPU array sampling
+│   ├── 17_train_gp_tier3.py         # Tier 3 GP training
+│   ├── 18_train_val_test_analysis.py # Train/val/test split analysis
+│   ├── 19_extract_encoder_embeddings.py # TargetDiff encoder embeddings
+│   ├── 20_train_gp_encoder.py       # GP with encoder embeddings
+│   ├── 21_train_gp_aggregation.py   # Aggregation strategy comparison
+│   ├── run_full_pipeline.py    # End-to-end pipeline (debug/pdbbind/full modes)
 │   ├── torch_scatter_shim.py   # Compatibility shim for older torch_scatter API
 │   └── _check_deps.py          # Verify dependency imports
 ├── slurm/                      # HPC job scripts (NYU Torch)
 │   ├── sample_job.sh           # Single-node sampling
 │   ├── sample_array_job.sh     # 4-shard parallel sampling
+│   ├── sample_maxgpu.sh        # 31-GPU array (93 pockets × 50 mol)
+│   ├── sample_tier3_array.sh   # Tier 3 sampling array
 │   ├── embedding_1000step_array.sh  # 1000-step embedding extraction
 │   ├── train_gp.sh             # GP training on GPU
+│   ├── train_gp_encoder.sh     # GP with encoder embeddings
+│   ├── train_gp_aggregation.sh # Aggregation strategy comparison
 │   ├── eval_ablation.sh        # Evaluation + ablation
 │   ├── gp_train_eval_viz.sh    # Combined GP + eval + viz
 │   ├── full_pipeline_job.sh    # Full pipeline on single GPU
 │   ├── merge_*.sh              # Merge shard outputs
-│   ├── gpu_verify.slurm        # GPU availability check
-│   ├── smoke_test.slurm        # Quick smoke test
 │   └── logs/                   # SLURM job logs
 ├── doc/                        # Documentation
 │   ├── overall_plan.md         # High-level project plan
@@ -106,11 +122,15 @@ BayesDiff/
 │   ├── progress_log.md         # Chronological progress log
 │   ├── math.md                 # Mathematical formulation (tutorial)
 │   ├── math_explain.md         # Mathematical formulation (reference)
+│   ├── gp_analysis_and_optimization.md # GP optimization results (§16)
+│   ├── check_01.md             # Code-math alignment audit
 │   └── hpc/                    # HPC-specific docs
 │       ├── bayesdiff_nyu_torch_hpc_agent_guide.md
 │       ├── nyu_torch_coding_agent_guide.md
 │       ├── hpc_execution_plan.md
 │       └── HPC_ENV_STATUS.md
+├── write_up/                   # Manuscript
+│   └── main.tex                # Science-style manuscript (LaTeX)
 ├── tests/                      # Validation scripts
 │   ├── debug_pipeline.py       # Phase 0 sanity check
 │   └── validate_phase1.py      # Phase 1 module validation (41 checks)

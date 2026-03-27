@@ -1,5 +1,25 @@
 # BayesDiff Progress Log
 
+## 2026-03-27: PDBbind Large-Scale Sampling & Worktree Consolidation
+
+### Summary
+Added PDBbind dataset support to the pipeline, scaled up to 93 pockets × 50 molecules per pocket using a 31-GPU A100 array job. Merged all development worktrees back to main branch.
+
+### Changes
+
+| Area | Details |
+|------|---------|
+| **PDBbind support** | `run_full_pipeline.py` now supports `--mode pdbbind` for large-scale PDBbind sampling (commit `49d0aef`) |
+| **31-GPU array job** | New `slurm/sample_maxgpu.sh` — 93 pockets split across 31 GPU tasks, 50 molecules each (commit `84fc511`) |
+| **Merge script** | New `slurm/merge_maxgpu.sh` — merge 31-task output shards into unified results |
+| **Molecule count** | Increased from 4→20/50 molecules per pocket for better uncertainty estimates |
+| **SLURM path fixes** | Hardcoded worktree paths in SLURM scripts; added `--chdir` directive (commit `5736b1b`) |
+| **Aggregation analysis** | §16 P0+ aggregation strategy comparison with overflow fix |
+| **Manuscript** | Added complete Science-style LaTeX manuscript (`write_up/main.tex`) |
+| **Worktree cleanup** | Merged all 4 copilot worktrees into main, removed branches |
+
+---
+
 ## 2026-03-26: Code–Math Alignment & Bug Fixes (check_01)
 
 ### Summary
