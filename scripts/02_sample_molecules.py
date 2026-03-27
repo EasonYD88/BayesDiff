@@ -6,7 +6,7 @@ Sample molecules for each pocket using TargetDiff.
 Mac debug mode:  python scripts/02_sample_molecules.py \
     --pocket_list data/splits/debug_pockets.txt \
     --pdbbind_dir data/pdbbind \
-    --num_samples 4 --device cpu \
+    --num_samples 20 --device cpu \
     --output_dir results/generated_molecules
 
 HPC batch mode:  See slurm/sample_job.sh
@@ -64,7 +64,7 @@ def main():
         help="Path to pretrained checkpoint (auto-detects in targetdiff_dir if not set)",
     )
     parser.add_argument(
-        "--num_samples", type=int, default=4, help="Molecules per pocket"
+        "--num_samples", type=int, default=20, help="Molecules per pocket"
     )
     parser.add_argument(
         "--batch_size", type=int, default=None, help="Batch size (default: num_samples)"
