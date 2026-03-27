@@ -270,8 +270,10 @@ def main():
         scaler = StandardScaler()
         X_s = scaler.fit_transform(X)
 
-        strategy_features[name] = {"X": X_s, "y": y, "dim": X.shape[1], "n": len(y)}
-        logger.info(f"  {name:15s}: shape={X.shape}, non-zero features={np.sum(np.abs(X).sum(axis=0) > 1e-10)}")
+        n_nonzero = int(np.sum(np.abs(X).sum(axis=0) > 1e-10))
+        valid = n_nonzero > 0 and not np.any(np.isnan(X_s))
+        strategy_features[name] = {"X": X_s, "y": y, "dim": X.shape[1], "n": len(y), "valid": valid}
+        logger.info(f"  {name:15s}: shape={X.shape}, non-zero features={n_nonzero}, valid={valid}")
 
     # ══════════════════════════════════════════════════════════════
     # Phase 2: LOOCV for all strategies
@@ -279,6 +281,12 @@ def main():
     logger.info("\n=== LOOCV for all aggregation strategies ===")
 
     for name, data in strategy_features.items():
+        if not data["valid"]:
+            logger.warning(f"  --- {name}: SKIPPED (degenerate features) ---")
+            all_results[f"loocv_{name}"] = {"rmse": float("nan"), "rho": float("nan"),
+                                             "r2": float("nan"), "p_value": float("nan"),
+                                             "mae": float("nan"), "skipped": True}
+            continue
         logger.info(f"\n  --- {name} (dim={data['dim']}) ---")
         preds = loocv(data["X"], data["y"], "rq", 200, 0.1)
         metrics = compute_metrics(data["y"], preds)
@@ -292,6 +300,16 @@ def main():
     logger.info("\n=== 50× Repeated Splits ===")
 
     for name, data in strategy_features.items():
+        if not data["valid"]:
+            all_results[f"50x_{name}"] = {
+                "rmse": "N/A", "rho": "N/A", "r2": "N/A",
+                "rmse_mean": float("nan"), "rmse_std": float("nan"),
+                "rho_mean": float("nan"), "rho_std": float("nan"),
+                "r2_mean": float("nan"), "r2_std": float("nan"),
+                "skipped": True,
+            }
+            logger.warning(f"  {name:15s}: SKIPPED (degenerate)")
+            continue
         splits = repeated_splits(data["X"], data["y"], 50, 0.3, "rq")
         rmses = [s["rmse"] for s in splits]
         rhos = [s["rho"] for s in splits]
@@ -313,7 +331,8 @@ def main():
     # ══════════════════════════════════════════════════════════════
     # Rank by LOOCV rho
     ranked = sorted(
-        [(name, all_results[f"loocv_{name}"]["rho"]) for name in strategy_features],
+        [(name, all_results[f"loocv_{name}"]["rho"]) for name in strategy_features
+         if strategy_features[name].get("valid", True) and not all_results.get(f"loocv_{name}", {}).get("skipped", False)],
         key=lambda x: -x[1]
     )
     top3 = [name for name, _ in ranked[:3]]
@@ -344,24 +363,25 @@ def main():
     # ══════════════════════════════════════════════════════════════
     logger.info("\n=== Generating comparison figures ===")
 
-    strategy_names = list(AGGREGATION_STRATEGIES.keys())
-    loocv_rmses = [all_results[f"loocv_{n}"]["rmse"] for n in strategy_names]
-    loocv_rhos = [all_results[f"loocv_{n}"]["rho"] for n in strategy_names]
-    loocv_r2s = [all_results[f"loocv_{n}"]["r2"] for n in strategy_names]
+    # Only include valid strategies in plots
+    valid_names = [n for n in AGGREGATION_STRATEGIES if not all_results.get(f"loocv_{n}", {}).get("skipped", False)]
+    loocv_rmses = [all_results[f"loocv_{n}"]["rmse"] for n in valid_names]
+    loocv_rhos = [all_results[f"loocv_{n}"]["rho"] for n in valid_names]
+    loocv_r2s = [all_results[f"loocv_{n}"]["r2"] for n in valid_names]
 
     # 5a. LOOCV metrics comparison bar chart
     fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-    colors = plt.cm.Set2(np.linspace(0, 1, len(strategy_names)))
+    colors = plt.cm.Set2(np.linspace(0, 1, len(valid_names)))
 
     for ax, metric_vals, ylabel, title in [
         (axes[0], loocv_rmses, "RMSE", "LOOCV RMSE (lower = better)"),
         (axes[1], loocv_rhos, "Spearman ρ", "LOOCV Spearman ρ (higher = better)"),
         (axes[2], loocv_r2s, "R²", "LOOCV R² (higher = better)"),
     ]:
-        bars = ax.bar(range(len(strategy_names)), metric_vals, color=colors,
+        bars = ax.bar(range(len(valid_names)), metric_vals, color=colors,
                       edgecolor="black", alpha=0.8)
-        ax.set_xticks(range(len(strategy_names)))
-        ax.set_xticklabels(strategy_names, rotation=45, ha="right")
+        ax.set_xticks(range(len(valid_names)))
+        ax.set_xticklabels(valid_names, rotation=45, ha="right")
         ax.set_ylabel(ylabel)
         ax.set_title(title)
         for bar, val in zip(bars, metric_vals):
@@ -388,13 +408,13 @@ def main():
         (axes[1], "r2_mean", "R²"),
         (axes[2], "rmse_mean", "RMSE"),
     ]:
-        means = [all_results[f"50x_{n}"][metric_key] for n in strategy_names]
-        stds = [all_results[f"50x_{n}"][f"{metric_key.replace('_mean','_std')}"] for n in strategy_names]
-        x = range(len(strategy_names))
+        means = [all_results[f"50x_{n}"][metric_key] for n in valid_names]
+        stds = [all_results[f"50x_{n}"][f"{metric_key.replace('_mean','_std')}"] for n in valid_names]
+        x = range(len(valid_names))
         ax.bar(x, means, yerr=stds, color=colors, edgecolor="black",
                alpha=0.8, capsize=3)
         ax.set_xticks(list(x))
-        ax.set_xticklabels(strategy_names, rotation=45, ha="right")
+        ax.set_xticklabels(valid_names, rotation=45, ha="right")
         ax.set_ylabel(ylabel)
         ax.set_title(f"50× Splits: {ylabel}")
         ax.grid(True, alpha=0.3, axis="y")
@@ -437,8 +457,21 @@ def main():
     plt.close()
 
     # ── Save results ──
+    # Handle NaN values for JSON
+    def json_safe(obj):
+        if isinstance(obj, float) and (np.isnan(obj) or np.isinf(obj)):
+            return None
+        if isinstance(obj, (np.floating, np.integer)):
+            v = float(obj)
+            return None if (np.isnan(v) or np.isinf(v)) else v
+        if isinstance(obj, dict):
+            return {k: json_safe(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [json_safe(v) for v in obj]
+        return obj
+
     with open(DATA_DIR / "p0plus_aggregation_results.json", "w") as f:
-        json.dump(all_results, f, indent=2, default=float)
+        json.dump(json_safe(all_results), f, indent=2)
     logger.info(f"\nResults saved to {DATA_DIR / 'p0plus_aggregation_results.json'}")
 
     # ── Summary table ──
@@ -447,7 +480,7 @@ def main():
     logger.info(f"{'='*70}")
     logger.info(f"{'Strategy':<15} {'Dim':>4} {'RMSE':>7} {'ρ':>7} {'R²':>7}")
     logger.info(f"{'-'*45}")
-    for name in strategy_names:
+    for name in valid_names:
         m = all_results[f"loocv_{name}"]
         dim = AGGREGATION_STRATEGIES[name][1]
         logger.info(f"{name:<15} {dim:>4} {m['rmse']:>7.3f} {m['rho']:>7.3f} {m['r2']:>7.3f}")
