@@ -18,12 +18,3 @@ external/targetdiff/pretrained_models/*.pt
 external/targetdiff/pretrained_models/*.pkl
 external/targetdiff/**/__pycache__/
 external/targetdiff/**/*.pyc
-
-# ── Results: track JSON/txt/figures (small), ignore large binaries ──
-results/**/*.npz
-results/**/*.npy
-results/**/*.pt
-results/**/*.sdf
-
-# ── Exception: track all embedding_1000step results (small enough) ──
-!results/embedding_1000step/**
