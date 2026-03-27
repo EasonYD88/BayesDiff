@@ -1,0 +1,538 @@
+{
+  "shard_index": 3,
+  "num_shards": 16,
+  "n_total": 67,
+  "n_success": 65,
+  "n_failed": 0,
+  "n_skipped": 2,
+  "results": [
+    {
+      "family": "ATS5_HUMAN_262_480_0",
+      "status": "success",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed": 290.98779678344727,
+      "pKd": 7.031517
+    },
+    {
+      "family": "GSTP1_HUMAN_2_210_0",
+      "status": "success",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed": 484.0423641204834,
+      "pKd": 3.3872161432802645
+    },
+    {
+      "family": "PHP_SULSO_1_314_0",
+      "status": "success",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed": 781.2926621437073,
+      "pKd": 2.109020403010311
+    },
+    {
+      "family": "8ODP_HUMAN_42_197_0",
+      "status": "success",
+      "n_valid": 5,
+      "n_total": 64,
+      "elapsed": 70.45377707481384,
+      "pKd": 9.397940008672037
+    },
+    {
+      "family": "ACCC_ECOLI_1_449_catalytic_0",
+      "status": "success",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed": 75.52667617797852,
+      "pKd": 2.0
+    },
+    {
+      "family": "ADCY2_RAT_870_1082_0",
+      "status": "success",
+      "n_valid": 4,
+      "n_total": 64,
+      "elapsed": 68.7934718132019,
+      "pKd": 6.958607314841775
+    },
+    {
+      "family": "ALBU_HUMAN_25_609_naproxenSite_0",
+      "status": "success",
+      "n_valid": 9,
+      "n_total": 64,
+      "elapsed": 51.81639242172241,
+      "pKd": 7.657577319177793
+    },
+    {
+      "family": "AMPN_PIG_63_963_0",
+      "status": "success",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed": 72.41636157035828,
+      "pKd": 9.301029995663981
+    },
+    {
+      "family": "AROD_SALTY_1_252_0",
+      "status": "success",
+      "n_valid": 10,
+      "n_total": 64,
+      "elapsed": 65.3091652393341,
+      "pKd": 3.638272163982407
+    },
+    {
+      "family": "B2CL1_HUMAN_1_207_0",
+      "status": "success",
+      "n_valid": 5,
+      "n_total": 64,
+      "elapsed": 56.943488359451294,
+      "pKd": 9.30103
+    },
+    {
+      "family": "BIRC7_HUMAN_62_175_pep_0",
+      "status": "success",
+      "n_valid": 14,
+      "n_total": 64,
+      "elapsed": 42.05954360961914,
+      "pKd": 7.337242168318426
+    },
+    {
+      "family": "BRD2_HUMAN_69_198_0",
+      "status": "success",
+      "n_valid": 10,
+      "n_total": 64,
+      "elapsed": 46.660457134246826,
+      "pKd": 7.60206
+    },
+    {
+      "family": "CAH2_HUMAN_2_260_0",
+      "status": "success",
+      "n_valid": 5,
+      "n_total": 64,
+      "elapsed": 62.54051995277405,
+      "pKd": 10.522878745280337
+    },
+    {
+      "family": "CBPB1_PIG_192_416_0",
+      "status": "success",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed": 82.24462556838989,
+      "pKd": 9.0
+    },
+    {
+      "family": "CDK8_HUMAN_1_364_0",
+      "status": "success",
+      "n_valid": 5,
+      "n_total": 64,
+      "elapsed": 75.83688116073608,
+      "pKd": 9.709965388637482
+    },
+    {
+      "family": "CLH1_HUMAN_1_362_0",
+      "status": "success",
+      "n_valid": 8,
+      "n_total": 64,
+      "elapsed": 48.003512144088745,
+      "pKd": 4.920819
+    },
+    {
+      "family": "CRP_HUMAN_19_224_0",
+      "status": "success",
+      "n_valid": 5,
+      "n_total": 64,
+      "elapsed": 39.78644013404846,
+      "pKd": 4.4939010400715595
+    },
+    {
+      "family": "DCPS_HUMAN_37_337_0",
+      "status": "success",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed": 58.850961208343506,
+      "pKd": 7.180456064458132
+    },
+    {
+      "family": "DHB1_HUMAN_2_290_0",
+      "status": "success",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed": 95.62495017051697,
+      "pKd": 9.045757
+    },
+    {
+      "family": "DUT_HUMAN_98_252_0",
+      "status": "success",
+      "n_valid": 7,
+      "n_total": 64,
+      "elapsed": 55.271005153656006,
+      "pKd": 6.494850021680094
+    },
+    {
+      "family": "EGTD_MYCS2_1_321_0",
+      "status": "success",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed": 64.97302174568176,
+      "pKd": 5.698970004336019
+    },
+    {
+      "family": "EPHB_MYCTO_1_356_0",
+      "status": "success",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed": 66.19877219200134,
+      "pKd": 7.721246399047171
+    },
+    {
+      "family": "F16P1_PIG_2_337_allosteric_0",
+      "status": "success",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed": 53.55294179916382,
+      "pKd": 5.60206
+    },
+    {
+      "family": "FABP4_MOUSE_2_132_0",
+      "status": "success",
+      "n_valid": 9,
+      "n_total": 64,
+      "elapsed": 58.95686411857605,
+      "pKd": 6.173925
+    },
+    {
+      "family": "FKBP5_HUMAN_11_140_0",
+      "status": "success",
+      "n_valid": 5,
+      "n_total": 64,
+      "elapsed": 59.20256519317627,
+      "pKd": 7.795880017344075
+    },
+    {
+      "family": "GAK_HUMAN_12_350_0",
+      "status": "success",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed": 62.60646653175354,
+      "pKd": 8.05061
+    },
+    {
+      "family": "GLR_HUMAN_126_430_alloEH567_0",
+      "status": "success",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed": 55.91353416442871,
+      "pKd": 9.207608
+    },
+    {
+      "family": "GRM5_HUMAN_568_835_0",
+      "status": "success",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed": 86.0767617225647,
+      "pKd": 9.30103
+    },
+    {
+      "family": "HASP_HUMAN_462_798_0",
+      "status": "success",
+      "n_valid": 18,
+      "n_total": 64,
+      "elapsed": 23.23782777786255,
+      "pKd": 6.823909
+    },
+    {
+      "family": "HMDH_HUMAN_434_880_0",
+      "status": "success",
+      "n_valid": 10,
+      "n_total": 64,
+      "elapsed": 51.59215426445007,
+      "pKd": 9.522879
+    },
+    {
+      "family": "HSP82_YEAST_2_217_0",
+      "status": "success",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed": 59.013712882995605,
+      "pKd": 8.568636235841012
+    },
+    {
+      "family": "IRAK4_HUMAN_158_460_0",
+      "status": "success",
+      "n_valid": 9,
+      "n_total": 64,
+      "elapsed": 61.44593572616577,
+      "pKd": 9.522879
+    },
+    {
+      "family": "JAK2_HUMAN_834_1132_0",
+      "status": "success",
+      "n_valid": 4,
+      "n_total": 64,
+      "elapsed": 70.78683471679688,
+      "pKd": 9.318759
+    },
+    {
+      "family": "KES1_YEAST_29_434_0",
+      "status": "success",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed": 108.40672421455383,
+      "pKd": 6.522879
+    },
+    {
+      "family": "KS6A3_HUMAN_41_357_0",
+      "status": "skipped"
+    },
+    {
+      "family": "LEG7_HUMAN_2_136_0",
+      "status": "success",
+      "n_valid": 14,
+      "n_total": 64,
+      "elapsed": 34.40071678161621,
+      "pKd": 4.060481
+    },
+    {
+      "family": "M3K12_HUMAN_113_402_0",
+      "status": "success",
+      "n_valid": 4,
+      "n_total": 64,
+      "elapsed": 64.95009565353394,
+      "pKd": 7.376751
+    },
+    {
+      "family": "MAP1_ECOLI_2_264_0",
+      "status": "success",
+      "n_valid": 8,
+      "n_total": 64,
+      "elapsed": 56.36191177368164,
+      "pKd": 7.173925
+    },
+    {
+      "family": "MDM4_HUMAN_20_111_0",
+      "status": "success",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed": 58.41741609573364,
+      "pKd": 7.107905
+    },
+    {
+      "family": "MK08_HUMAN_2_364_ATPsite_0",
+      "status": "success",
+      "n_valid": 7,
+      "n_total": 64,
+      "elapsed": 61.015381813049316,
+      "pKd": 8.522879
+    },
+    {
+      "family": "MQMTN_HELPY_2_231_0",
+      "status": "success",
+      "n_valid": 9,
+      "n_total": 64,
+      "elapsed": 56.46891450881958,
+      "pKd": 10.522879
+    },
+    {
+      "family": "NADC_YEAST_2_295_0",
+      "status": "success",
+      "n_valid": 9,
+      "n_total": 64,
+      "elapsed": 53.63731026649475,
+      "pKd": 3.3467874862246565
+    },
+    {
+      "family": "NEK2_HUMAN_1_273_0",
+      "status": "success",
+      "n_valid": 11,
+      "n_total": 64,
+      "elapsed": 53.045286655426025,
+      "pKd": 7.229148
+    },
+    {
+      "family": "NR1I3_MOUSE_114_358_0",
+      "status": "success",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed": 90.27110838890076,
+      "pKd": 6.380907
+    },
+    {
+      "family": "ODPB_HUMAN_31_359_0",
+      "status": "success",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed": 96.61901497840881,
+      "pKd": 6.537602
+    },
+    {
+      "family": "P53_HUMAN_94_306_0",
+      "status": "success",
+      "n_valid": 16,
+      "n_total": 64,
+      "elapsed": 39.49785232543945,
+      "pKd": 6.327902142064283
+    },
+    {
+      "family": "PARE_STRPN_1_226_0",
+      "status": "success",
+      "n_valid": 7,
+      "n_total": 64,
+      "elapsed": 57.29867124557495,
+      "pKd": 8.30103
+    },
+    {
+      "family": "PCXB_PSEPU_2_239_0",
+      "status": "success",
+      "n_valid": 6,
+      "n_total": 64,
+      "elapsed": 58.199708461761475,
+      "pKd": 7.221849
+    },
+    {
+      "family": "PDK4_HUMAN_18_411_0",
+      "status": "success",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed": 69.14698624610901,
+      "pKd": 5.481486060122113
+    },
+    {
+      "family": "PHP_SULSO_1_314_0",
+      "status": "skipped"
+    },
+    {
+      "family": "PKNB_MYCTU_2_279_0",
+      "status": "success",
+      "n_valid": 6,
+      "n_total": 64,
+      "elapsed": 70.00992727279663,
+      "pKd": 6.0
+    },
+    {
+      "family": "POLG_HCVBK_1209_1655_0",
+      "status": "success",
+      "n_valid": 5,
+      "n_total": 64,
+      "elapsed": 50.35066533088684,
+      "pKd": 7.657577319177793
+    },
+    {
+      "family": "POL_HV1H2_1019_1145_0",
+      "status": "success",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed": 39.93428134918213,
+      "pKd": 6.841638
+    },
+    {
+      "family": "PPHA_VARSP_1_290_0",
+      "status": "success",
+      "n_valid": 14,
+      "n_total": 64,
+      "elapsed": 36.38249373435974,
+      "pKd": 4.769551078621726
+    },
+    {
+      "family": "PTP_PORGI_37_732_0",
+      "status": "success",
+      "n_valid": 7,
+      "n_total": 64,
+      "elapsed": 63.37923741340637,
+      "pKd": 7.055024
+    },
+    {
+      "family": "PYRF_METTH_1_228_0",
+      "status": "success",
+      "n_valid": 1,
+      "n_total": 64,
+      "elapsed": 80.67473769187927,
+      "pKd": 7.1938200260161125
+    },
+    {
+      "family": "RENI_HUMAN_69_406_0",
+      "status": "success",
+      "n_valid": 5,
+      "n_total": 64,
+      "elapsed": 86.13306951522827,
+      "pKd": 9.698970004336019
+    },
+    {
+      "family": "RNAS2_HUMAN_27_161_0",
+      "status": "success",
+      "n_valid": 3,
+      "n_total": 64,
+      "elapsed": 54.06249189376831,
+      "pKd": 4.49485
+    },
+    {
+      "family": "SAMP_HUMAN_20_223_0",
+      "status": "success",
+      "n_valid": 12,
+      "n_total": 64,
+      "elapsed": 35.28430938720703,
+      "pKd": 6.920818753952375
+    },
+    {
+      "family": "SMYD3_HUMAN_1_428_0",
+      "status": "success",
+      "n_valid": 0,
+      "n_total": 64,
+      "elapsed": 78.37224555015564,
+      "pKd": 8.397940008672037
+    },
+    {
+      "family": "STRH_STRPN_179_625_0",
+      "status": "success",
+      "n_valid": 4,
+      "n_total": 64,
+      "elapsed": 54.07843518257141,
+      "pKd": 9.096910013008056
+    },
+    {
+      "family": "SYY_STAAE_1_420_0",
+      "status": "success",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed": 87.51592659950256,
+      "pKd": 9.0
+    },
+    {
+      "family": "THRB_HUMAN_364_622_inhibitor_0",
+      "status": "success",
+      "n_valid": 11,
+      "n_total": 64,
+      "elapsed": 52.78068518638611,
+      "pKd": 11.853872
+    },
+    {
+      "family": "TPIS_YEAST_2_248_0",
+      "status": "success",
+      "n_valid": 11,
+      "n_total": 64,
+      "elapsed": 56.91266703605652,
+      "pKd": 4.823909
+    },
+    {
+      "family": "TYK2_HUMAN_564_879_0",
+      "status": "success",
+      "n_valid": 6,
+      "n_total": 64,
+      "elapsed": 58.70677638053894,
+      "pKd": 8.154902
+    },
+    {
+      "family": "VAOX_PENSI_1_560_0",
+      "status": "success",
+      "n_valid": 2,
+      "n_total": 64,
+      "elapsed": 59.73464751243591,
+      "pKd": 5.677781
+    },
+    {
+      "family": "XIAP_HUMAN_242_355_0",
+      "status": "success",
+      "n_valid": 7,
+      "n_total": 64,
+      "elapsed": 36.09334373474121,
+      "pKd": 7.595166283380062
+    }
+  ]
+}
