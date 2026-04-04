@@ -1,0 +1,1091 @@
+=== PRE-TRAINED EMBEDDING EXTRACTION + COMPARISON ===
+Date: Sat Mar 28 06:17:18 EDT 2026
+Node: ga043.hpc.nyu.edu
+GPU: NVIDIA A100-SXM4-80GB
+Installing unimol_tools...
+Collecting unimol_tools
+  Downloading unimol_tools-0.1.5-py3-none-any.whl.metadata (11 kB)
+Downloading unimol_tools-0.1.5-py3-none-any.whl (106 kB)
+Installing collected packages: unimol_tools
+Successfully installed unimol_tools-0.1.5
+Collecting huggingface_hub
+  Downloading huggingface_hub-1.8.0-py3-none-any.whl.metadata (13 kB)
+Requirement already satisfied: filelock>=3.10.0 in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from huggingface_hub) (3.20.0)
+Requirement already satisfied: fsspec>=2023.5.0 in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from huggingface_hub) (2025.12.0)
+Collecting hf-xet<2.0.0,>=1.4.2 (from huggingface_hub)
+  Downloading hf_xet-1.4.2-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Requirement already satisfied: httpx<1,>=0.23.0 in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from huggingface_hub) (0.28.1)
+Requirement already satisfied: packaging>=20.9 in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from huggingface_hub) (26.0)
+Requirement already satisfied: pyyaml>=5.1 in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from huggingface_hub) (6.0.3)
+Requirement already satisfied: tqdm>=4.42.1 in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from huggingface_hub) (4.67.3)
+Collecting typer (from huggingface_hub)
+  Downloading typer-0.24.1-py3-none-any.whl.metadata (16 kB)
+Requirement already satisfied: typing-extensions>=4.1.0 in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from huggingface_hub) (4.15.0)
+Requirement already satisfied: anyio in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (4.12.1)
+Requirement already satisfied: certifi in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (2026.2.25)
+Requirement already satisfied: httpcore==1.* in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (1.0.9)
+Requirement already satisfied: idna in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (3.11)
+Requirement already satisfied: h11>=0.16 in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from httpcore==1.*->httpx<1,>=0.23.0->huggingface_hub) (0.16.0)
+Requirement already satisfied: exceptiongroup>=1.0.2 in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from anyio->httpx<1,>=0.23.0->huggingface_hub) (1.3.1)
+Collecting click>=8.2.1 (from typer->huggingface_hub)
+  Downloading click-8.3.1-py3-none-any.whl.metadata (2.6 kB)
+Collecting shellingham>=1.3.0 (from typer->huggingface_hub)
+  Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+Collecting rich>=12.3.0 (from typer->huggingface_hub)
+  Downloading rich-14.3.3-py3-none-any.whl.metadata (18 kB)
+Collecting annotated-doc>=0.0.2 (from typer->huggingface_hub)
+  Downloading annotated_doc-0.0.4-py3-none-any.whl.metadata (6.6 kB)
+Collecting markdown-it-py>=2.2.0 (from rich>=12.3.0->typer->huggingface_hub)
+  Downloading markdown_it_py-4.0.0-py3-none-any.whl.metadata (7.3 kB)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages (from rich>=12.3.0->typer->huggingface_hub) (2.19.2)
+Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=12.3.0->typer->huggingface_hub)
+  Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+Downloading huggingface_hub-1.8.0-py3-none-any.whl (625 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 625.2/625.2 kB 11.3 MB/s  0:00:00
+Downloading hf_xet-1.4.2-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.2/4.2 MB 57.0 MB/s  0:00:00
+Downloading typer-0.24.1-py3-none-any.whl (56 kB)
+Downloading annotated_doc-0.0.4-py3-none-any.whl (5.3 kB)
+Downloading click-8.3.1-py3-none-any.whl (108 kB)
+Downloading rich-14.3.3-py3-none-any.whl (310 kB)
+Downloading markdown_it_py-4.0.0-py3-none-any.whl (87 kB)
+Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+Installing collected packages: shellingham, mdurl, hf-xet, click, annotated-doc, markdown-it-py, rich, typer, huggingface_hub
+
+Successfully installed annotated-doc-0.0.4 click-8.3.1 hf-xet-1.4.2 huggingface_hub-1.8.0 markdown-it-py-4.0.0 mdurl-0.1.2 rich-14.3.3 shellingham-1.5.4 typer-0.24.1
+
+=== Phase B: Uni-Mol 512-dim embedding extraction ===
+2026-03-28 06:17:56,039 ERROR unimol_tools not installed. Run: pip install unimol_tools
+Uni-Mol extraction failed (non-fatal)
+
+=== Phase C: SchNet QM9-pretrained embedding extraction ===
+2026-03-28 06:18:05,141 INFO Loading SchNet pre-trained model...
+Traceback (most recent call last):
+  File "/scratch/yd2915/BayesDiff/scripts/26c_extract_schnet.py", line 168, in <module>
+    main()
+  File "/scratch/yd2915/BayesDiff/scripts/26c_extract_schnet.py", line 113, in main
+    model = load_schnet_pretrained()
+  File "/scratch/yd2915/BayesDiff/scripts/26c_extract_schnet.py", line 34, in load_schnet_pretrained
+    model, datasets = SchNet.from_qm9_pretrained(
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torch_geometric/nn/models/schnet.py", line 180, in from_qm9_pretrained
+    import ase
+ModuleNotFoundError: No module named 'ase'
+SchNet extraction failed (non-fatal)
+
+=== Phase D+E: Compare all embeddings + visualization ===
+2026-03-28 06:18:36,168 INFO 
+============================================================
+2026-03-28 06:18:36,168 INFO Evaluating 12 embedding configurations
+2026-03-28 06:18:36,168 INFO ============================================================
+
+2026-03-28 06:18:36,168 INFO Evaluating Encoder-128 (baseline): X=(942, 128), y=(942,)
+2026-03-28 06:18:45,136 INFO   LOOCV: RMSE=1.950, ρ=0.367, R²=0.119
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-28 06:19:25,671 INFO   50× splits: Test ρ=0.362±0.054, Gap=0.525
+2026-03-28 06:19:25,671 INFO Evaluating Layer-0 (128d): X=(17, 128), y=(17,)
+2026-03-28 06:19:26,379 INFO   LOOCV: RMSE=2.636, ρ=-0.005, R²=-0.141
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-28 06:20:00,919 INFO   50× splits: Test ρ=0.380±0.613, Gap=0.517
+2026-03-28 06:20:00,920 INFO Evaluating Layer-5 (128d): X=(17, 128), y=(17,)
+2026-03-28 06:20:01,606 INFO   LOOCV: RMSE=2.787, ρ=-0.368, R²=-0.275
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-28 06:20:36,585 INFO   50× splits: Test ρ=0.040±0.677, Gap=0.918
+2026-03-28 06:20:36,585 INFO Evaluating Layer-8 (128d): X=(17, 128), y=(17,)
+2026-03-28 06:20:37,280 INFO   LOOCV: RMSE=2.792, ρ=-0.343, R²=-0.280
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-28 06:21:12,396 INFO   50× splits: Test ρ=0.130±0.677, Gap=0.831
+2026-03-28 06:21:12,396 INFO Evaluating Layer-9 (128d): X=(17, 128), y=(17,)
+2026-03-28 06:21:13,095 INFO   LOOCV: RMSE=2.795, ρ=-0.380, R²=-0.283
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-28 06:21:47,665 INFO   50× splits: Test ρ=0.120±0.690, Gap=0.842
+2026-03-28 06:21:47,665 INFO Evaluating AllLayers→PCA-32: X=(17, 1280), y=(17,)
+2026-03-28 06:21:47,666 ERROR FAILED AllLayers→PCA-32: n_components=32 must be between 0 and min(n_samples, n_features)=17 with svd_solver='full'
+Traceback (most recent call last):
+  File "/scratch/yd2915/BayesDiff/scripts/26d_compare_embeddings.py", line 583, in main
+    result = evaluate_embedding(name, X, y, n_repeats=50, pca_dims=pca_dims)
+  File "/scratch/yd2915/BayesDiff/scripts/26d_compare_embeddings.py", line 146, in evaluate_embedding
+    X_s = pca.fit_transform(X_s)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/utils/_set_output.py", line 316, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/base.py", line 1365, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 466, in fit_transform
+    U, S, _, X, x_is_centered, xp = self._fit(X)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 540, in _fit
+    return self._fit_full(X, n_components, xp, is_array_api_compliant)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 554, in _fit_full
+    raise ValueError(
+ValueError: n_components=32 must be between 0 and min(n_samples, n_features)=17 with svd_solver='full'
+2026-03-28 06:21:47,688 INFO Evaluating AllLayers→PCA-64: X=(17, 1280), y=(17,)
+2026-03-28 06:21:47,688 ERROR FAILED AllLayers→PCA-64: n_components=64 must be between 0 and min(n_samples, n_features)=17 with svd_solver='full'
+Traceback (most recent call last):
+  File "/scratch/yd2915/BayesDiff/scripts/26d_compare_embeddings.py", line 583, in main
+    result = evaluate_embedding(name, X, y, n_repeats=50, pca_dims=pca_dims)
+  File "/scratch/yd2915/BayesDiff/scripts/26d_compare_embeddings.py", line 146, in evaluate_embedding
+    X_s = pca.fit_transform(X_s)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/utils/_set_output.py", line 316, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/base.py", line 1365, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 466, in fit_transform
+    U, S, _, X, x_is_centered, xp = self._fit(X)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 540, in _fit
+    return self._fit_full(X, n_components, xp, is_array_api_compliant)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 554, in _fit_full
+    raise ValueError(
+ValueError: n_components=64 must be between 0 and min(n_samples, n_features)=17 with svd_solver='full'
+2026-03-28 06:21:47,689 INFO Evaluating AllLayers→PCA-128: X=(17, 1280), y=(17,)
+2026-03-28 06:21:47,690 ERROR FAILED AllLayers→PCA-128: n_components=128 must be between 0 and min(n_samples, n_features)=17 with svd_solver='full'
+Traceback (most recent call last):
+  File "/scratch/yd2915/BayesDiff/scripts/26d_compare_embeddings.py", line 583, in main
+    result = evaluate_embedding(name, X, y, n_repeats=50, pca_dims=pca_dims)
+  File "/scratch/yd2915/BayesDiff/scripts/26d_compare_embeddings.py", line 146, in evaluate_embedding
+    X_s = pca.fit_transform(X_s)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/utils/_set_output.py", line 316, in wrapped
+    data_to_wrap = f(self, X, *args, **kwargs)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/base.py", line 1365, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 466, in fit_transform
+    U, S, _, X, x_is_centered, xp = self._fit(X)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 540, in _fit
+    return self._fit_full(X, n_components, xp, is_array_api_compliant)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 554, in _fit_full
+    raise ValueError(
+ValueError: n_components=128 must be between 0 and min(n_samples, n_features)=17 with svd_solver='full'
+2026-03-28 06:21:47,690 INFO Evaluating Last3→384d: X=(17, 384), y=(17,)
+2026-03-28 06:21:48,377 INFO   LOOCV: RMSE=2.778, ρ=-0.439, R²=-0.268
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-28 06:22:23,063 INFO   50× splits: Test ρ=0.090±0.661, Gap=0.880
+2026-03-28 06:22:23,063 INFO Evaluating WeightedAvg-128d: X=(17, 128), y=(17,)
+2026-03-28 06:22:23,759 INFO   LOOCV: RMSE=2.791, ρ=-0.341, R²=-0.279
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-28 06:22:58,848 INFO   50× splits: Test ρ=0.100±0.693, Gap=0.864
+2026-03-28 06:22:58,848 INFO Evaluating UniformAvg-128d: X=(17, 128), y=(17,)
+2026-03-28 06:22:59,546 INFO   LOOCV: RMSE=2.786, ρ=-0.365, R²=-0.275
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-28 06:23:34,309 INFO   50× splits: Test ρ=0.120±0.711, Gap=0.841
+2026-03-28 06:23:34,309 INFO Evaluating FCFP4-2048 (ref): X=(932, 2048), y=(932,)
+2026-03-28 06:23:36,638 INFO   LOOCV: RMSE=2.067, ρ=0.114, R²=0.014
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-28 06:24:17,873 INFO   50× splits: Test ρ=0.106±0.066, Gap=0.879
+2026-03-28 06:24:17,882 INFO 
+Saved results to /scratch/yd2915/BayesDiff/results/tier3_gp/pretrained_comparison_results.json
+2026-03-28 06:24:17,882 INFO 
+Generating figures...
+2026-03-28 06:24:19,013 INFO Saved 01_comparison_bars.png
+2026-03-28 06:24:19,284 INFO Saved 02_boxplots.png
+2026-03-28 06:24:19,611 INFO Saved 03_overfit_analysis.png
+2026-03-28 06:24:20,049 INFO Saved 04_summary_table.png
+2026-03-28 06:24:20,684 INFO Saved 05_dim_vs_performance.png
+Traceback (most recent call last):
+  File "/scratch/yd2915/BayesDiff/scripts/26d_compare_embeddings.py", line 627, in <module>
+    main()
+  File "/scratch/yd2915/BayesDiff/scripts/26d_compare_embeddings.py", line 611, in main
+    plot_pca_comparison(results_with_X[:4], FIG_DIR / "06_pca_comparison.png")
+  File "/scratch/yd2915/BayesDiff/scripts/26d_compare_embeddings.py", line 418, in plot_pca_comparison
+    pca.fit(X_s)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/base.py", line 1365, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 440, in fit
+    self._fit(X)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 540, in _fit
+    return self._fit_full(X, n_components, xp, is_array_api_compliant)
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/sklearn/decomposition/_pca.py", line 554, in _fit_full
+    raise ValueError(
+ValueError: n_components=50 must be between 0 and min(n_samples, n_features)=17 with svd_solver='full'
+
+=== ALL PHASES COMPLETE ===
+Date: Sat Mar 28 06:24:22 EDT 2026
+Figures: 5

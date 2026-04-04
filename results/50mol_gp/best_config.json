@@ -1,0 +1,5 @@
+{
+  "kernel": "rq",
+  "pca_dims": 0,
+  "ard": true
+}

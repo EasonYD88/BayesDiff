@@ -1,0 +1,11 @@
+=== Step 1: Extract 50mol encoder embeddings ===
+Start: Mon Mar 30 11:26:22 EDT 2026
+Done: Mon Mar 30 11:28:52 EDT 2026
+
+=== Step 2: GP Study ===
+Start: Mon Mar 30 11:28:52 EDT 2026
+Done: Mon Mar 30 11:46:10 EDT 2026
+
+=== All done ===
+Results: results/50mol_gp/
+Figures: results/50mol_gp/figures/

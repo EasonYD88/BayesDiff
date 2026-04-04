@@ -1,0 +1,28 @@
+═══════════════════════════════════════════════════════════
+ BayesDiff: 50-mol Embedding (Shard 25/31)
+═══════════════════════════════════════════════════════════
+Date:         Fri Mar 27 22:12:16 EDT 2026
+Node:         ga007.hpc.nyu.edu
+GPU:          NVIDIA A100-SXM4-80GB, 81920 MiB
+Array job id: 5027464
+Task id:      25
+Repo dir:     /scratch/yd2915/BayesDiff
+Run dir:      results/embedding_50mol/20260327_221216_j5027464
+Shard dir:    results/embedding_50mol/20260327_221216_j5027464/shards/shard_25of31
+Pocket list:  data/splits/test_pockets.txt
+Samples/pkt:  50
+Steps:        1000
+
+Command: python scripts/08_sample_molecules_shard.py --pocket_list data/splits/test_pockets.txt --num_shards 31 --shard_index 25 --pdbbind_dir external/targetdiff/data/test_set --targetdiff_dir external/targetdiff --num_samples 50 --num_steps 1000 --device cuda --output_dir results/embedding_50mol/20260327_221216_j5027464/shards/shard_25of31
+
+=== Shard selection ===
+Total pockets:  93
+Num shards:     31
+Shard index:    25
+Shard pockets:  3
+Running: /scratch/yd2915/conda_envs/bayesdiff/bin/python scripts/02_sample_molecules.py --pocket_list /state/partition1/job-5049631/bayesdiff_shard_qd3ryxxe/pockets_shard.txt --pdbbind_dir external/targetdiff/data/test_set --targetdiff_dir external/targetdiff --num_samples 50 --num_steps 1000 --device cuda --output_dir results/embedding_50mol/20260327_221216_j5027464/shards/shard_25of31
+
+═══════════════════════════════════════════════════════════
+ Shard 25/31 done at Sat Mar 28 01:29:08 EDT 2026
+ Output: results/embedding_50mol/20260327_221216_j5027464/shards/shard_25of31
+═══════════════════════════════════════════════════════════

@@ -1,0 +1,6 @@
+2026-03-27 18:33:08,601 INFO === Strategy: weighted_avg ===
+2026-03-27 18:33:09,447 INFO   Features: 128 (depth-weighted avg), shape=(17, 128)
+2026-03-27 18:33:09,447 INFO   Running analytic LOOCV ...
+2026-03-27 18:33:16,599 INFO   LOOCV: RMSE=2.791, ρ=-0.341, R²=-0.279
+2026-03-27 18:33:16,599 INFO   Running 50× splits ...
+2026-03-27 18:33:44,764 INFO   Saved → /scratch/yd2915/BayesDiff/results/tier3_gp/p0pp_partial_weighted_avg.json

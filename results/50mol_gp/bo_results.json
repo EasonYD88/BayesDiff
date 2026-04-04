@@ -1,0 +1,2415 @@
+{
+  "best_params": {
+    "kernel": "rq",
+    "pca_dims": 0,
+    "ard": true,
+    "lr": 0.1825128343067202,
+    "n_epochs": 299,
+    "noise_lb": 0.0025484816530724767,
+    "best_rmse": 1.9057209722747945
+  },
+  "best_value": 1.9057209722747945,
+  "n_trials": 200,
+  "trials": [
+    {
+      "number": 0,
+      "value": 2.0892152069650587,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.18276027831785724,
+        "n_epochs": 258,
+        "noise_lb": 7.068974950624602e-05
+      }
+    },
+    {
+      "number": 1,
+      "value": 1.952856763643685,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 20,
+        "ard": false,
+        "lr": 0.10508421338691762,
+        "n_epochs": 100,
+        "noise_lb": 0.0011400863701127321
+      }
+    },
+    {
+      "number": 2,
+      "value": 2.844982723797619,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 20,
+        "ard": false,
+        "lr": 0.03738105868191797,
+        "n_epochs": 80,
+        "noise_lb": 0.0009565499215943821
+      }
+    },
+    {
+      "number": 3,
+      "value": 2.128773162689136,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 64,
+        "ard": false,
+        "lr": 0.1459476894296684,
+        "n_epochs": 200,
+        "noise_lb": 0.04869640941520897
+      }
+    },
+    {
+      "number": 4,
+      "value": 1.9434622507854358,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 20,
+        "ard": true,
+        "lr": 0.11058146376563001,
+        "n_epochs": 68,
+        "noise_lb": 0.08862326508576249
+      }
+    },
+    {
+      "number": 5,
+      "value": 1.9544317678000533,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 20,
+        "ard": false,
+        "lr": 0.06470376604234768,
+        "n_epochs": 133,
+        "noise_lb": 1.795698422567761e-05
+      }
+    },
+    {
+      "number": 6,
+      "value": 2.3596131061197316,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 0,
+        "ard": false,
+        "lr": 0.043897812845882046,
+        "n_epochs": 181,
+        "noise_lb": 0.0005130551760589835
+      }
+    },
+    {
+      "number": 7,
+      "value": 1.9710427145896452,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 20,
+        "ard": true,
+        "lr": 0.012593695017526326,
+        "n_epochs": 122,
+        "noise_lb": 4.414536876494478e-05
+      }
+    },
+    {
+      "number": 8,
+      "value": 4.853360873915533,
+      "params": {
+        "kernel": "rbf",
+        "pca_dims": 20,
+        "ard": true,
+        "lr": 0.013905315749737282,
+        "n_epochs": 107,
+        "noise_lb": 0.0005110120656497165
+      }
+    },
+    {
+      "number": 9,
+      "value": 2.2522883998168948,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 64,
+        "ard": false,
+        "lr": 0.08215779086695435,
+        "n_epochs": 141,
+        "noise_lb": 0.07711312991331107
+      }
+    },
+    {
+      "number": 10,
+      "value": 5.096669757383871,
+      "params": {
+        "kernel": "rbf",
+        "pca_dims": 10,
+        "ard": true,
+        "lr": 0.0262038520630419,
+        "n_epochs": 53,
+        "noise_lb": 0.008566301930727152
+      }
+    },
+    {
+      "number": 11,
+      "value": 1.9459151541983035,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 20,
+        "ard": true,
+        "lr": 0.0949942037953068,
+        "n_epochs": 52,
+        "noise_lb": 0.006146439247862417
+      }
+    },
+    {
+      "number": 12,
+      "value": 1.941646367615482,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.10921342085800233,
+        "n_epochs": 52,
+        "noise_lb": 0.010786727482152236
+      }
+    },
+    {
+      "number": 13,
+      "value": 1.9199488956847128,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.13458980790540453,
+        "n_epochs": 292,
+        "noise_lb": 0.014384946972382852
+      }
+    },
+    {
+      "number": 14,
+      "value": 1.917061499701729,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.1976275032553497,
+        "n_epochs": 296,
+        "noise_lb": 0.015387104000883323
+      }
+    },
+    {
+      "number": 15,
+      "value": 1.9167443181499917,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.19783582553168688,
+        "n_epochs": 300,
+        "noise_lb": 0.01802264482464944
+      }
+    },
+    {
+      "number": 16,
+      "value": 1.9171624225533443,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.19762777418078004,
+        "n_epochs": 300,
+        "noise_lb": 0.002407667090414404
+      }
+    },
+    {
+      "number": 17,
+      "value": 2.2332137672369123,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.06018325562353314,
+        "n_epochs": 238,
+        "noise_lb": 0.0029054363487998115
+      }
+    },
+    {
+      "number": 18,
+      "value": 2.114903320252177,
+      "params": {
+        "kernel": "rbf",
+        "pca_dims": 10,
+        "ard": true,
+        "lr": 0.15903097695549273,
+        "n_epochs": 260,
+        "noise_lb": 0.03207413566047171
+      }
+    },
+    {
+      "number": 19,
+      "value": 1.9398050510573086,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.02714499061500694,
+        "n_epochs": 225,
+        "noise_lb": 0.027453612584523047
+      }
+    },
+    {
+      "number": 20,
+      "value": 1.9279041204127496,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.07436902054944462,
+        "n_epochs": 277,
+        "noise_lb": 0.0037608456833460417
+      }
+    },
+    {
+      "number": 21,
+      "value": 1.91824630765643,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.1864601382695121,
+        "n_epochs": 300,
+        "noise_lb": 0.0022811287575472037
+      }
+    },
+    {
+      "number": 22,
+      "value": 1.9168785389636924,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.18827054217488995,
+        "n_epochs": 272,
+        "noise_lb": 0.016139909449508064
+      }
+    },
+    {
+      "number": 23,
+      "value": 1.9208150233476535,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.1353681176229853,
+        "n_epochs": 269,
+        "noise_lb": 0.018456148335903016
+      }
+    },
+    {
+      "number": 24,
+      "value": 1.9210466038408027,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.13818445411763594,
+        "n_epochs": 238,
+        "noise_lb": 0.00582106049283937
+      }
+    },
+    {
+      "number": 25,
+      "value": 1.9193981480399087,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.18012622124502795,
+        "n_epochs": 214,
+        "noise_lb": 0.04111834324236494
+      }
+    },
+    {
+      "number": 26,
+      "value": 2.4790690763154775,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 10,
+        "ard": true,
+        "lr": 0.017812098054619842,
+        "n_epochs": 276,
+        "noise_lb": 0.017028881814012197
+      }
+    },
+    {
+      "number": 27,
+      "value": 2.1695944431567455,
+      "params": {
+        "kernel": "rbf",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.1251118144929162,
+        "n_epochs": 246,
+        "noise_lb": 0.0003342542862035565
+      }
+    },
+    {
+      "number": 28,
+      "value": 2.1499160379710407,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.08716309734227298,
+        "n_epochs": 285,
+        "noise_lb": 0.0001538582021694406
+      }
+    },
+    {
+      "number": 29,
+      "value": 2.08775343685986,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.16376696297220245,
+        "n_epochs": 252,
+        "noise_lb": 0.0013440762284496496
+      }
+    },
+    {
+      "number": 30,
+      "value": 1.9222615137581833,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.19817946881697604,
+        "n_epochs": 165,
+        "noise_lb": 0.006701379095869723
+      }
+    },
+    {
+      "number": 31,
+      "value": 1.9175718892682483,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.19503043733248676,
+        "n_epochs": 300,
+        "noise_lb": 0.02073780380098047
+      }
+    },
+    {
+      "number": 32,
+      "value": 1.9222814698156214,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.1626232507337358,
+        "n_epochs": 265,
+        "noise_lb": 0.004249180104745441
+      }
+    },
+    {
+      "number": 33,
+      "value": 1.921471719208322,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.12013786316138754,
+        "n_epochs": 287,
+        "noise_lb": 0.0016035810104083003
+      }
+    },
+    {
+      "number": 34,
+      "value": 1.9481029536377183,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": false,
+        "lr": 0.15251573881214583,
+        "n_epochs": 279,
+        "noise_lb": 0.011093981619667513
+      }
+    },
+    {
+      "number": 35,
+      "value": 1.9178476727831741,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.19836128045512288,
+        "n_epochs": 258,
+        "noise_lb": 0.049813367033544095
+      }
+    },
+    {
+      "number": 36,
+      "value": 1.948035410600903,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": false,
+        "lr": 0.09961681251024548,
+        "n_epochs": 298,
+        "noise_lb": 0.0007485340824115293
+      }
+    },
+    {
+      "number": 37,
+      "value": 2.242324993856719,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.0590180082708019,
+        "n_epochs": 228,
+        "noise_lb": 0.05930743671521026
+      }
+    },
+    {
+      "number": 38,
+      "value": 2.1176109840850947,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 0,
+        "ard": false,
+        "lr": 0.16201607839285154,
+        "n_epochs": 198,
+        "noise_lb": 0.0019814289234473597
+      }
+    },
+    {
+      "number": 39,
+      "value": 1.9314027826492814,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.0508638760822815,
+        "n_epochs": 269,
+        "noise_lb": 0.02335145817970911
+      }
+    },
+    {
+      "number": 40,
+      "value": 1.9663382452690776,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 10,
+        "ard": false,
+        "lr": 0.11880483163143533,
+        "n_epochs": 283,
+        "noise_lb": 0.09136712499037054
+      }
+    },
+    {
+      "number": 41,
+      "value": 1.91867937856655,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.19843103236459345,
+        "n_epochs": 299,
+        "noise_lb": 0.02968701366725533
+      }
+    },
+    {
+      "number": 42,
+      "value": 1.9198758370872449,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.16721045131887677,
+        "n_epochs": 288,
+        "noise_lb": 0.012329045114250951
+      }
+    },
+    {
+      "number": 43,
+      "value": 1.9190311116084646,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.14417716183373697,
+        "n_epochs": 299,
+        "noise_lb": 0.018016372826778967
+      }
+    },
+    {
+      "number": 44,
+      "value": 1.918700597372086,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 32,
+        "ard": true,
+        "lr": 0.17406260753735214,
+        "n_epochs": 276,
+        "noise_lb": 0.036835550447034744
+      }
+    },
+    {
+      "number": 45,
+      "value": 2.345952307620867,
+      "params": {
+        "kernel": "rbf",
+        "pca_dims": 20,
+        "ard": true,
+        "lr": 0.03887966078237474,
+        "n_epochs": 246,
+        "noise_lb": 0.009677691944830398
+      }
+    },
+    {
+      "number": 46,
+      "value": 1.912209459036039,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.10792154795798546,
+        "n_epochs": 270,
+        "noise_lb": 0.006672658549626672
+      }
+    },
+    {
+      "number": 47,
+      "value": 2.134919905493289,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.10665540000149289,
+        "n_epochs": 263,
+        "noise_lb": 1.2927388005608198e-05
+      }
+    },
+    {
+      "number": 48,
+      "value": 1.922853903393117,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.07531402080426096,
+        "n_epochs": 167,
+        "noise_lb": 0.0035082233722883425
+      }
+    },
+    {
+      "number": 49,
+      "value": 2.229037845284041,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 64,
+        "ard": false,
+        "lr": 0.14432073899309072,
+        "n_epochs": 77,
+        "noise_lb": 0.007578884470433317
+      }
+    },
+    {
+      "number": 50,
+      "value": 1.9167801158518234,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.09326045151876122,
+        "n_epochs": 206,
+        "noise_lb": 0.0043555626346285
+      }
+    },
+    {
+      "number": 51,
+      "value": 1.9658665999444993,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.010122649358141935,
+        "n_epochs": 186,
+        "noise_lb": 0.004976708582910719
+      }
+    },
+    {
+      "number": 52,
+      "value": 1.9132875386135209,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.12378549679989721,
+        "n_epochs": 217,
+        "noise_lb": 0.0026144145788642354
+      }
+    },
+    {
+      "number": 53,
+      "value": 1.9165745719211744,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.0892024063321741,
+        "n_epochs": 214,
+        "noise_lb": 0.00803505293582022
+      }
+    },
+    {
+      "number": 54,
+      "value": 1.9167299179876984,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.09035471814736354,
+        "n_epochs": 212,
+        "noise_lb": 0.00860652348277494
+      }
+    },
+    {
+      "number": 55,
+      "value": 1.9169623060849825,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.08871018783402859,
+        "n_epochs": 213,
+        "noise_lb": 0.0008879548459843248
+      }
+    },
+    {
+      "number": 56,
+      "value": 2.2675760085018037,
+      "params": {
+        "kernel": "rbf",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.07842119815447812,
+        "n_epochs": 200,
+        "noise_lb": 0.003180591352869971
+      }
+    },
+    {
+      "number": 57,
+      "value": 1.9218551135204027,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.07008464906491983,
+        "n_epochs": 212,
+        "noise_lb": 0.008129412648347902
+      }
+    },
+    {
+      "number": 58,
+      "value": 1.918553128432278,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.09522057722826718,
+        "n_epochs": 184,
+        "noise_lb": 0.005195644537880338
+      }
+    },
+    {
+      "number": 59,
+      "value": 1.9196323444746144,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.06630130696968908,
+        "n_epochs": 229,
+        "noise_lb": 0.00256686288602193
+      }
+    },
+    {
+      "number": 60,
+      "value": 1.925441695414499,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.05323835675271314,
+        "n_epochs": 195,
+        "noise_lb": 2.9295290631360422e-05
+      }
+    },
+    {
+      "number": 61,
+      "value": 1.9192882920887482,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.11439797156851496,
+        "n_epochs": 149,
+        "noise_lb": 0.012320979800096088
+      }
+    },
+    {
+      "number": 62,
+      "value": 1.9124457726977808,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.13011935683040587,
+        "n_epochs": 218,
+        "noise_lb": 0.006797902727194965
+      }
+    },
+    {
+      "number": 63,
+      "value": 1.9190781281914195,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.08603806769776068,
+        "n_epochs": 220,
+        "noise_lb": 0.006609150940248589
+      }
+    },
+    {
+      "number": 64,
+      "value": 1.9167061581934368,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.10375482578911878,
+        "n_epochs": 203,
+        "noise_lb": 0.00396595684851052
+      }
+    },
+    {
+      "number": 65,
+      "value": 2.1502164339099803,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.10495941655587308,
+        "n_epochs": 235,
+        "noise_lb": 0.0018603330188898177
+      }
+    },
+    {
+      "number": 66,
+      "value": 1.9159414899117935,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.12907989355479627,
+        "n_epochs": 190,
+        "noise_lb": 0.008194680596360936
+      }
+    },
+    {
+      "number": 67,
+      "value": 1.9152655596171624,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.12984413384598084,
+        "n_epochs": 173,
+        "noise_lb": 0.0012845903925560143
+      }
+    },
+    {
+      "number": 68,
+      "value": 2.2056634537910274,
+      "params": {
+        "kernel": "rbf",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.1286515590782154,
+        "n_epochs": 172,
+        "noise_lb": 0.000739623316806257
+      }
+    },
+    {
+      "number": 69,
+      "value": 1.9159656199623234,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.13334432981606814,
+        "n_epochs": 159,
+        "noise_lb": 0.001197399659561211
+      }
+    },
+    {
+      "number": 70,
+      "value": 2.1907500246698857,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 64,
+        "ard": false,
+        "lr": 0.13541710141661747,
+        "n_epochs": 120,
+        "noise_lb": 0.00038909476832354133
+      }
+    },
+    {
+      "number": 71,
+      "value": 1.9166319471427713,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.11222232701266871,
+        "n_epochs": 154,
+        "noise_lb": 0.001202820534682028
+      }
+    },
+    {
+      "number": 72,
+      "value": 1.91650801968625,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.12539113006539257,
+        "n_epochs": 151,
+        "noise_lb": 0.0005560530199907787
+      }
+    },
+    {
+      "number": 73,
+      "value": 1.9185244454020731,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.12908472080620276,
+        "n_epochs": 159,
+        "noise_lb": 0.0002733248867313093
+      }
+    },
+    {
+      "number": 74,
+      "value": 1.934874949442723,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 20,
+        "ard": true,
+        "lr": 0.14898998305778,
+        "n_epochs": 145,
+        "noise_lb": 0.0005344824941848688
+      }
+    },
+    {
+      "number": 75,
+      "value": 1.916025907046154,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.12113663752418892,
+        "n_epochs": 181,
+        "noise_lb": 0.000985016588543846
+      }
+    },
+    {
+      "number": 76,
+      "value": 1.9212444457950926,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.11825911246172756,
+        "n_epochs": 133,
+        "noise_lb": 0.001476237278654161
+      }
+    },
+    {
+      "number": 77,
+      "value": 1.9143751429882505,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.14003659861968357,
+        "n_epochs": 175,
+        "noise_lb": 0.00018725543723901276
+      }
+    },
+    {
+      "number": 78,
+      "value": 1.9466163389188358,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 10,
+        "ard": true,
+        "lr": 0.13948957678416482,
+        "n_epochs": 178,
+        "noise_lb": 7.896390952457155e-05
+      }
+    },
+    {
+      "number": 79,
+      "value": 1.912485985966285,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.14998871421828902,
+        "n_epochs": 190,
+        "noise_lb": 0.0001721263728627039
+      }
+    },
+    {
+      "number": 80,
+      "value": 2.1250928359264525,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.15303117432908284,
+        "n_epochs": 193,
+        "noise_lb": 0.00017944812717573427
+      }
+    },
+    {
+      "number": 81,
+      "value": 1.911779723085597,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.1760417482012615,
+        "n_epochs": 187,
+        "noise_lb": 9.106624647144079e-05
+      }
+    },
+    {
+      "number": 82,
+      "value": 1.9117404887072853,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.17618762027211096,
+        "n_epochs": 189,
+        "noise_lb": 8.792993842817765e-05
+      }
+    },
+    {
+      "number": 83,
+      "value": 1.9120909743103365,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.16566508830912258,
+        "n_epochs": 190,
+        "noise_lb": 6.450259531763324e-05
+      }
+    },
+    {
+      "number": 84,
+      "value": 1.9122872869312328,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.1753490011074565,
+        "n_epochs": 166,
+        "noise_lb": 7.316487214546031e-05
+      }
+    },
+    {
+      "number": 85,
+      "value": 1.9110158648783568,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.17377241541229413,
+        "n_epochs": 187,
+        "noise_lb": 7.527289086612998e-05
+      }
+    },
+    {
+      "number": 86,
+      "value": 1.9472592110155116,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": false,
+        "lr": 0.18031381008663094,
+        "n_epochs": 191,
+        "noise_lb": 6.395123425472838e-05
+      }
+    },
+    {
+      "number": 87,
+      "value": 1.932989141300225,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 20,
+        "ard": true,
+        "lr": 0.1756337777932095,
+        "n_epochs": 167,
+        "noise_lb": 0.00010659414865436989
+      }
+    },
+    {
+      "number": 88,
+      "value": 2.106347870723409,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.16239700397371787,
+        "n_epochs": 207,
+        "noise_lb": 3.92895128002342e-05
+      }
+    },
+    {
+      "number": 89,
+      "value": 1.9416239114469922,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.026880747031551494,
+        "n_epochs": 182,
+        "noise_lb": 5.0735607746245874e-05
+      }
+    },
+    {
+      "number": 90,
+      "value": 2.147558792688504,
+      "params": {
+        "kernel": "rbf",
+        "pca_dims": 10,
+        "ard": true,
+        "lr": 0.15701087729582233,
+        "n_epochs": 189,
+        "noise_lb": 0.00010587931208666031
+      }
+    },
+    {
+      "number": 91,
+      "value": 1.9131562089114849,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.17286336726221238,
+        "n_epochs": 176,
+        "noise_lb": 0.00018580874021080666
+      }
+    },
+    {
+      "number": 92,
+      "value": 1.907610649713412,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.17341962824826823,
+        "n_epochs": 197,
+        "noise_lb": 0.00012436400740406514
+      }
+    },
+    {
+      "number": 93,
+      "value": 1.909222495793055,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.183121540762703,
+        "n_epochs": 197,
+        "noise_lb": 0.00010879885361070795
+      }
+    },
+    {
+      "number": 94,
+      "value": 1.910151598994556,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.18475890859433222,
+        "n_epochs": 202,
+        "noise_lb": 0.00012040411619957153
+      }
+    },
+    {
+      "number": 95,
+      "value": 1.9108657312823307,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.18939746944050825,
+        "n_epochs": 198,
+        "noise_lb": 0.00011555532641387481
+      }
+    },
+    {
+      "number": 96,
+      "value": 1.9109047753751458,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.18043890362820164,
+        "n_epochs": 197,
+        "noise_lb": 0.00012178190906620312
+      }
+    },
+    {
+      "number": 97,
+      "value": 1.9127816532704902,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.1811951702897173,
+        "n_epochs": 197,
+        "noise_lb": 0.00012355465550098048
+      }
+    },
+    {
+      "number": 98,
+      "value": 1.9471860509819252,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": false,
+        "lr": 0.18910096550471325,
+        "n_epochs": 206,
+        "noise_lb": 2.578415953781722e-05
+      }
+    },
+    {
+      "number": 99,
+      "value": 1.9115562159277097,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.1667893188343757,
+        "n_epochs": 201,
+        "noise_lb": 0.0002454742839430604
+      }
+    },
+    {
+      "number": 100,
+      "value": 1.9128361109369247,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.16533255849524262,
+        "n_epochs": 202,
+        "noise_lb": 0.00013287126231577523
+      }
+    },
+    {
+      "number": 101,
+      "value": 1.910718625704557,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.18698571700948877,
+        "n_epochs": 223,
+        "noise_lb": 0.0002493781327505416
+      }
+    },
+    {
+      "number": 102,
+      "value": 1.9114363953955298,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.1831586288266073,
+        "n_epochs": 197,
+        "noise_lb": 0.0002563642439259183
+      }
+    },
+    {
+      "number": 103,
+      "value": 1.9090651951314175,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.1896823801009583,
+        "n_epochs": 223,
+        "noise_lb": 0.00024136558443184917
+      }
+    },
+    {
+      "number": 104,
+      "value": 1.9067791335697404,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.1997886346720277,
+        "n_epochs": 223,
+        "noise_lb": 0.0002999223289835301
+      }
+    },
+    {
+      "number": 105,
+      "value": 1.9077791088240432,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.19205296467679014,
+        "n_epochs": 225,
+        "noise_lb": 0.00023817632284870027
+      }
+    },
+    {
+      "number": 106,
+      "value": 2.0880655535488173,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.18905242532666292,
+        "n_epochs": 224,
+        "noise_lb": 0.0002589817746020674
+      }
+    },
+    {
+      "number": 107,
+      "value": 1.9071807822495561,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.18832967991406493,
+        "n_epochs": 236,
+        "noise_lb": 0.0002972721916486791
+      }
+    },
+    {
+      "number": 108,
+      "value": 1.9304239501052314,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 20,
+        "ard": true,
+        "lr": 0.19945125340811617,
+        "n_epochs": 237,
+        "noise_lb": 0.00033620269084676013
+      }
+    },
+    {
+      "number": 109,
+      "value": 2.3780863235064236,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 64,
+        "ard": true,
+        "lr": 0.03018709245907311,
+        "n_epochs": 231,
+        "noise_lb": 0.0001425220619590501
+      }
+    },
+    {
+      "number": 110,
+      "value": 1.9097888038255533,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18950301825307006,
+        "n_epochs": 220,
+        "noise_lb": 0.00022200725644471762
+      }
+    },
+    {
+      "number": 111,
+      "value": 1.909087945529683,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18802102636858478,
+        "n_epochs": 223,
+        "noise_lb": 0.00021292372995894093
+      }
+    },
+    {
+      "number": 112,
+      "value": 1.909239170039251,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18857610443492856,
+        "n_epochs": 242,
+        "noise_lb": 0.00021416805196078906
+      }
+    },
+    {
+      "number": 113,
+      "value": 1.90866591606744,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1909212888943922,
+        "n_epochs": 248,
+        "noise_lb": 0.00040469714842829817
+      }
+    },
+    {
+      "number": 114,
+      "value": 1.9096797654206126,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1545764476332326,
+        "n_epochs": 245,
+        "noise_lb": 0.0004432059480851286
+      }
+    },
+    {
+      "number": 115,
+      "value": 1.9101612163704371,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1526945869644455,
+        "n_epochs": 254,
+        "noise_lb": 0.0004291056877934377
+      }
+    },
+    {
+      "number": 116,
+      "value": 2.0933953341487896,
+      "params": {
+        "kernel": "rbf",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19857246060139172,
+        "n_epochs": 247,
+        "noise_lb": 0.00020960232088743086
+      }
+    },
+    {
+      "number": 117,
+      "value": 1.9103025077043254,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.16094529509797167,
+        "n_epochs": 241,
+        "noise_lb": 0.00036524642074161755
+      }
+    },
+    {
+      "number": 118,
+      "value": 1.9459610523556805,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.019580616083767852,
+        "n_epochs": 232,
+        "noise_lb": 0.0004473624260233229
+      }
+    },
+    {
+      "number": 119,
+      "value": 1.9465410164494055,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": false,
+        "lr": 0.15574209790463422,
+        "n_epochs": 242,
+        "noise_lb": 0.0006495129514254282
+      }
+    },
+    {
+      "number": 120,
+      "value": 1.9091839147619016,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.14705699735980704,
+        "n_epochs": 251,
+        "noise_lb": 0.00033436956109727845
+      }
+    },
+    {
+      "number": 121,
+      "value": 1.9090471400272624,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19955573317382283,
+        "n_epochs": 249,
+        "noise_lb": 0.00028779247897913195
+      }
+    },
+    {
+      "number": 122,
+      "value": 1.9088235328638916,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1986181521359354,
+        "n_epochs": 250,
+        "noise_lb": 0.00021279051718525093
+      }
+    },
+    {
+      "number": 123,
+      "value": 1.910669780402149,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.14610000222572986,
+        "n_epochs": 251,
+        "noise_lb": 0.00031765449600083866
+      }
+    },
+    {
+      "number": 124,
+      "value": 1.9077449256019068,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.16819698526965268,
+        "n_epochs": 256,
+        "noise_lb": 0.000322330875300944
+      }
+    },
+    {
+      "number": 125,
+      "value": 1.9080012262891946,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19968173486551022,
+        "n_epochs": 257,
+        "noise_lb": 0.0003080885678254372
+      }
+    },
+    {
+      "number": 126,
+      "value": 1.906170988057375,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19717944130100282,
+        "n_epochs": 254,
+        "noise_lb": 0.0002942218982574704
+      }
+    },
+    {
+      "number": 127,
+      "value": 1.9090761580347038,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17000778378145537,
+        "n_epochs": 260,
+        "noise_lb": 0.000321136755148372
+      }
+    },
+    {
+      "number": 128,
+      "value": 1.908835436947672,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1698129247467342,
+        "n_epochs": 265,
+        "noise_lb": 0.00030188660657848407
+      }
+    },
+    {
+      "number": 129,
+      "value": 2.090227386226583,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.16943133652201017,
+        "n_epochs": 263,
+        "noise_lb": 0.00015702264375700768
+      }
+    },
+    {
+      "number": 130,
+      "value": 1.9072523899302254,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1970318579075872,
+        "n_epochs": 258,
+        "noise_lb": 0.00029750426508408384
+      }
+    },
+    {
+      "number": 131,
+      "value": 1.9087227268331923,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1990498687494214,
+        "n_epochs": 258,
+        "noise_lb": 0.00028557034021328047
+      }
+    },
+    {
+      "number": 132,
+      "value": 1.9093729008890925,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19946200632748012,
+        "n_epochs": 272,
+        "noise_lb": 0.000287933937998338
+      }
+    },
+    {
+      "number": 133,
+      "value": 1.9086091675586478,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1971860925867755,
+        "n_epochs": 267,
+        "noise_lb": 0.0005930115431668638
+      }
+    },
+    {
+      "number": 134,
+      "value": 1.9075262806502749,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19910204186932132,
+        "n_epochs": 265,
+        "noise_lb": 0.0006087924202474182
+      }
+    },
+    {
+      "number": 135,
+      "value": 1.9088290993678876,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.16955293357692056,
+        "n_epochs": 258,
+        "noise_lb": 0.0007440952202318462
+      }
+    },
+    {
+      "number": 136,
+      "value": 1.9087729160512616,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19963285956669768,
+        "n_epochs": 254,
+        "noise_lb": 0.0006336576398536621
+      }
+    },
+    {
+      "number": 137,
+      "value": 1.9078781016170359,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19948315262255406,
+        "n_epochs": 268,
+        "noise_lb": 0.0005979429450839811
+      }
+    },
+    {
+      "number": 138,
+      "value": 2.075302349795565,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17958430693844352,
+        "n_epochs": 279,
+        "noise_lb": 0.0006252895323425723
+      }
+    },
+    {
+      "number": 139,
+      "value": 1.9065007148301887,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19985943794729213,
+        "n_epochs": 256,
+        "noise_lb": 0.0004701529644613954
+      }
+    },
+    {
+      "number": 140,
+      "value": 2.1151302492625734,
+      "params": {
+        "kernel": "rbf",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.16036644560695426,
+        "n_epochs": 270,
+        "noise_lb": 0.0005156692471237291
+      }
+    },
+    {
+      "number": 141,
+      "value": 1.9077144080415898,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19960000963745955,
+        "n_epochs": 266,
+        "noise_lb": 0.0008925848554888699
+      }
+    },
+    {
+      "number": 142,
+      "value": 1.9086607563387343,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17647230868519898,
+        "n_epochs": 266,
+        "noise_lb": 0.0009239819404108302
+      }
+    },
+    {
+      "number": 143,
+      "value": 1.90741807756531,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17836706708705324,
+        "n_epochs": 265,
+        "noise_lb": 0.0008211399420205463
+      }
+    },
+    {
+      "number": 144,
+      "value": 1.9094850508848282,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17710058764460634,
+        "n_epochs": 266,
+        "noise_lb": 0.000938635673965587
+      }
+    },
+    {
+      "number": 145,
+      "value": 1.9074349709378833,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17937280333550157,
+        "n_epochs": 283,
+        "noise_lb": 0.0008800665872885884
+      }
+    },
+    {
+      "number": 146,
+      "value": 1.9463168266146866,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": false,
+        "lr": 0.16675923472456955,
+        "n_epochs": 278,
+        "noise_lb": 0.0004667751122673183
+      }
+    },
+    {
+      "number": 147,
+      "value": 1.9091996953559378,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1592222556773274,
+        "n_epochs": 256,
+        "noise_lb": 0.0007852480443859846
+      }
+    },
+    {
+      "number": 148,
+      "value": 1.9078718069257,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1824434410313458,
+        "n_epochs": 290,
+        "noise_lb": 0.0005413587241117828
+      }
+    },
+    {
+      "number": 149,
+      "value": 1.9074101049085985,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18110864702684823,
+        "n_epochs": 293,
+        "noise_lb": 0.0003784830527546554
+      }
+    },
+    {
+      "number": 150,
+      "value": 1.9068015436210497,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18082777869483407,
+        "n_epochs": 288,
+        "noise_lb": 0.0010611512746557742
+      }
+    },
+    {
+      "number": 151,
+      "value": 1.9070057422536115,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18181756205467503,
+        "n_epochs": 292,
+        "noise_lb": 0.0016721361686548686
+      }
+    },
+    {
+      "number": 152,
+      "value": 1.9058235982696543,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1778154394130039,
+        "n_epochs": 293,
+        "noise_lb": 0.0011125399315709895
+      }
+    },
+    {
+      "number": 153,
+      "value": 1.9075681751155034,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1612026764571805,
+        "n_epochs": 287,
+        "noise_lb": 0.001590659660992366
+      }
+    },
+    {
+      "number": 154,
+      "value": 1.9084566190389143,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.14131142717010006,
+        "n_epochs": 294,
+        "noise_lb": 0.0015775524810168957
+      }
+    },
+    {
+      "number": 155,
+      "value": 1.9068759850758479,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.15976106017359767,
+        "n_epochs": 284,
+        "noise_lb": 0.0018295408024349182
+      }
+    },
+    {
+      "number": 156,
+      "value": 1.9075024259979425,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1567089182857686,
+        "n_epochs": 286,
+        "noise_lb": 0.002254491490248939
+      }
+    },
+    {
+      "number": 157,
+      "value": 1.9076486004221778,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.15489026916513077,
+        "n_epochs": 287,
+        "noise_lb": 0.0019816950874564612
+      }
+    },
+    {
+      "number": 158,
+      "value": 1.9457594327558896,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 10,
+        "ard": true,
+        "lr": 0.14882371278137685,
+        "n_epochs": 284,
+        "noise_lb": 0.0010846293388591733
+      }
+    },
+    {
+      "number": 159,
+      "value": 1.9083879647852569,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.16072807918509474,
+        "n_epochs": 293,
+        "noise_lb": 0.0018278174203616526
+      }
+    },
+    {
+      "number": 160,
+      "value": 1.9067533209625047,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17841790221788809,
+        "n_epochs": 284,
+        "noise_lb": 0.0023205138322129498
+      }
+    },
+    {
+      "number": 161,
+      "value": 1.9075774192796595,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17936126989717838,
+        "n_epochs": 282,
+        "noise_lb": 0.002173787232306011
+      }
+    },
+    {
+      "number": 162,
+      "value": 1.9099867427964667,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1825882937443175,
+        "n_epochs": 281,
+        "noise_lb": 0.002813578983319206
+      }
+    },
+    {
+      "number": 163,
+      "value": 1.9071407149656765,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1769405079884786,
+        "n_epochs": 290,
+        "noise_lb": 0.001386197944296483
+      }
+    },
+    {
+      "number": 164,
+      "value": 1.9075607512377208,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1608078456065971,
+        "n_epochs": 294,
+        "noise_lb": 0.001516090466716387
+      }
+    },
+    {
+      "number": 165,
+      "value": 2.081197700484869,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17213412781888726,
+        "n_epochs": 296,
+        "noise_lb": 0.001335961568248109
+      }
+    },
+    {
+      "number": 166,
+      "value": 1.9088892585169253,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1398711000503506,
+        "n_epochs": 274,
+        "noise_lb": 0.0011402118919500762
+      }
+    },
+    {
+      "number": 167,
+      "value": 1.9063315593771335,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18587474132422566,
+        "n_epochs": 291,
+        "noise_lb": 0.002335493778651266
+      }
+    },
+    {
+      "number": 168,
+      "value": 1.907390166545702,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18283534485847364,
+        "n_epochs": 291,
+        "noise_lb": 0.0024576919011377076
+      }
+    },
+    {
+      "number": 169,
+      "value": 1.906029812643025,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18411477263629647,
+        "n_epochs": 289,
+        "noise_lb": 0.003175298049111683
+      }
+    },
+    {
+      "number": 170,
+      "value": 2.082026588429488,
+      "params": {
+        "kernel": "matern15",
+        "pca_dims": 0,
+        "ard": false,
+        "lr": 0.18255859221403253,
+        "n_epochs": 292,
+        "noise_lb": 0.0030707742141065464
+      }
+    },
+    {
+      "number": 171,
+      "value": 1.9069843169066303,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17887476083871592,
+        "n_epochs": 289,
+        "noise_lb": 0.0022956136362132923
+      }
+    },
+    {
+      "number": 172,
+      "value": 1.9057209722747945,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1825128343067202,
+        "n_epochs": 299,
+        "noise_lb": 0.0025484816530724767
+      }
+    },
+    {
+      "number": 173,
+      "value": 1.9063879381447157,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1858289298116008,
+        "n_epochs": 299,
+        "noise_lb": 0.003658805718057382
+      }
+    },
+    {
+      "number": 174,
+      "value": 1.9065330587670364,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18586048732807156,
+        "n_epochs": 299,
+        "noise_lb": 0.0027556340855069725
+      }
+    },
+    {
+      "number": 175,
+      "value": 1.9072990649234578,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18703957007894997,
+        "n_epochs": 299,
+        "noise_lb": 0.0036883425857078224
+      }
+    },
+    {
+      "number": 176,
+      "value": 1.906860783999596,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.16743366389728348,
+        "n_epochs": 299,
+        "noise_lb": 0.004011952319458537
+      }
+    },
+    {
+      "number": 177,
+      "value": 1.9303109741671352,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 20,
+        "ard": true,
+        "lr": 0.1666543731938781,
+        "n_epochs": 298,
+        "noise_lb": 0.0033579134013158552
+      }
+    },
+    {
+      "number": 178,
+      "value": 2.0985039422427025,
+      "params": {
+        "kernel": "rbf",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17075430121016888,
+        "n_epochs": 300,
+        "noise_lb": 0.004865207920266133
+      }
+    },
+    {
+      "number": 179,
+      "value": 1.9233637657592966,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.046279588235870285,
+        "n_epochs": 290,
+        "noise_lb": 0.0027276435256671644
+      }
+    },
+    {
+      "number": 180,
+      "value": 1.9069630502933455,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18949811047585438,
+        "n_epochs": 288,
+        "noise_lb": 0.0018371597145672308
+      }
+    },
+    {
+      "number": 181,
+      "value": 1.9090598662306477,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18720943696900602,
+        "n_epochs": 276,
+        "noise_lb": 0.0018684246396649075
+      }
+    },
+    {
+      "number": 182,
+      "value": 1.9076410266185555,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.16961807608277357,
+        "n_epochs": 288,
+        "noise_lb": 0.003814534381348189
+      }
+    },
+    {
+      "number": 183,
+      "value": 1.906799990092319,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18811443888879267,
+        "n_epochs": 296,
+        "noise_lb": 0.002313444358146155
+      }
+    },
+    {
+      "number": 184,
+      "value": 1.906276949939741,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1873649854387953,
+        "n_epochs": 300,
+        "noise_lb": 0.0025583081622711883
+      }
+    },
+    {
+      "number": 185,
+      "value": 1.907644890481939,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17152719006386324,
+        "n_epochs": 300,
+        "noise_lb": 0.0022936332568495835
+      }
+    },
+    {
+      "number": 186,
+      "value": 1.908951272714149,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.14957282105239708,
+        "n_epochs": 295,
+        "noise_lb": 0.003053108934857282
+      }
+    },
+    {
+      "number": 187,
+      "value": 1.9070638065831005,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18648737713481034,
+        "n_epochs": 284,
+        "noise_lb": 0.004555442691978044
+      }
+    },
+    {
+      "number": 188,
+      "value": 1.9059348726982253,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18598384843793941,
+        "n_epochs": 283,
+        "noise_lb": 0.004298038527452053
+      }
+    },
+    {
+      "number": 189,
+      "value": 1.9293141747981384,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.03517683931958341,
+        "n_epochs": 295,
+        "noise_lb": 0.005418133327959333
+      }
+    },
+    {
+      "number": 190,
+      "value": 1.9453594349026457,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 10,
+        "ard": true,
+        "lr": 0.18754732263355675,
+        "n_epochs": 280,
+        "noise_lb": 0.0018912455380981593
+      }
+    },
+    {
+      "number": 191,
+      "value": 1.9060618324770222,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18860460935883971,
+        "n_epochs": 286,
+        "noise_lb": 0.004345031712347225
+      }
+    },
+    {
+      "number": 192,
+      "value": 1.9092115575844593,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.1667266530116744,
+        "n_epochs": 287,
+        "noise_lb": 0.004122433771776823
+      }
+    },
+    {
+      "number": 193,
+      "value": 1.9060960649492737,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18914223997039661,
+        "n_epochs": 300,
+        "noise_lb": 0.0025910879431993096
+      }
+    },
+    {
+      "number": 194,
+      "value": 1.9067251684319475,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.18791987129273227,
+        "n_epochs": 300,
+        "noise_lb": 0.0027856893988891826
+      }
+    },
+    {
+      "number": 195,
+      "value": 1.907086906603093,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19099884033448405,
+        "n_epochs": 299,
+        "noise_lb": 0.0033467000430508443
+      }
+    },
+    {
+      "number": 196,
+      "value": 1.9071686587688577,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.17255257891543713,
+        "n_epochs": 300,
+        "noise_lb": 0.0027883755063192223
+      }
+    },
+    {
+      "number": 197,
+      "value": 1.9398797440127513,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.0207332247391031,
+        "n_epochs": 295,
+        "noise_lb": 0.005935501045020852
+      }
+    },
+    {
+      "number": 198,
+      "value": 1.9065211846153773,
+      "params": {
+        "kernel": "rq",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.19135246239519874,
+        "n_epochs": 283,
+        "noise_lb": 0.004115321039665341
+      }
+    },
+    {
+      "number": 199,
+      "value": 2.090907268311921,
+      "params": {
+        "kernel": "matern25",
+        "pca_dims": 0,
+        "ard": true,
+        "lr": 0.16228523423132857,
+        "n_epochs": 276,
+        "noise_lb": 0.00435469722900798
+      }
+    }
+  ]
+}

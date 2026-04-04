@@ -1,0 +1,6 @@
+2026-03-27 18:32:50,897 INFO === Strategy: avg_all ===
+2026-03-27 18:32:52,097 INFO   Features: 128 (uniform avg), shape=(17, 128)
+2026-03-27 18:32:52,097 INFO   Running analytic LOOCV ...
+2026-03-27 18:32:59,551 INFO   LOOCV: RMSE=2.786, ρ=-0.365, R²=-0.275
+2026-03-27 18:32:59,551 INFO   Running 50× splits ...
+2026-03-27 18:33:27,810 INFO   Saved → /scratch/yd2915/BayesDiff/results/tier3_gp/p0pp_partial_avg_all.json

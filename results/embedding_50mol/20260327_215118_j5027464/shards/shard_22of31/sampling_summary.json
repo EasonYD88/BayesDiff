@@ -1,0 +1,47 @@
+{
+  "args": {
+    "pocket_list": "/state/partition1/job-5049339/bayesdiff_shard_z_gwb3n9/pockets_shard.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 50,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/embedding_50mol/20260327_215118_j5027464/shards/shard_22of31",
+    "num_steps": 1000
+  },
+  "n_pockets": 3,
+  "n_sampled": 3,
+  "timing": [
+    {
+      "pdb_code": "CONA_CANCT_1_237_0",
+      "n_valid": 0,
+      "n_total": 50,
+      "elapsed_s": 2015.6,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "NEP_HUMAN_54_750_0",
+      "n_valid": 36,
+      "n_total": 50,
+      "elapsed_s": 6160.1,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "TIAM1_HUMAN_840_931_0",
+      "n_valid": 0,
+      "n_total": 50,
+      "elapsed_s": 821.6,
+      "emb_shape": [
+        50,
+        128
+      ]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "args": {
+    "pocket_list": "/state/partition1/job-5043336/bayesdiff_shard_wpqfe6l3/pockets_shard.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 50,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/embedding_50mol/20260327_192636_j5027464/shards/shard_19of31",
+    "num_steps": 1000
+  },
+  "n_pockets": 3,
+  "n_sampled": 3,
+  "timing": [
+    {
+      "pdb_code": "CHIB_SERMA_1_499_0",
+      "n_valid": 0,
+      "n_total": 50,
+      "elapsed_s": 4248.2,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "MENE_BACSU_2_486_0",
+      "n_valid": 2,
+      "n_total": 50,
+      "elapsed_s": 6727.8,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "SIR3_HUMAN_117_398_0",
+      "n_valid": 0,
+      "n_total": 50,
+      "elapsed_s": 2343.7,
+      "emb_shape": [
+        50,
+        128
+      ]
+    }
+  ]
+}

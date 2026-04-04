@@ -1,0 +1,6 @@
+2026-03-27 18:33:47,320 INFO === Strategy: skip_0_9 ===
+2026-03-27 18:33:48,503 INFO   Features: 256 (skip: layer 0 + last), shape=(17, 256)
+2026-03-27 18:33:48,503 INFO   Running analytic LOOCV ...
+2026-03-27 18:33:56,111 INFO   LOOCV: RMSE=2.733, ρ=-0.441, R²=-0.227
+2026-03-27 18:33:56,111 INFO   Running 50× splits ...
+2026-03-27 18:34:24,318 INFO   Saved → /scratch/yd2915/BayesDiff/results/tier3_gp/p0pp_partial_skip_0_9.json

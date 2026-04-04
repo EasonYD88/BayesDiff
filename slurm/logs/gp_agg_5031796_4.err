@@ -1,0 +1,11 @@
+2026-03-27 14:43:20,751 INFO === Strategy: attn_norm (dim=128) ===
+2026-03-27 14:43:30,054 INFO   shape=(942, 128), non-zero features=128, valid=True
+2026-03-27 14:43:30,054 INFO   Running analytic LOOCV ...
+2026-03-27 14:43:43,140 INFO   LOOCV: RMSE=1.947, ρ=0.373, R²=0.122
+2026-03-27 14:43:43,140 INFO   Running 50× repeated splits ...
+2026-03-27 14:44:17,312 INFO   50x: RMSE=1.957±0.072, ρ=0.375±0.045
+2026-03-27 14:44:17,312 INFO   Running 30× TVT splits ...
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-27 14:44:37,286 INFO   TVT: Test ρ=0.369±0.053
+2026-03-27 14:44:37,294 INFO   Saved → /scratch/yd2915/BayesDiff/results/tier3_gp/p0plus_partial_attn_norm.json

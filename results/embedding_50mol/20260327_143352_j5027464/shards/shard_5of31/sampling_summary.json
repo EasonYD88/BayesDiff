@@ -1,0 +1,47 @@
+{
+  "args": {
+    "pocket_list": "/state/partition1/job-5032007/bayesdiff_shard_x7jr9ryo/pockets_shard.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 50,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/embedding_50mol/20260327_143352_j5027464/shards/shard_5of31",
+    "num_steps": 1000
+  },
+  "n_pockets": 3,
+  "n_sampled": 3,
+  "timing": [
+    {
+      "pdb_code": "ATS5_HUMAN_262_480_0",
+      "n_valid": 0,
+      "n_total": 50,
+      "elapsed_s": 1870.3,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "GRK4_HUMAN_1_578_0",
+      "n_valid": 39,
+      "n_total": 50,
+      "elapsed_s": 8937.3,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PHKG1_RABIT_6_296_ATPsite_0",
+      "n_valid": 0,
+      "n_total": 50,
+      "elapsed_s": 2455.9,
+      "emb_shape": [
+        50,
+        128
+      ]
+    }
+  ]
+}

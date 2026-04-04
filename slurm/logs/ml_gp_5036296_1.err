@@ -1,0 +1,6 @@
+2026-03-27 18:24:26,094 INFO === Strategy: layer_1 ===
+2026-03-27 18:24:27,677 INFO   Features: 128 (layer 1), shape=(17, 128)
+2026-03-27 18:24:27,677 INFO   Running analytic LOOCV ...
+2026-03-27 18:24:34,650 INFO   LOOCV: RMSE=2.758, ρ=-0.194, R²=-0.249
+2026-03-27 18:24:34,650 INFO   Running 50× splits ...
+2026-03-27 18:25:02,828 INFO   Saved → /scratch/yd2915/BayesDiff/results/tier3_gp/p0pp_partial_layer_1.json

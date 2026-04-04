@@ -1,0 +1,5 @@
+2026-03-30 11:24:44 | unimol_tools/models/unimol.py | 167 | INFO | Uni-Mol Tools | Loading pretrained weights from /scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/unimol_tools/weights/mol_pre_all_h_220816.pt
+2026-03-30 11:24:47 | unimol_tools/data/conformer.py | 182 | INFO | Uni-Mol Tools | Start generating conformers...
+2026-03-30 11:24:48 | unimol_tools/data/conformer.py | 197 | INFO | Uni-Mol Tools | Succeeded in generating conformers for 100.00% of molecules.
+2026-03-30 11:24:48 | unimol_tools/data/conformer.py | 214 | INFO | Uni-Mol Tools | Succeeded in generating 3d conformers for 100.00% of molecules.
+2026-03-30 11:24:48 | unimol_tools/tasks/trainer.py | 103 | INFO | Uni-Mol Tools | Using CPU.

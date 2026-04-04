@@ -1,0 +1,47 @@
+{
+  "args": {
+    "pocket_list": "/state/partition1/job-5042578/bayesdiff_shard_8mcj2p2y/pockets_shard.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 50,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/embedding_50mol/20260327_190507_j5027464/shards/shard_14of31",
+    "num_steps": 1000
+  },
+  "n_pockets": 3,
+  "n_sampled": 3,
+  "timing": [
+    {
+      "pdb_code": "CCPR_YEAST_69_361_0",
+      "n_valid": 10,
+      "n_total": 50,
+      "elapsed_s": 3134.7,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "KS6A3_HUMAN_41_357_0",
+      "n_valid": 0,
+      "n_total": 50,
+      "elapsed_s": 2493.2,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "QPCT_HUMAN_33_361_0",
+      "n_valid": 0,
+      "n_total": 50,
+      "elapsed_s": 2841.1,
+      "emb_shape": [
+        50,
+        128
+      ]
+    }
+  ]
+}

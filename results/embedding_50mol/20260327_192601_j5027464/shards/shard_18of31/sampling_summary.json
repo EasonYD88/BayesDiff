@@ -1,0 +1,47 @@
+{
+  "args": {
+    "pocket_list": "/state/partition1/job-5043328/bayesdiff_shard_vxeyz__s/pockets_shard.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 50,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/embedding_50mol/20260327_192601_j5027464/shards/shard_18of31",
+    "num_steps": 1000
+  },
+  "n_pockets": 3,
+  "n_sampled": 3,
+  "timing": [
+    {
+      "pdb_code": "CHIB1_ASPFM_39_433_0",
+      "n_valid": 1,
+      "n_total": 50,
+      "elapsed_s": 3325.4,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "MCCF_ECOLX_1_344_0",
+      "n_valid": 17,
+      "n_total": 50,
+      "elapsed_s": 5765.2,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "SDIA_ECOLI_1_171_0",
+      "n_valid": 10,
+      "n_total": 50,
+      "elapsed_s": 4204.9,
+      "emb_shape": [
+        50,
+        128
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+2026-03-27 18:30:50,576 INFO === Strategy: last_3 ===
+2026-03-27 18:30:51,781 INFO   Features: 384 (last 3 layers) → PCA(16, 100.0% var), shape=(17, 16)
+2026-03-27 18:30:51,781 INFO   Running analytic LOOCV ...
+2026-03-27 18:30:59,020 INFO   LOOCV: RMSE=2.775, ρ=-1.000, R²=-0.264
+2026-03-27 18:30:59,020 INFO   Running 50× splits ...
+/scratch/yd2915/BayesDiff/scripts/23_train_gp_multilayer.py:96: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+  rho, p = stats.spearmanr(y_true, y_pred)
+2026-03-27 18:31:27,024 INFO   Saved → /scratch/yd2915/BayesDiff/results/tier3_gp/p0pp_partial_last_3.json

@@ -1,0 +1,6 @@
+2026-03-27 18:30:52,919 INFO === Strategy: last_2 ===
+2026-03-27 18:30:55,634 INFO   Features: 256 (last 2 layers), shape=(17, 256)
+2026-03-27 18:30:55,634 INFO   Running analytic LOOCV ...
+2026-03-27 18:31:08,507 INFO   LOOCV: RMSE=2.782, ρ=-0.395, R²=-0.271
+2026-03-27 18:31:08,507 INFO   Running 50× splits ...
+2026-03-27 18:31:36,573 INFO   Saved → /scratch/yd2915/BayesDiff/results/tier3_gp/p0pp_partial_last_2.json

@@ -1,0 +1,85 @@
+=== SchNet Extraction + Comparison Update ===
+Date: Mon Mar 30 14:18:19 EDT 2026
+Node: cs686.hpc.nyu.edu
+=== Phase 1: SchNet extraction ===
+2026-03-30 14:18:44,625 INFO Loading SchNet pre-trained model...
+Traceback (most recent call last):
+  File "/scratch/yd2915/BayesDiff/scripts/26c_extract_schnet.py", line 227, in <module>
+    main()
+  File "/scratch/yd2915/BayesDiff/scripts/26c_extract_schnet.py", line 172, in main
+    model = load_schnet_pretrained()
+  File "/scratch/yd2915/BayesDiff/scripts/26c_extract_schnet.py", line 64, in load_schnet_pretrained
+    import schnetpack  # noqa: F401
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/schnetpack/__init__.py", line 7, in <module>
+    from schnetpack import data
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/schnetpack/data/__init__.py", line 5, in <module>
+    from .datamodule import *
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/schnetpack/data/datamodule.py", line 8, in <module>
+    import pytorch_lightning as pl
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/pytorch_lightning/__init__.py", line 27, in <module>
+    from pytorch_lightning.callbacks import Callback  # noqa: E402
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/pytorch_lightning/callbacks/__init__.py", line 14, in <module>
+    from pytorch_lightning.callbacks.batch_size_finder import BatchSizeFinder
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/pytorch_lightning/callbacks/batch_size_finder.py", line 26, in <module>
+    from pytorch_lightning.callbacks.callback import Callback
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/pytorch_lightning/callbacks/callback.py", line 22, in <module>
+    from pytorch_lightning.utilities.types import STEP_OUTPUT
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/pytorch_lightning/utilities/types.py", line 36, in <module>
+    from torchmetrics import Metric
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torchmetrics/__init__.py", line 37, in <module>
+    from torchmetrics import functional  # noqa: E402
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torchmetrics/functional/__init__.py", line 56, in <module>
+    from torchmetrics.functional.image._deprecated import (
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torchmetrics/functional/image/__init__.py", line 14, in <module>
+    from torchmetrics.functional.image.arniqa import arniqa
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/torchmetrics/functional/image/arniqa.py", line 32, in <module>
+    from torchvision.models import resnet50
+ModuleNotFoundError: No module named 'torchvision.models'; 'torchvision' is not a package
+SchNet exit code: 1
+=== Phase 2: Update comparison ===
+2026-03-30 14:19:21,412 INFO 
+============================================================
+2026-03-30 14:19:21,413 INFO Evaluating 17 embedding configurations
+2026-03-30 14:19:21,413 INFO ============================================================
+
+2026-03-30 14:19:21,413 INFO Evaluating Encoder-128 (baseline): X=(942, 128), y=(942,)
+2026-03-30 14:19:28,859 INFO   LOOCV: RMSE=1.950, ρ=0.367, R²=0.119
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+[2026-03-30T14:20:33.078] error: *** JOB 5128554 ON cs686 CANCELLED AT 2026-03-30T14:20:33 DUE to SIGNAL Terminated ***

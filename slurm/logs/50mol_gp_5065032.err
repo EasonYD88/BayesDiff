@@ -1,0 +1,108 @@
+2026-03-29 01:19:07,997 INFO ============================================================
+2026-03-29 01:19:07,998 INFO Phase 0: Loading model
+2026-03-29 01:19:33,352 INFO Model loaded: hidden_dim=128, device=cuda
+2026-03-29 01:19:33,354 INFO ============================================================
+2026-03-29 01:19:33,354 INFO Phase 1: Collecting SDF paths from shards
+2026-03-29 01:19:33,510 INFO Found 31 shard directories
+2026-03-29 01:19:33,516 WARNING   ABL2_HUMAN_274_551_0: SDF missing or empty
+2026-03-29 01:19:33,528 WARNING   EXG1_CANAL_41_438_0: SDF missing or empty
+2026-03-29 01:19:33,535 WARNING   AK1BA_HUMAN_1_316_0: SDF missing or empty
+2026-03-29 01:19:33,539 WARNING   PA2B8_DABRR_1_121_0: SDF missing or empty
+2026-03-29 01:19:33,547 WARNING   FKB1A_HUMAN_2_108_0: SDF missing or empty
+2026-03-29 01:19:33,554 WARNING   AROE_THET8_1_263_0: SDF missing or empty
+2026-03-29 01:19:33,556 WARNING   GLMU_STRPN_2_459_0: SDF missing or empty
+2026-03-29 01:19:33,568 WARNING   ATS5_HUMAN_262_480_0: SDF missing or empty
+2026-03-29 01:19:33,573 WARNING   PHKG1_RABIT_6_296_ATPsite_0: SDF missing or empty
+2026-03-29 01:19:33,579 WARNING   BACE2_HUMAN_76_460_0: SDF missing or empty
+2026-03-29 01:19:33,591 WARNING   GUX1_HYPJE_18_451_0: SDF missing or empty
+2026-03-29 01:19:33,597 WARNING   BAZ2A_HUMAN_1795_1898_0: SDF missing or empty
+2026-03-29 01:19:33,600 WARNING   HDAC8_HUMAN_1_377_0: SDF missing or empty
+2026-03-29 01:19:33,608 WARNING   BGAT_HUMAN_63_353_0: SDF missing or empty
+2026-03-29 01:19:33,612 WARNING   POL_FOAMV_861_1060_0: SDF missing or empty
+2026-03-29 01:19:33,618 WARNING   BGL07_ORYSJ_25_504_0: SDF missing or empty
+2026-03-29 01:19:33,619 WARNING   HMD_METJA_1_358_0: SDF missing or empty
+2026-03-29 01:19:33,621 WARNING   PPIA_HUMAN_1_165_0: SDF missing or empty
+2026-03-29 01:19:33,630 WARNING   PTGIS_HUMAN_20_500_0: SDF missing or empty
+2026-03-29 01:19:33,640 WARNING   PYRD_TRYCC_2_314_catalytic_0: SDF missing or empty
+2026-03-29 01:19:33,646 WARNING   CAT_ECOLX_1_219_0: SDF missing or empty
+2026-03-29 01:19:33,649 WARNING   IPMK_HUMAN_49_416_0: SDF missing or empty
+2026-03-29 01:19:33,659 WARNING   KS6A3_HUMAN_41_357_0: SDF missing or empty
+2026-03-29 01:19:33,661 WARNING   QPCT_HUMAN_33_361_0: SDF missing or empty
+2026-03-29 01:19:33,670 WARNING   RG1_RAUSE_1_513_0: SDF missing or empty
+2026-03-29 01:19:33,681 WARNING   RIBB_VIBCH_2_218_0: SDF missing or empty
+2026-03-29 01:19:33,689 WARNING   M3K14_HUMAN_321_678_0: SDF missing or empty
+2026-03-29 01:19:33,691 WARNING   ROCO4_DICDI_1009_1292_0: SDF missing or empty
+2026-03-29 01:19:33,707 WARNING   CHIB_SERMA_1_499_0: SDF missing or empty
+2026-03-29 01:19:33,712 WARNING   SIR3_HUMAN_117_398_0: SDF missing or empty
+2026-03-29 01:19:33,719 WARNING   MURA_ECOLI_1_419_catalytic_0: SDF missing or empty
+2026-03-29 01:19:33,727 WARNING   NAGZ_VIBCH_1_330_0: SDF missing or empty
+2026-03-29 01:19:33,728 WARNING   TBK1_HUMAN_1_303_0: SDF missing or empty
+2026-03-29 01:19:33,734 WARNING   CONA_CANCT_1_237_0: SDF missing or empty
+2026-03-29 01:19:33,739 WARNING   TIAM1_HUMAN_840_931_0: SDF missing or empty
+2026-03-29 01:19:33,745 WARNING   COTA_BACSU_1_513_0: SDF missing or empty
+2026-03-29 01:19:33,747 WARNING   NOS1_HUMAN_302_723_0: SDF missing or empty
+2026-03-29 01:19:33,749 WARNING   TNKS1_HUMAN_1099_1319_0: SDF missing or empty
+2026-03-29 01:19:33,757 WARNING   NOS2_HUMAN_78_505_0: SDF missing or empty
+2026-03-29 01:19:33,760 WARNING   TNKS2_HUMAN_948_1162_0: SDF missing or empty
+2026-03-29 01:19:33,770 WARNING   TRAR_RHIRD_1_234_0: SDF missing or empty
+2026-03-29 01:19:33,777 WARNING   NPD_THEMA_1_246_0: SDF missing or empty
+2026-03-29 01:19:33,779 WARNING   UBE2T_HUMAN_1_156_0: SDF missing or empty
+2026-03-29 01:19:33,784 WARNING   DIDH_RAT_1_319_0: SDF missing or empty
+2026-03-29 01:19:33,788 WARNING   NQO1_HUMAN_2_274_0: SDF missing or empty
+2026-03-29 01:19:33,790 WARNING   UPPS_ECOLI_1_253_0: SDF missing or empty
+2026-03-29 01:19:33,798 WARNING   NR1H4_HUMAN_258_486_0: SDF missing or empty
+2026-03-29 01:19:33,799 WARNING   VAOX_PENSI_1_560_0: SDF missing or empty
+2026-03-29 01:19:33,806 WARNING   ODBB_THET8_1_324_0: SDF missing or empty
+2026-03-29 01:19:33,814 WARNING   OLIAC_CANSA_1_101_0: SDF missing or empty
+2026-03-29 01:19:33,816 INFO Found 39 pockets with valid SDF files
+2026-03-29 01:19:33,816 INFO ============================================================
+2026-03-29 01:19:33,816 INFO Phase 2: Extracting encoder embeddings
+2026-03-29 01:19:33,870 ERROR [1] ACE_HUMAN_650_1230_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:33,903 ERROR [2] AKT1_HUMAN_1_137_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,006 ERROR [3] BAPA_SPHXN_30_402_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,045 ERROR [4] BSD_ASPTE_1_130_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,072 ERROR [5] BTRN_BACCI_2_250_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,104 ERROR [6] CCPR_YEAST_69_361_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,130 ERROR [7] CD38_HUMAN_44_300_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,170 ERROR [8] CDK6_HUMAN_1_312_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,241 ERROR [9] CHIA_SERMA_19_563_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,277 ERROR [10] CHIB1_ASPFM_39_433_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,315 ERROR [11] CHOD_BREST_46_552_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,362 ERROR [12] COAA_MYCTU_1_312_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,402 ERROR [13] CPXB_BACMB_2_464_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,432 ERROR [14] DFPA_LOLVU_2_314_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,479 ERROR [15] DHAK_ECOLI_1_356_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,511 ERROR [16] DPO4_SULSO_1_347_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,571 ERROR [17] DPP2_HUMAN_27_492_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,611 ERROR [18] DYRK2_HUMAN_145_550_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,644 ERROR [19] EFTU1_ECOLI_2_178_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,727 ERROR [20] F16P1_HUMAN_1_338_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,795 ERROR [21] GRK4_HUMAN_1_578_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,829 ERROR [22] GSTP1_HUMAN_2_210_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,897 ERROR [23] HDHA_ECOLI_1_255_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,957 ERROR [24] IDHP_HUMAN_40_452_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:34,993 ERROR [25] IMA1_HUMAN_68_497_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,052 ERROR [26] LAT_MYCTU_1_449_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,084 ERROR [27] LMBL1_HUMAN_198_526_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,132 ERROR [28] MCCF_ECOLX_1_344_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,186 ERROR [29] MENE_BACSU_2_486_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,237 ERROR [30] NEP_HUMAN_54_750_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,293 ERROR [31] NOS3_HUMAN_65_480_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,328 ERROR [32] P2Y12_HUMAN_1_342_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,347 ERROR [33] PA21B_PIG_23_146_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,399 ERROR [34] PAC_ECOLX_27_846_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,447 ERROR [35] PHP_SULSO_1_314_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,485 ERROR [36] PNTM_STRAE_2_398_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,520 ERROR [37] PYRE_BACAN_1_210_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,563 ERROR [38] SDIA_ECOLI_1_171_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,606 ERROR [39] Y635_MYCTU_1_158_0: FAILED - Type must be a sub-type of ndarray type
+2026-03-29 01:19:35,607 INFO 
+Extraction done: 0 pockets, 39 failed
+Traceback (most recent call last):
+  File "/scratch/yd2915/BayesDiff/scripts/29_extract_50mol_embeddings.py", line 355, in <module>
+    main()
+  File "/scratch/yd2915/BayesDiff/scripts/29_extract_50mol_embeddings.py", line 283, in main
+    X_perpocket = np.stack([all_embeddings[f].mean(axis=0) for f in families])
+  File "/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/numpy/_core/shape_base.py", line 456, in stack
+    raise ValueError('need at least one array to stack')
+ValueError: need at least one array to stack

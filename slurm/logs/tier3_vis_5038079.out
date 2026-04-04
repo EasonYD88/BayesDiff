@@ -1,0 +1,54 @@
+Device: cpu
+Loading Tier 3 data...
+FCFP4 dataset: 932 pockets, 2048-dim
+Encoder dataset: 942 pockets, 128-dim
+pKd range: [1.28, 15.22], mean=7.08±2.08
+
+FCFP4 split: Train=559, Val=186, Test=187
+Encoder split: Train=565, Val=188, Test=189
+
+--- Training FCFP4 GP (200 epochs) ---
+  Final loss: 2.160
+
+--- Training Encoder GP (200 epochs) ---
+  Final loss: 2.108
+
+--- 10× Repeated splits (FCFP4) ---
+  Run 5/10
+  Run 10/10
+--- 10× Repeated splits (Encoder) ---
+  Run 5/10
+  Run 10/10
+
+Generating Figure 1: Training Curves...
+  ✓ 01_training_curves.png
+Generating Figure 2: Learning Curves (RMSE/ρ/R² vs Epoch)...
+  ✓ 02_learning_curves.png
+Generating Figure 3: Data Distribution Analysis...
+  ✓ 03_data_distribution.png
+Generating Figure 4: Train/Val/Test Scatter Plots...
+  ✓ 04_scatter_tvt.png
+Generating Figure 5: Model Comparison Dashboard...
+  ✓ 05_model_comparison.png
+Generating Figure 6: Residual & Calibration Analysis...
+  ✓ 06_residual_calibration.png
+Generating Figure 7: Summary Table...
+  ✓ 07_summary.png
+
+✓ Results saved to /scratch/yd2915/BayesDiff/results/tier3_gp/figures/tier3_analysis/tier3_analysis_results.json
+
+============================================================
+All 7 figures saved to: /scratch/yd2915/BayesDiff/results/tier3_gp/figures/tier3_analysis
+============================================================
+
+=== Quick Summary ===
+Model           Split        RMSE        ρ       R²
+--------------------------------------------------
+FCFP4-2048      train       1.247    0.983    0.626
+FCFP4-2048      val         2.003    0.176    0.017
+FCFP4-2048      test        2.245    0.082    0.012
+
+Encoder-128     train       1.277    0.903    0.621
+Encoder-128     val         1.802    0.287    0.052
+Encoder-128     test        2.167    0.347    0.098
+

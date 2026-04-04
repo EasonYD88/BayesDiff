@@ -1,0 +1,22 @@
+{
+  "strategy": "last_3",
+  "dim": 16,
+  "orig_dim": 384,
+  "dim_desc": "384 (last 3 layers) \u2192 PCA(16, 100.0% var)",
+  "pca_applied": true,
+  "n_pockets": 17,
+  "loocv": {
+    "rmse": 2.7748455606257862,
+    "rho": -1.0,
+    "p_value": 0.0,
+    "r2": -0.26427442278259217
+  },
+  "splits_50x": {
+    "rmse_mean": 2.521792761004737,
+    "rmse_std": 0.8884068662500726,
+    "rho_mean": null,
+    "rho_std": null,
+    "r2_mean": -0.9398712867380101,
+    "r2_std": 1.5934265448618512
+  }
+}

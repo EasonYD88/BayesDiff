@@ -1,0 +1,46 @@
+2026-03-27 18:34:42,846 INFO   Loaded layer_0: LOOCV ρ=-0.005
+2026-03-27 18:34:42,856 INFO   Loaded layer_1: LOOCV ρ=-0.194
+2026-03-27 18:34:42,866 INFO   Loaded layer_2: LOOCV ρ=-0.257
+2026-03-27 18:34:42,875 INFO   Loaded layer_3: LOOCV ρ=-0.373
+2026-03-27 18:34:42,886 INFO   Loaded layer_4: LOOCV ρ=-0.375
+2026-03-27 18:34:42,895 INFO   Loaded layer_5: LOOCV ρ=-0.368
+2026-03-27 18:34:42,902 INFO   Loaded layer_6: LOOCV ρ=-0.311
+2026-03-27 18:34:42,908 INFO   Loaded layer_7: LOOCV ρ=-0.409
+2026-03-27 18:34:42,917 INFO   Loaded layer_8: LOOCV ρ=-0.343
+2026-03-27 18:34:42,923 INFO   Loaded layer_9: LOOCV ρ=-0.380
+2026-03-27 18:34:42,931 INFO   Loaded last_2: LOOCV ρ=-0.395
+2026-03-27 18:34:42,944 INFO   Loaded last_3: LOOCV ρ=-1.000
+2026-03-27 18:34:42,955 INFO   Loaded last_4: LOOCV ρ=-1.000
+2026-03-27 18:34:42,962 INFO   Loaded last_5: LOOCV ρ=-1.000
+2026-03-27 18:34:42,969 INFO   Loaded concat_all: LOOCV ρ=-1.000
+2026-03-27 18:34:42,973 INFO   Loaded avg_all: LOOCV ρ=-0.365
+2026-03-27 18:34:42,980 INFO   Loaded weighted_avg: LOOCV ρ=-0.341
+2026-03-27 18:34:42,985 INFO   Loaded skip_0_9: LOOCV ρ=-0.441
+2026-03-27 18:34:43,763 INFO 
+================================================================================
+2026-03-27 18:34:43,763 INFO P0++ SUMMARY: Multi-Layer Embedding Comparison
+2026-03-27 18:34:43,763 INFO ================================================================================
+2026-03-27 18:34:43,763 INFO Strategy           Dim    RMSE       ρ      R²         50x ρ
+2026-03-27 18:34:43,763 INFO -----------------------------------------------------------------
+2026-03-27 18:34:43,763 INFO layer_0            128   2.636  -0.005  -0.141  0.371±0.383
+2026-03-27 18:34:43,763 INFO layer_1            128   2.758  -0.194  -0.249  0.293±0.404
+2026-03-27 18:34:43,763 INFO layer_2            128   2.768  -0.257  -0.258  0.211±0.446
+2026-03-27 18:34:43,763 INFO layer_6            128   2.797  -0.311  -0.285  -0.042±0.309
+2026-03-27 18:34:43,763 INFO weighted_avg       128   2.791  -0.341  -0.279  0.017±0.314
+2026-03-27 18:34:43,763 INFO layer_8            128   2.792  -0.343  -0.280  0.016±0.315
+2026-03-27 18:34:43,763 INFO avg_all            128   2.786  -0.365  -0.275  0.030±0.319
+2026-03-27 18:34:43,763 INFO layer_5            128   2.787  -0.368  -0.275  -0.003±0.348
+2026-03-27 18:34:43,763 INFO layer_3            128   2.781  -0.373  -0.270  0.088±0.406
+2026-03-27 18:34:43,763 INFO layer_4            128   2.783  -0.375  -0.272  -0.001±0.349
+2026-03-27 18:34:43,763 INFO layer_9            128   2.795  -0.380  -0.283  0.000±0.344
+2026-03-27 18:34:43,763 INFO last_2             256   2.782  -0.395  -0.271  -0.006±0.334
+2026-03-27 18:34:43,763 INFO layer_7            128   2.802  -0.409  -0.289  -0.082±0.339
+2026-03-27 18:34:43,763 INFO skip_0_9           256   2.733  -0.441  -0.227  0.186±0.395
+Traceback (most recent call last):
+  File "/scratch/yd2915/BayesDiff/scripts/23_train_gp_multilayer.py", line 453, in <module>
+    main()
+  File "/scratch/yd2915/BayesDiff/scripts/23_train_gp_multilayer.py", line 197, in main
+    merge_results(strategy_list)
+  File "/scratch/yd2915/BayesDiff/scripts/23_train_gp_multilayer.py", line 442, in merge_results
+    logger.info(f"{name:<15} {data['dim']:>6} {data['loocv']['rmse']:>7.3f} "
+TypeError: unsupported format string passed to NoneType.__format__

@@ -1,0 +1,8 @@
+2026-03-27 18:32:14,308 INFO === Strategy: concat_all ===
+2026-03-27 18:32:15,846 INFO   Features: 1280 (all layers) → PCA(16, 100.0% var), shape=(17, 16)
+2026-03-27 18:32:15,847 INFO   Running analytic LOOCV ...
+2026-03-27 18:32:23,462 INFO   LOOCV: RMSE=2.775, ρ=-1.000, R²=-0.264
+2026-03-27 18:32:23,463 INFO   Running 50× splits ...
+/scratch/yd2915/BayesDiff/scripts/23_train_gp_multilayer.py:96: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+  rho, p = stats.spearmanr(y_true, y_pred)
+2026-03-27 18:32:51,838 INFO   Saved → /scratch/yd2915/BayesDiff/results/tier3_gp/p0pp_partial_concat_all.json

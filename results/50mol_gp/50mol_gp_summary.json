@@ -1,0 +1,20 @@
+{
+  "dataset": "combined_128",
+  "N": 947,
+  "D": 128,
+  "best_config": {
+    "kernel": "rq",
+    "pca_dims": 0,
+    "ard": true
+  },
+  "best_loocv_rho": 0.40307432190694104,
+  "best_loocv_rmse": 1.915320654079071,
+  "best_loocv_r2": 0.14880486610242805,
+  "best_10x_test_rho": 0.31477072684889773,
+  "best_overfit_gap": 0.607038850763255,
+  "n_grid_configs": 40,
+  "n_bo_trials": 200,
+  "n_ablations": 12,
+  "elapsed_seconds": 1019.902930021286,
+  "device": "cuda"
+}

@@ -1,0 +1,234 @@
+2026-03-30 11:26:34,547 INFO ============================================================
+2026-03-30 11:26:34,548 INFO Phase 0: Loading model
+2026-03-30 11:26:59,799 INFO Model loaded: hidden_dim=128, device=cuda
+2026-03-30 11:26:59,800 INFO ============================================================
+2026-03-30 11:26:59,800 INFO Phase 1: Collecting SDF paths from shards
+2026-03-30 11:26:59,920 INFO Found 31 shard directories
+2026-03-30 11:26:59,924 WARNING   ABL2_HUMAN_274_551_0: SDF missing or empty
+2026-03-30 11:26:59,933 WARNING   EXG1_CANAL_41_438_0: SDF missing or empty
+2026-03-30 11:26:59,939 WARNING   AK1BA_HUMAN_1_316_0: SDF missing or empty
+2026-03-30 11:26:59,942 WARNING   PA2B8_DABRR_1_121_0: SDF missing or empty
+2026-03-30 11:26:59,948 WARNING   FKB1A_HUMAN_2_108_0: SDF missing or empty
+2026-03-30 11:26:59,954 WARNING   AROE_THET8_1_263_0: SDF missing or empty
+2026-03-30 11:26:59,955 WARNING   GLMU_STRPN_2_459_0: SDF missing or empty
+2026-03-30 11:26:59,959 WARNING   ATS5_HUMAN_262_480_0: SDF missing or empty
+2026-03-30 11:26:59,963 WARNING   PHKG1_RABIT_6_296_ATPsite_0: SDF missing or empty
+2026-03-30 11:26:59,968 WARNING   BACE2_HUMAN_76_460_0: SDF missing or empty
+2026-03-30 11:26:59,977 WARNING   GUX1_HYPJE_18_451_0: SDF missing or empty
+2026-03-30 11:26:59,981 WARNING   BAZ2A_HUMAN_1795_1898_0: SDF missing or empty
+2026-03-30 11:26:59,983 WARNING   HDAC8_HUMAN_1_377_0: SDF missing or empty
+2026-03-30 11:26:59,989 WARNING   BGAT_HUMAN_63_353_0: SDF missing or empty
+2026-03-30 11:26:59,992 WARNING   POL_FOAMV_861_1060_0: SDF missing or empty
+2026-03-30 11:26:59,996 WARNING   BGL07_ORYSJ_25_504_0: SDF missing or empty
+2026-03-30 11:26:59,998 WARNING   HMD_METJA_1_358_0: SDF missing or empty
+2026-03-30 11:26:59,999 WARNING   PPIA_HUMAN_1_165_0: SDF missing or empty
+2026-03-30 11:27:00,005 WARNING   PTGIS_HUMAN_20_500_0: SDF missing or empty
+2026-03-30 11:27:00,013 WARNING   PYRD_TRYCC_2_314_catalytic_0: SDF missing or empty
+2026-03-30 11:27:00,018 WARNING   CAT_ECOLX_1_219_0: SDF missing or empty
+2026-03-30 11:27:00,019 WARNING   IPMK_HUMAN_49_416_0: SDF missing or empty
+2026-03-30 11:27:00,026 WARNING   KS6A3_HUMAN_41_357_0: SDF missing or empty
+2026-03-30 11:27:00,028 WARNING   QPCT_HUMAN_33_361_0: SDF missing or empty
+2026-03-30 11:27:00,035 WARNING   RG1_RAUSE_1_513_0: SDF missing or empty
+2026-03-30 11:27:00,042 WARNING   RIBB_VIBCH_2_218_0: SDF missing or empty
+2026-03-30 11:27:00,048 WARNING   M3K14_HUMAN_321_678_0: SDF missing or empty
+2026-03-30 11:27:00,049 WARNING   ROCO4_DICDI_1009_1292_0: SDF missing or empty
+2026-03-30 11:27:00,060 WARNING   CHIB_SERMA_1_499_0: SDF missing or empty
+2026-03-30 11:27:00,063 WARNING   SIR3_HUMAN_117_398_0: SDF missing or empty
+2026-03-30 11:27:00,069 WARNING   MURA_ECOLI_1_419_catalytic_0: SDF missing or empty
+2026-03-30 11:27:00,074 WARNING   NAGZ_VIBCH_1_330_0: SDF missing or empty
+2026-03-30 11:27:00,075 WARNING   TBK1_HUMAN_1_303_0: SDF missing or empty
+2026-03-30 11:27:00,080 WARNING   CONA_CANCT_1_237_0: SDF missing or empty
+2026-03-30 11:27:00,083 WARNING   TIAM1_HUMAN_840_931_0: SDF missing or empty
+2026-03-30 11:27:00,088 WARNING   COTA_BACSU_1_513_0: SDF missing or empty
+2026-03-30 11:27:00,089 WARNING   NOS1_HUMAN_302_723_0: SDF missing or empty
+2026-03-30 11:27:00,091 WARNING   TNKS1_HUMAN_1099_1319_0: SDF missing or empty
+2026-03-30 11:27:00,097 WARNING   NOS2_HUMAN_78_505_0: SDF missing or empty
+2026-03-30 11:27:00,099 WARNING   TNKS2_HUMAN_948_1162_0: SDF missing or empty
+2026-03-30 11:27:00,106 WARNING   TRAR_RHIRD_1_234_0: SDF missing or empty
+2026-03-30 11:27:00,112 WARNING   NPD_THEMA_1_246_0: SDF missing or empty
+2026-03-30 11:27:00,114 WARNING   UBE2T_HUMAN_1_156_0: SDF missing or empty
+2026-03-30 11:27:00,118 WARNING   DIDH_RAT_1_319_0: SDF missing or empty
+2026-03-30 11:27:00,119 WARNING   NQO1_HUMAN_2_274_0: SDF missing or empty
+2026-03-30 11:27:00,121 WARNING   UPPS_ECOLI_1_253_0: SDF missing or empty
+2026-03-30 11:27:00,127 WARNING   NR1H4_HUMAN_258_486_0: SDF missing or empty
+2026-03-30 11:27:00,128 WARNING   VAOX_PENSI_1_560_0: SDF missing or empty
+2026-03-30 11:27:00,133 WARNING   ODBB_THET8_1_324_0: SDF missing or empty
+2026-03-30 11:27:00,139 WARNING   OLIAC_CANSA_1_101_0: SDF missing or empty
+2026-03-30 11:27:00,140 INFO Found 39 pockets with valid SDF files
+2026-03-30 11:27:00,141 INFO ============================================================
+2026-03-30 11:27:00,141 INFO Phase 2: Extracting encoder embeddings
+2026-03-30 11:27:03,832 INFO [1/39] ACE_HUMAN_650_1230_0: 21 mols → emb (21, 128), norm=4.9777, 3.7s
+2026-03-30 11:27:04,692 INFO [2/39] AKT1_HUMAN_1_137_0: 11 mols → emb (11, 128), norm=5.2880, 0.9s
+2026-03-30 11:27:12,535 INFO [3/39] BAPA_SPHXN_30_402_0: 30 mols → emb (30, 128), norm=5.3044, 7.8s
+2026-03-30 11:27:12,847 INFO [4/39] BSD_ASPTE_1_130_0: 3 mols → emb (3, 128), norm=5.8166, 0.3s
+2026-03-30 11:27:12,997 INFO [5/39] BTRN_BACCI_2_250_0: 1 mols → emb (1, 128), norm=5.2022, 0.1s
+2026-03-30 11:27:13,751 INFO [6/39] CCPR_YEAST_69_361_0: 10 mols → emb (10, 128), norm=5.4290, 0.8s
+2026-03-30 11:27:15,668 INFO [7/39] CD38_HUMAN_44_300_0: 37 mols → emb (37, 128), norm=4.7237, 1.9s
+2026-03-30 11:27:15,818 INFO [8/39] CDK6_HUMAN_1_312_0: 1 mols → emb (1, 128), norm=5.6365, 0.1s
+2026-03-30 11:27:24,303 INFO [9/39] CHIA_SERMA_19_563_0: 42 mols → emb (42, 128), norm=5.3441, 8.5s
+2026-03-30 11:27:24,420 INFO [10/39] CHIB1_ASPFM_39_433_0: 1 mols → emb (1, 128), norm=5.4062, 0.1s
+2026-03-30 11:27:28,515 INFO [11/39] CHOD_BREST_46_552_0: 44 mols → emb (44, 128), norm=5.2419, 4.1s
+2026-03-30 11:27:34,010 INFO [12/39] COAA_MYCTU_1_312_0: 45 mols → emb (45, 128), norm=5.0617, 5.5s
+2026-03-30 11:27:36,046 INFO [13/39] CPXB_BACMB_2_464_0: 22 mols → emb (22, 128), norm=5.4203, 2.0s
+2026-03-30 11:27:36,445 INFO [14/39] DFPA_LOLVU_2_314_0: 6 mols → emb (6, 128), norm=5.2992, 0.4s
+2026-03-30 11:27:41,431 INFO [15/39] DHAK_ECOLI_1_356_0: 39 mols → emb (39, 128), norm=5.3968, 5.0s
+2026-03-30 11:27:43,955 INFO [16/39] DPO4_SULSO_1_347_0: 38 mols → emb (38, 128), norm=5.2781, 2.5s
+2026-03-30 11:27:46,231 INFO [17/39] DPP2_HUMAN_27_492_0: 13 mols → emb (13, 128), norm=5.1972, 2.3s
+2026-03-30 11:27:46,895 INFO [18/39] DYRK2_HUMAN_145_550_0: 8 mols → emb (8, 128), norm=5.0852, 0.7s
+2026-03-30 11:27:49,362 INFO [19/39] EFTU1_ECOLI_2_178_0: 35 mols → emb (35, 128), norm=5.0827, 2.5s
+2026-03-30 11:27:59,265 INFO [20/39] F16P1_HUMAN_1_338_0: 41 mols → emb (41, 128), norm=5.5794, 9.9s
+2026-03-30 11:28:07,006 INFO [21/39] GRK4_HUMAN_1_578_0: 39 mols → emb (39, 128), norm=5.2051, 7.7s
+2026-03-30 11:28:09,436 INFO [22/39] GSTP1_HUMAN_2_210_0: 32 mols → emb (32, 128), norm=5.1146, 2.4s
+2026-03-30 11:28:15,046 INFO [23/39] HDHA_ECOLI_1_255_0: 30 mols → emb (30, 128), norm=5.3340, 5.6s
+2026-03-30 11:28:19,785 INFO [24/39] IDHP_HUMAN_40_452_0: 29 mols → emb (29, 128), norm=5.1709, 4.7s
+2026-03-30 11:28:22,725 INFO [25/39] IMA1_HUMAN_68_497_0: 36 mols → emb (36, 128), norm=5.1815, 2.9s
+2026-03-30 11:28:25,428 INFO [26/39] LAT_MYCTU_1_449_0: 16 mols → emb (16, 128), norm=5.0909, 2.7s
+2026-03-30 11:28:28,180 INFO [27/39] LMBL1_HUMAN_198_526_0: 42 mols → emb (42, 128), norm=5.1754, 2.8s
+2026-03-30 11:28:30,463 INFO [28/39] MCCF_ECOLX_1_344_0: 17 mols → emb (17, 128), norm=5.1680, 2.3s
+2026-03-30 11:28:30,826 INFO [29/39] MENE_BACSU_2_486_0: 2 mols → emb (2, 128), norm=6.0395, 0.4s
+2026-03-30 11:28:35,848 INFO [30/39] NEP_HUMAN_54_750_0: 36 mols → emb (36, 128), norm=5.3430, 5.0s
+2026-03-30 11:28:36,080 INFO [31/39] NOS3_HUMAN_65_480_0: 1 mols → emb (1, 128), norm=5.1763, 0.2s
+2026-03-30 11:28:36,195 INFO [32/39] P2Y12_HUMAN_1_342_0: 1 mols → emb (1, 128), norm=5.6322, 0.1s
+2026-03-30 11:28:36,293 INFO [33/39] PA21B_PIG_23_146_0: 3 mols → emb (3, 128), norm=5.1083, 0.1s
+2026-03-30 11:28:41,136 INFO [34/39] PAC_ECOLX_27_846_0: 32 mols → emb (32, 128), norm=5.1561, 4.8s
+2026-03-30 11:28:46,497 INFO [35/39] PHP_SULSO_1_314_0: 43 mols → emb (43, 128), norm=4.8881, 5.4s
+2026-03-30 11:28:48,679 INFO [36/39] PNTM_STRAE_2_398_0: 28 mols → emb (28, 128), norm=5.2871, 2.2s
+2026-03-30 11:28:48,797 INFO [37/39] PYRE_BACAN_1_210_0: 1 mols → emb (1, 128), norm=6.2740, 0.1s
+2026-03-30 11:28:49,802 INFO [38/39] SDIA_ECOLI_1_171_0: 10 mols → emb (10, 128), norm=5.2881, 1.0s
+2026-03-30 11:28:50,081 INFO [39/39] Y635_MYCTU_1_158_0: 2 mols → emb (2, 128), norm=5.2551, 0.3s
+2026-03-30 11:28:50,081 INFO 
+Extraction done: 39 pockets, 0 failed
+2026-03-30 11:28:50,104 INFO Mean-pooled: (39, 128), norm range=[4.7237, 6.2740]
+2026-03-30 11:28:50,246 INFO Matched with pKd: 18/39
+2026-03-30 11:28:50,247 INFO X_50mol: (18, 128), y range=[2.11,8.96]
+2026-03-30 11:28:50,247 INFO Embedding norm: mean=5.2567
+2026-03-30 11:28:50,317 INFO ============================================================
+2026-03-30 11:28:50,317 INFO Phase 3: Merging with tier3 data
+2026-03-30 11:28:50,346 INFO Tier3 merge: 13 updated, 5 added, total=947
+2026-03-30 11:28:50,413 INFO 
+============================================================
+2026-03-30 11:28:50,413 INFO DONE in 136s (2.3 min)
+2026-03-30 11:28:50,413 INFO Files saved to /scratch/yd2915/BayesDiff/results/50mol_gp
+2026-03-30 11:28:50,413 INFO ============================================================
+2026-03-30 11:29:09,192 INFO Device: cuda
+2026-03-30 11:29:09,209 INFO Combined dataset: X=(947, 128), y=(947,)
+2026-03-30 11:29:09,209 INFO 
+============================================================
+2026-03-30 11:29:09,209 INFO Phase 1: Data Analysis & Visualization
+2026-03-30 11:29:09,209 INFO ============================================================
+2026-03-30 11:29:09,209 INFO Dataset: N=947, D=128
+2026-03-30 11:29:09,209 INFO pKd: range=[1.28, 15.22], mean=7.08, std=2.08
+2026-03-30 11:29:09,627 INFO PCA: 19 PCs explain 90% variance, PC1=35.8%
+2026-03-30 11:29:09,748 INFO U_gen: mean=0.73, std=0.19
+2026-03-30 11:29:10,508 INFO Saved 01_data_overview.png
+2026-03-30 11:29:10,508 INFO 
+============================================================
+2026-03-30 11:29:10,508 INFO Phase 2a: Grid Search (kernel × PCA × ARD)
+2026-03-30 11:29:10,508 INFO ============================================================
+2026-03-30 11:29:25,636 INFO   [1/40] RBF, PCA=None, ARD=False: LOOCV ρ=0.251, 10× Test ρ=0.264±0.061
+2026-03-30 11:29:33,377 INFO   [2/40] RBF, PCA=None, ARD=True: LOOCV ρ=0.259, 10× Test ρ=0.262±0.060
+2026-03-30 11:29:40,946 INFO   [3/40] RBF, PCA=10, ARD=False: LOOCV ρ=0.228, 10× Test ρ=0.240±0.057
+2026-03-30 11:29:48,974 INFO   [4/40] RBF, PCA=10, ARD=True: LOOCV ρ=0.233, 10× Test ρ=0.242±0.055
+2026-03-30 11:29:56,382 INFO   [5/40] RBF, PCA=20, ARD=False: LOOCV ρ=0.248, 10× Test ρ=0.248±0.063
+2026-03-30 11:30:04,413 INFO   [6/40] RBF, PCA=20, ARD=True: LOOCV ρ=0.258, 10× Test ρ=0.249±0.066
+2026-03-30 11:30:11,666 INFO   [7/40] RBF, PCA=32, ARD=False: LOOCV ρ=0.245, 10× Test ρ=0.255±0.062
+2026-03-30 11:30:19,530 INFO   [8/40] RBF, PCA=32, ARD=True: LOOCV ρ=0.256, 10× Test ρ=0.251±0.065
+2026-03-30 11:30:27,067 INFO   [9/40] RBF, PCA=64, ARD=False: LOOCV ρ=0.250, 10× Test ρ=0.261±0.061
+2026-03-30 11:30:34,997 INFO   [10/40] RBF, PCA=64, ARD=True: LOOCV ρ=0.266, 10× Test ρ=0.249±0.061
+2026-03-30 11:30:42,355 INFO   [11/40] Matérn-3/2, PCA=None, ARD=False: LOOCV ρ=0.270, 10× Test ρ=0.275±0.056
+2026-03-30 11:30:50,378 INFO   [12/40] Matérn-3/2, PCA=None, ARD=True: LOOCV ρ=0.276, 10× Test ρ=0.274±0.055
+2026-03-30 11:30:57,867 INFO   [13/40] Matérn-3/2, PCA=10, ARD=False: LOOCV ρ=0.238, 10× Test ρ=0.246±0.052
+2026-03-30 11:31:06,094 INFO   [14/40] Matérn-3/2, PCA=10, ARD=True: LOOCV ρ=0.243, 10× Test ρ=0.249±0.051
+2026-03-30 11:31:13,668 INFO   [15/40] Matérn-3/2, PCA=20, ARD=False: LOOCV ρ=0.262, 10× Test ρ=0.258±0.057
+2026-03-30 11:31:21,835 INFO   [16/40] Matérn-3/2, PCA=20, ARD=True: LOOCV ρ=0.271, 10× Test ρ=0.261±0.060
+2026-03-30 11:31:29,490 INFO   [17/40] Matérn-3/2, PCA=32, ARD=False: LOOCV ρ=0.265, 10× Test ρ=0.267±0.054
+2026-03-30 11:31:37,592 INFO   [18/40] Matérn-3/2, PCA=32, ARD=True: LOOCV ρ=0.274, 10× Test ρ=0.267±0.057
+2026-03-30 11:31:45,245 INFO   [19/40] Matérn-3/2, PCA=64, ARD=False: LOOCV ρ=0.270, 10× Test ρ=0.273±0.055
+2026-03-30 11:31:53,631 INFO   [20/40] Matérn-3/2, PCA=64, ARD=True: LOOCV ρ=0.283, 10× Test ρ=0.273±0.055
+2026-03-30 11:32:00,988 INFO   [21/40] Matérn-5/2, PCA=None, ARD=False: LOOCV ρ=0.269, 10× Test ρ=0.272±0.055
+2026-03-30 11:32:09,127 INFO   [22/40] Matérn-5/2, PCA=None, ARD=True: LOOCV ρ=0.275, 10× Test ρ=0.270±0.054
+2026-03-30 11:32:16,874 INFO   [23/40] Matérn-5/2, PCA=10, ARD=False: LOOCV ρ=0.235, 10× Test ρ=0.242±0.051
+2026-03-30 11:32:25,416 INFO   [24/40] Matérn-5/2, PCA=10, ARD=True: LOOCV ρ=0.240, 10× Test ρ=0.243±0.050
+2026-03-30 11:32:33,052 INFO   [25/40] Matérn-5/2, PCA=20, ARD=False: LOOCV ρ=0.259, 10× Test ρ=0.253±0.056
+2026-03-30 11:32:41,286 INFO   [26/40] Matérn-5/2, PCA=20, ARD=True: LOOCV ρ=0.268, 10× Test ρ=0.256±0.060
+2026-03-30 11:32:49,085 INFO   [27/40] Matérn-5/2, PCA=32, ARD=False: LOOCV ρ=0.262, 10× Test ρ=0.264±0.055
+2026-03-30 11:32:57,648 INFO   [28/40] Matérn-5/2, PCA=32, ARD=True: LOOCV ρ=0.271, 10× Test ρ=0.262±0.056
+2026-03-30 11:33:05,424 INFO   [29/40] Matérn-5/2, PCA=64, ARD=False: LOOCV ρ=0.268, 10× Test ρ=0.270±0.054
+2026-03-30 11:33:13,825 INFO   [30/40] Matérn-5/2, PCA=64, ARD=True: LOOCV ρ=0.282, 10× Test ρ=0.266±0.056
+2026-03-30 11:33:22,171 INFO   [31/40] RQ, PCA=None, ARD=False: LOOCV ρ=0.368, 10× Test ρ=0.339±0.059
+2026-03-30 11:33:30,507 INFO   [32/40] RQ, PCA=None, ARD=True: LOOCV ρ=0.399, 10× Test ρ=0.321±0.068
+2026-03-30 11:33:38,903 INFO   [33/40] RQ, PCA=10, ARD=False: LOOCV ρ=0.340, 10× Test ρ=0.318±0.062
+2026-03-30 11:33:47,465 INFO   [34/40] RQ, PCA=10, ARD=True: LOOCV ρ=0.362, 10× Test ρ=0.325±0.055
+2026-03-30 11:33:55,858 INFO   [35/40] RQ, PCA=20, ARD=False: LOOCV ρ=0.363, 10× Test ρ=0.335±0.057
+2026-03-30 11:34:04,337 INFO   [36/40] RQ, PCA=20, ARD=True: LOOCV ρ=0.381, 10× Test ρ=0.329±0.060
+2026-03-30 11:34:12,958 INFO   [37/40] RQ, PCA=32, ARD=False: LOOCV ρ=0.368, 10× Test ρ=0.339±0.059
+2026-03-30 11:34:21,665 INFO   [38/40] RQ, PCA=32, ARD=True: LOOCV ρ=0.395, 10× Test ρ=0.320±0.058
+2026-03-30 11:34:30,489 INFO   [39/40] RQ, PCA=64, ARD=False: LOOCV ρ=0.368, 10× Test ρ=0.339±0.058
+2026-03-30 11:34:39,169 INFO   [40/40] RQ, PCA=64, ARD=True: LOOCV ρ=0.403, 10× Test ρ=0.315±0.058
+2026-03-30 11:34:39,181 INFO Grid search done: 40 configs evaluated
+2026-03-30 11:34:39,181 INFO 
+Top-5 by LOOCV ρ:
+2026-03-30 11:34:39,181 INFO   #1 RQ, PCA=64, ARD=True: ρ=0.403, RMSE=1.915, R²=0.149
+2026-03-30 11:34:39,181 INFO   #2 RQ, PCA=None, ARD=True: ρ=0.399, RMSE=1.917, R²=0.147
+2026-03-30 11:34:39,181 INFO   #3 RQ, PCA=32, ARD=True: ρ=0.395, RMSE=1.927, R²=0.138
+2026-03-30 11:34:39,181 INFO   #4 RQ, PCA=20, ARD=True: ρ=0.381, RMSE=1.936, R²=0.130
+2026-03-30 11:34:39,181 INFO   #5 RQ, PCA=None, ARD=False: ρ=0.368, RMSE=1.948, R²=0.120
+2026-03-30 11:34:39,181 INFO 
+============================================================
+2026-03-30 11:34:39,181 INFO Phase 2b: Bayesian Optimization (200 trials)
+2026-03-30 11:34:39,181 INFO ============================================================
+2026-03-30 11:43:50,035 INFO Best BO config: {'kernel': 'rq', 'pca_dims': 0, 'ard': True, 'lr': 0.1825128343067202, 'n_epochs': 299, 'noise_lb': 0.0025484816530724767, 'best_rmse': 1.9057209722747945}
+2026-03-30 11:43:53,849 INFO BO config is better: ρ=0.411 vs grid 0.403
+2026-03-30 11:43:53,849 INFO 
+Best config: {'kernel': 'rq', 'pca_dims': 0, 'ard': True}
+2026-03-30 11:43:53,857 INFO 
+============================================================
+2026-03-30 11:43:53,857 INFO Phase 3: Training Curves (top-3 configs)
+2026-03-30 11:43:53,857 INFO ============================================================
+2026-03-30 11:43:53,857 INFO   Config 1: RQ, PCA=64, ARD=True
+2026-03-30 11:43:56,144 INFO     Final: train ρ=0.943, val ρ=0.241, test ρ=0.276
+2026-03-30 11:43:56,144 INFO   Config 2: RQ, PCA=None, ARD=True
+2026-03-30 11:43:58,411 INFO     Final: train ρ=0.945, val ρ=0.289, test ρ=0.285
+2026-03-30 11:43:58,411 INFO   Config 3: RQ, PCA=32, ARD=True
+2026-03-30 11:44:00,989 INFO     Final: train ρ=0.908, val ρ=0.295, test ρ=0.318
+2026-03-30 11:44:02,777 INFO Saved 03_training_curves.png
+2026-03-30 11:44:02,777 INFO 
+============================================================
+2026-03-30 11:44:02,777 INFO Phase 4: Ablation Study
+2026-03-30 11:44:02,777 INFO ============================================================
+2026-03-30 11:44:16,010 INFO   Best (full)               | LOOCV ρ=0.401 | 10× Test ρ=0.321±0.068
+2026-03-30 11:44:28,685 INFO   Kernel→RBF                | LOOCV ρ=0.259 | 10× Test ρ=0.262±0.060
+2026-03-30 11:44:41,809 INFO   Kernel→Matérn-3/2         | LOOCV ρ=0.276 | 10× Test ρ=0.274±0.055
+2026-03-30 11:44:54,673 INFO   Kernel→Matérn-5/2         | LOOCV ρ=0.275 | 10× Test ρ=0.270±0.054
+2026-03-30 11:45:07,174 INFO   ARD→False                 | LOOCV ρ=0.368 | 10× Test ρ=0.339±0.059
+2026-03-30 11:45:20,609 INFO   PCA→10                    | LOOCV ρ=0.362 | 10× Test ρ=0.325±0.055
+2026-03-30 11:45:33,348 INFO   PCA→20                    | LOOCV ρ=0.381 | 10× Test ρ=0.329±0.060
+2026-03-30 11:45:45,283 INFO   PCA→32                    | LOOCV ρ=0.395 | 10× Test ρ=0.317±0.058
+2026-03-30 11:45:56,652 INFO   PCA→64                    | LOOCV ρ=0.401 | 10× Test ρ=0.315±0.056
+2026-03-30 11:45:56,660 INFO 
+============================================================
+2026-03-30 11:45:56,660 INFO Phase 5: Generating all figures
+2026-03-30 11:45:56,660 INFO ============================================================
+2026-03-30 11:45:57,090 INFO Saved 02_grid_search.png
+2026-03-30 11:45:59,782 INFO Saved 04_test_results.png
+2026-03-30 11:46:00,411 INFO Saved 05_ablation.png
+2026-03-30 11:46:00,690 INFO Saved 06_bo_trace.png
+2026-03-30 11:46:00,952 INFO Saved 07_kernel_ard_analysis.png
+2026-03-30 11:46:01,266 INFO Saved 08_pca_sweep.png
+2026-03-30 11:46:01,637 INFO Saved 09_overfit_analysis.png
+2026-03-30 11:46:01,637 INFO Comparing embedding types with best GP config...
+2026-03-30 11:46:03,835 INFO   Combined-128 (50mol)           N= 947, LOOCV ρ=0.399
+2026-03-30 11:46:05,987 INFO   Encoder-128 (tier3)            N= 942, LOOCV ρ=0.400
+2026-03-30 11:46:08,041 INFO   FCFP4-2048                     N= 932, LOOCV ρ=0.749
+2026-03-30 11:46:08,844 INFO   50mol-only (N=37)              N=  18, LOOCV ρ=0.379
+2026-03-30 11:46:09,087 INFO Saved 10_embedding_comparison.png
+2026-03-30 11:46:09,103 INFO 
+============================================================
+2026-03-30 11:46:09,103 INFO STUDY COMPLETE
+2026-03-30 11:46:09,103 INFO ============================================================
+2026-03-30 11:46:09,103 INFO Best config: RQ, PCA=None, ARD=True
+2026-03-30 11:46:09,103 INFO LOOCV: ρ=0.403, RMSE=1.915, R²=0.149
+2026-03-30 11:46:09,103 INFO 10× Test: ρ=0.315±0.058
+2026-03-30 11:46:09,103 INFO Overfit gap: 0.607
+2026-03-30 11:46:09,103 INFO Total time: 1020s (17.0 min)
+2026-03-30 11:46:09,103 INFO Figures saved to: /scratch/yd2915/BayesDiff/results/50mol_gp/figures

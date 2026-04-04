@@ -1,0 +1,11 @@
+2026-03-27 14:43:20,787 INFO === Strategy: attn_pca (dim=128) ===
+2026-03-27 14:43:31,352 INFO   shape=(942, 128), non-zero features=128, valid=True
+2026-03-27 14:43:31,352 INFO   Running analytic LOOCV ...
+2026-03-27 14:43:44,528 INFO   LOOCV: RMSE=1.957, ρ=0.357, R²=0.113
+2026-03-27 14:43:44,528 INFO   Running 50× repeated splits ...
+2026-03-27 14:44:19,253 INFO   50x: RMSE=1.964±0.073, ρ=0.362±0.046
+2026-03-27 14:44:19,254 INFO   Running 30× TVT splits ...
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-27 14:44:39,524 INFO   TVT: Test ρ=0.350±0.050
+2026-03-27 14:44:39,534 INFO   Saved → /scratch/yd2915/BayesDiff/results/tier3_gp/p0plus_partial_attn_pca.json

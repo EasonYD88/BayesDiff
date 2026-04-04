@@ -1,0 +1,81 @@
+=== Regularization Study ===
+Start: Fri Mar 27 17:08:30 EDT 2026
+Node: cs647.hpc.nyu.edu
+Device: cpu
+Loading Encoder-128 data...
+  N=942, dim=128, pKd=[1.28, 15.22]
+  Split: Train=565, Val=188, Test=189
+
+--- Training: Baseline GP ---
+  Train: RMSE=1.277, ρ=0.903
+  Val:   RMSE=1.802, ρ=0.287
+  Test:  RMSE=2.167, ρ=0.347
+
+--- Training: DKL (no reg) ---
+  Train: RMSE=0.146, ρ=0.998
+  Val:   RMSE=2.375, ρ=0.073
+  Test:  RMSE=2.473, ρ=0.274
+
+--- Training: DKL + Dropout 0.3 ---
+  Train: RMSE=0.552, ρ=0.976
+  Val:   RMSE=2.298, ρ=0.155
+  Test:  RMSE=2.417, ρ=0.288
+
+--- Training: DKL + Dropout 0.5 ---
+  Train: RMSE=0.751, ρ=0.953
+  Val:   RMSE=2.344, ρ=0.173
+  Test:  RMSE=2.521, ρ=0.251
+
+--- Training: DKL + WD 0.01 ---
+  Train: RMSE=0.153, ρ=0.998
+  Val:   RMSE=2.364, ρ=0.089
+  Test:  RMSE=2.407, ρ=0.290
+
+--- Training: DKL + D0.3 + WD ---
+  Train: RMSE=0.577, ρ=0.982
+  Val:   RMSE=2.339, ρ=0.098
+  Test:  RMSE=2.458, ρ=0.236
+
+--- Training: GP + NoisePrior ---
+  Train: RMSE=1.280, ρ=0.902
+  Val:   RMSE=1.802, ρ=0.288
+  Test:  RMSE=2.167, ρ=0.347
+
+
+=== 10× Repeated splits ===
+  Repeat 1/10 done
+  Repeat 2/10 done
+  Repeat 3/10 done
+  Repeat 4/10 done
+  Repeat 5/10 done
+  Repeat 6/10 done
+  Repeat 7/10 done
+  Repeat 8/10 done
+  Repeat 9/10 done
+  Repeat 10/10 done
+
+Generating figures...
+  ✓ 01_learning_curves.png
+  ✓ 02_model_comparison.png
+  ✓ 03_scatter_top4.png
+  ✓ 04_overfitting_gap.png
+  ✓ 05_summary_table.png
+
+✓ Results saved to /scratch/yd2915/BayesDiff/results/tier3_gp/figures/regularization/regularization_results.json
+
+================================================================================
+REGULARIZATION STUDY SUMMARY (Encoder-128, Tier 3)
+================================================================================
+Config                  Train ρ   Test ρ    Gap       10× Test ρ
+----------------------------------------------------------------------
+Baseline GP               0.903    0.347  0.556   0.352±0.068
+DKL (no reg)              0.998    0.274  0.724   0.189±0.045
+DKL + Dropout 0.3         0.976    0.288  0.688   0.236±0.074
+DKL + Dropout 0.5         0.953    0.251  0.702   0.239±0.071
+DKL + WD 0.01             0.998    0.290  0.708   0.197±0.070
+DKL + D0.3 + WD           0.982    0.236  0.746   0.263±0.065
+GP + NoisePrior           0.902    0.347  0.555   0.352±0.069
+================================================================================
+
+✓ All figures saved to /scratch/yd2915/BayesDiff/results/tier3_gp/figures/regularization
+End: Fri Mar 27 17:10:37 EDT 2026

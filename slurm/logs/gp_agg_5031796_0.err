@@ -1,0 +1,11 @@
+2026-03-27 14:43:21,798 INFO === Strategy: mean (dim=128) ===
+2026-03-27 14:43:32,453 INFO   shape=(942, 128), non-zero features=128, valid=True
+2026-03-27 14:43:32,455 INFO   Running analytic LOOCV ...
+2026-03-27 14:43:46,276 INFO   LOOCV: RMSE=1.950, ρ=0.367, R²=0.119
+2026-03-27 14:43:46,276 INFO   Running 50× repeated splits ...
+2026-03-27 14:44:20,929 INFO   50x: RMSE=1.957±0.071, ρ=0.373±0.045
+2026-03-27 14:44:20,930 INFO   Running 30× TVT splits ...
+/scratch/yd2915/conda_envs/bayesdiff/lib/python3.10/site-packages/gpytorch/models/exact_gp.py:299: GPInputWarning: The input matches the stored training data. Did you forget to call model.train()?
+  warnings.warn(
+2026-03-27 14:44:40,947 INFO   TVT: Test ρ=0.357±0.053
+2026-03-27 14:44:40,958 INFO   Saved → /scratch/yd2915/BayesDiff/results/tier3_gp/p0plus_partial_mean.json

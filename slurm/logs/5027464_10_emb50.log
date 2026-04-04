@@ -1,0 +1,17 @@
+═══════════════════════════════════════════════════════════
+ BayesDiff: 50-mol Embedding (Shard 10/31)
+═══════════════════════════════════════════════════════════
+Date:         Fri Mar 27 15:26:28 EDT 2026
+Node:         ga025.hpc.nyu.edu
+GPU:          NVIDIA A100-SXM4-80GB, 81920 MiB
+Array job id: 5027464
+Task id:      10
+Repo dir:     /scratch/yd2915/BayesDiff
+Run dir:      results/embedding_50mol/20260327_152628_j5027464
+Shard dir:    results/embedding_50mol/20260327_152628_j5027464/shards/shard_10of31
+Pocket list:  data/splits/test_pockets.txt
+Samples/pkt:  50
+Steps:        1000
+
+Command: python scripts/08_sample_molecules_shard.py --pocket_list data/splits/test_pockets.txt --num_shards 31 --shard_index 10 --pdbbind_dir external/targetdiff/data/test_set --targetdiff_dir external/targetdiff --num_samples 50 --num_steps 1000 --device cuda --output_dir results/embedding_50mol/20260327_152628_j5027464/shards/shard_10of31
+

@@ -1,0 +1,47 @@
+{
+  "args": {
+    "pocket_list": "/state/partition1/job-5027464/bayesdiff_shard_s89ojurj/pockets_shard.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 50,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/embedding_50mol/20260328_061616_j5027464/shards/shard_30of31",
+    "num_steps": 1000
+  },
+  "n_pockets": 3,
+  "n_sampled": 3,
+  "timing": [
+    {
+      "pdb_code": "DYRK2_HUMAN_145_550_0",
+      "n_valid": 8,
+      "n_total": 50,
+      "elapsed_s": 3489.1,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "OLIAC_CANSA_1_101_0",
+      "n_valid": 0,
+      "n_total": 50,
+      "elapsed_s": 1889.9,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "Y635_MYCTU_1_158_0",
+      "n_valid": 2,
+      "n_total": 50,
+      "elapsed_s": 4943.1,
+      "emb_shape": [
+        50,
+        128
+      ]
+    }
+  ]
+}

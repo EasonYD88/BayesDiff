@@ -1,0 +1,47 @@
+{
+  "args": {
+    "pocket_list": "/state/partition1/job-5033368/bayesdiff_shard_nyr28mj3/pockets_shard.txt",
+    "pdbbind_dir": "external/targetdiff/data/test_set",
+    "targetdiff_dir": "external/targetdiff",
+    "checkpoint": null,
+    "num_samples": 50,
+    "batch_size": null,
+    "device": "cuda",
+    "output_dir": "results/embedding_50mol/20260327_151741_j5027464/shards/shard_8of31",
+    "num_steps": 1000
+  },
+  "n_pockets": 3,
+  "n_sampled": 3,
+  "timing": [
+    {
+      "pdb_code": "BAZ2A_HUMAN_1795_1898_0",
+      "n_valid": 0,
+      "n_total": 50,
+      "elapsed_s": 977.7,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "HDAC8_HUMAN_1_377_0",
+      "n_valid": 0,
+      "n_total": 50,
+      "elapsed_s": 3023.4,
+      "emb_shape": [
+        50,
+        128
+      ]
+    },
+    {
+      "pdb_code": "PNTM_STRAE_2_398_0",
+      "n_valid": 28,
+      "n_total": 50,
+      "elapsed_s": 3361.9,
+      "emb_shape": [
+        50,
+        128
+      ]
+    }
+  ]
+}
