@@ -1,13 +1,12 @@
 % BayesDiff: Calibrated Uncertainty for Diffusion-Based Molecular Generation
 % Science journal style manuscript
-\documentclass[12pt]{article}
+\documentclass{article}
 
 %% ── Packages ──────────────────────────────────────────────────────────────
-\usepackage[letterpaper, margin=1in]{geometry}
-\usepackage{times}                        % Times New Roman
-\usepackage{setspace}                     % single spacing
-\usepackage{amsmath,amssymb,amsfonts}
+\usepackage[letterpaper]{geometry}
+\usepackage{amsmath,amsfonts,amssymb}
 \usepackage{graphicx}
+\usepackage{float}                        % [H] float placement
 \usepackage{booktabs}
 \usepackage{xcolor}
 \usepackage{hyperref}
@@ -19,16 +18,13 @@
 \usepackage{natbib}
 \usepackage{enumitem}
 
+%% ── Graphics path ─────────────────────────────────────────────────────────
+\graphicspath{{figures/}}
+
 %% ── Hyperref setup ────────────────────────────────────────────────────────
 \hypersetup{
-  colorlinks=true,
-  linkcolor=blue!60!black,
-  citecolor=blue!60!black,
-  urlcolor=blue!60!black,
+  colorlinks=false,
 }
-
-%% ── Spacing ───────────────────────────────────────────────────────────────
-\singlespacing
 
 %% ── Custom commands ───────────────────────────────────────────────────────
 \newcommand{\Psuccess}{P_{\mathrm{success}}}
@@ -53,7 +49,7 @@
 \newcommand{\scite}[1]{(\textit{#1})}
 
 %% ── Title block ───────────────────────────────────────────────────────────
-\title{\textbf{BayesDiff: Calibrated Uncertainty for\\Diffusion-Based Molecular Generation}}
+\title{BayesDiff: Calibrated Uncertainty for\\Diffusion-Based Molecular Generation}
 
 \author{
   Y.~Ding\textsuperscript{1*}\\[6pt]
@@ -66,7 +62,6 @@
 %% ══════════════════════════════════════════════════════════════════════════
 \begin{document}
 \maketitle
-\thispagestyle{empty}
 
 %% ── Abstract ──────────────────────────────────────────────────────────────
 \begin{abstract}
@@ -90,7 +85,7 @@ uncertainty-aware framework for generative molecular design.
 %%  MAIN TEXT
 %% ══════════════════════════════════════════════════════════════════════════
 
-\section*{\textbf{Introduction}}
+\section{Introduction}
 
 Structure-based drug design (SBDD) seeks to discover small molecules
 that bind to a disease-relevant protein pocket with high affinity and
@@ -174,7 +169,7 @@ molecule.  Our contributions are as follows:
 
 
 %% ── Related Work ──────────────────────────────────────────────────────────
-\section*{\textbf{Related Work}}
+\section{Related Work}
 
 \textbf{\textit{Diffusion-based 3D molecular generation.}}
 Score-based stochastic differential equations \scite{4} underpin a
@@ -221,7 +216,7 @@ pipelines.
 
 
 %% ── Problem Formulation ──────────────────────────────────────────────────
-\section*{\textbf{Problem Formulation}}
+\section{Problem Formulation}
 
 Let $x$ denote a protein pocket, $m$ a small molecule generated
 conditioned on $x$, and $z \in \Rreal^{d}$ an embedding of the
@@ -253,9 +248,9 @@ population.
 
 
 %% ── Method ───────────────────────────────────────────────────────────────
-\section*{\textbf{Method: BayesDiff Framework}}
+\section{Method: BayesDiff Framework}
 
-\subsection*{\textbf{\textit{Overview}}}
+\subsection{Overview}
 
 BayesDiff consists of six sequential stages (Fig.~\ref{fig:pipeline}):
 (i)~diffusion-based molecular sampling from a protein pocket;
@@ -266,7 +261,7 @@ BayesDiff consists of six sequential stages (Fig.~\ref{fig:pipeline}):
 (vi)~probability calibration and OOD detection.
 Each stage is described below.
 
-\subsection*{\textbf{\textit{Molecular Embedding Strategy}}}
+\subsection{Molecular Embedding Strategy}
 
 A critical design choice is the representation used to embed each
 generated molecule.  We systematically evaluate two families of
@@ -305,7 +300,7 @@ protocol (LOOCV, 5-fold CV, 50$\times$ repeated 70/30 splits) to
 isolate the effect of the representation from confounding factors such as
 model capacity or data scale.
 
-\subsection*{\textbf{\textit{Generation Uncertainty}}}
+\subsection{Generation Uncertainty}
 
 Given $M$ molecules sampled from a single pocket, we obtain $M$
 embeddings $\{z^{(i)}\}_{i=1}^{M}$, each in $\Rreal^{d}$.  The spread
@@ -350,7 +345,7 @@ Gaussian:
   \label{eq:gmm_agg}
 \end{equation}
 
-\subsection*{\textbf{\textit{Prediction Uncertainty}}}
+\subsection{Prediction Uncertainty}
 
 The oracle is a Gaussian process that maps an embedding $z$ to a binding
 affinity $y$.  We place a GP prior over the oracle function:
@@ -407,7 +402,7 @@ posterior mean with respect to the embedding:
 This is computed efficiently via reverse-mode automatic differentiation
 (autograd) through the GP predictive equations \scite{25}.
 
-\subsection*{\textbf{\textit{Uncertainty Fusion via the Delta Method}}}
+\subsection{Uncertainty Fusion via the Delta Method}
 
 We now fuse the generation-side covariance $\Siggen$ with the
 oracle-side posterior.  Applying a first-order Taylor expansion of
@@ -445,7 +440,7 @@ advantage is that the fusion requires only a single forward pass through
 the GP (to obtain $\muoracle$, $\Uoracle$, and $\Jmu$) rather than $M$
 independent forward passes for Monte Carlo integration.
 
-\subsection*{\textbf{\textit{Calibration and OOD Detection}}}
+\subsection{Calibration and OOD Detection}
 
 \textit{Isotonic regression.}
 The raw probability $\Psuccess$ may be miscalibrated (\ie, the predicted
@@ -480,7 +475,7 @@ The final calibrated probability is
 
 
 %% ── Experimental Setup ───────────────────────────────────────────────────
-\section*{\textbf{Experimental Setup}}
+\section{Experimental Setup}
 
 \textit{Datasets.}
 We draw protein--ligand complexes from three sources: PDBbind
@@ -531,9 +526,9 @@ $\rho$, enrichment factor at 1\% (EF@1\%), root mean squared error
 
 
 %% ── Results ──────────────────────────────────────────────────────────────
-\section*{\textbf{Results}}
+\section{Results}
 
-\subsection*{\textbf{\textit{Representation Bottleneck}}}
+\subsection{Representation Bottleneck}
 
 We begin by evaluating six molecular representations on the initial
 $N = 24$ pocket set using LOOCV with an identical GP model.
@@ -559,7 +554,7 @@ relative positions of ligand atoms within the protein pocket are the
 primary determinants of binding affinity; a representation that discards
 this information cannot capture the relevant signal.
 
-\subsection*{\textbf{\textit{Encoder-128 Breakthrough}}}
+\subsection{Encoder-128 Breakthrough}
 
 Switching to the SE(3)-equivariant encoder embedding ($d = 128$) on the
 expanded dataset ($N = 932$) yields a qualitative improvement
@@ -581,7 +576,7 @@ for FCFP4-2048.  The encoder's advantage is not only larger in magnitude
 but also more consistent, with a coefficient of variation approximately
 half that of the fingerprint baseline.
 
-\subsection*{\textbf{\textit{Data Scale Effect}}}
+\subsection{Data Scale Effect}
 
 Expanding from $N = 24$ to $N = 932$ reduces the standard deviation of
 performance estimates by approximately $6\times$ and renders $p$-values
@@ -608,7 +603,7 @@ exact GP) raises $\rho$ to $0.111$.  Switching to the encoder embedding
 raises $\rho$ to $0.369$---a larger gain than the entire data-expansion
 step.
 
-\subsection*{\textbf{\textit{GP Optimization}}}
+\subsection{GP Optimization}
 
 We conduct 200 Optuna trials over the full hyperparameter space to
 identify the optimal GP configuration.  The rational quadratic kernel
@@ -627,7 +622,7 @@ $R^{2} = 0.013$, whereas the encoder embedding with the same GP
 configuration reaches $R^{2} = 0.120$.  This confirms that the
 representation, not the model, is the binding constraint.
 
-\subsection*{\textbf{\textit{End-to-End Performance}}}
+\subsection{End-to-End Performance}
 
 With the encoder-128 embedding, the full BayesDiff pipeline produces
 calibrated probabilities with strong discriminative performance.  On the
@@ -644,7 +639,7 @@ and may not generalize to all protein families, it demonstrates that the
 dual-uncertainty framework can produce discriminative confidence scores
 when the representation captures the relevant binding features.
 
-\subsection*{\textbf{\textit{Ablation Study}}}
+\subsection{Ablation Study}
 
 To quantify the contribution of each component, we evaluate four ablated
 variants against the full pipeline (Table~\ref{tab:ablation}).
@@ -678,7 +673,7 @@ uncertainty and Ledoit--Wolf shrinkage each contribute measurably to
 calibration.  Isotonic calibration will become important as larger
 calibration sets become available.
 
-\subsection*{\textbf{\textit{Bottleneck Hierarchy}}}
+\subsection{Bottleneck Hierarchy}
 
 Synthesizing the results from the representation comparison, data
 expansion, GP optimization, and ablation study, we identify a clear
@@ -701,7 +696,7 @@ largest single gain comes from the representation switch.
 
 
 %% ── Discussion ───────────────────────────────────────────────────────────
-\section*{\textbf{Discussion}}
+\section{Discussion}
 
 BayesDiff demonstrates that dual uncertainty fusion---combining
 generation-side and prediction-side uncertainty---produces calibrated
@@ -752,7 +747,7 @@ the loop between computation and experiment.
 
 
 %% ── Conclusion ───────────────────────────────────────────────────────────
-\section*{\textbf{Conclusion}}
+\section{Conclusion}
 
 We have presented BayesDiff, the first end-to-end calibrated
 uncertainty-quantification framework for diffusion-based molecular
@@ -773,7 +768,7 @@ computational exploration to experimental practice.
 %% ══════════════════════════════════════════════════════════════════════════
 %%  REFERENCES AND NOTES
 %% ══════════════════════════════════════════════════════════════════════════
-\section*{\textbf{References and Notes}}
+\section*{References and Notes}
 
 \begin{enumerate}[leftmargin=2em,itemsep=1pt,label=\textit{\arabic*}.]
 
@@ -914,7 +909,7 @@ computational exploration to experimental practice.
 
 
 %% ── Acknowledgments ──────────────────────────────────────────────────────
-\section*{\textbf{Acknowledgments}}
+\section*{Acknowledgments}
 
 This work was supported by computational resources provided by the New
 York University High Performance Computing facility (NYU Torch cluster).
@@ -926,7 +921,7 @@ public repositories.  No external funding was received for this work.
 
 
 %% ── Supplementary Materials ──────────────────────────────────────────────
-\section*{\textbf{List of Supplementary Materials}}
+\section*{List of Supplementary Materials}
 
 \begin{itemize}[leftmargin=2em,itemsep=2pt]
 \item Supplementary Text S1: Ledoit--Wolf shrinkage derivation and
@@ -934,17 +929,40 @@ public repositories.  No external funding was received for this work.
 \item Supplementary Text S2: Delta method derivation with
   second-order correction terms.
 \item Supplementary Text S3: Full Optuna hyperparameter search
-  configuration and convergence analysis.
-\item Fig.~S1: Reliability diagrams for all six embedding
-  representations.
-\item Fig.~S2: LOOCV residual distributions by protein family.
-\item Fig.~S3: Optuna optimization history (200 trials).
-\item Fig.~S4: Embedding t-SNE visualizations colored by $\pKd$.
+  configuration and convergence analysis (200 trials).
+\item Supplementary Text S4: Systematic optimization progression from
+  initial SVGP model through robust evaluation, embedding comparison,
+  Bayesian optimization, data expansion, and encoder embedding upgrade.
+\item Fig.~S1: Initial SVGP model diagnostics --- training curves,
+  per-split scatter, prediction analysis, and data distribution
+  (Figs.~\ref{fig:svgp_training}--\ref{fig:data_distribution}).
+\item Fig.~S2: Robust evaluation protocols at $N = 24$ --- LOOCV scatter,
+  repeated-split violins, bootstrap CIs, and calibration diagnostics
+  (Figs.~\ref{fig:robust_eval}--\ref{fig:loocv_diagnostics}).
+\item Fig.~S3: Embedding comparison at $N = 24$ --- LOOCV scatter for all
+  six representations and summary table
+  (Figs.~\ref{fig:embedding_scatter}--\ref{fig:comparison_table}).
+\item Fig.~S4: Bayesian optimization --- optimization history, best
+  configuration diagnostics, validation splits, and summary table
+  (Figs.~\ref{fig:bo_history}--\ref{fig:bo_summary}).
+\item Fig.~S5: Tier~3 dataset ($N = 932$) FCFP4-2048 results ---
+  training curve, LOOCV and 5-fold scatter, repeated splits,
+  diagnostics, and data scale comparison
+  (Figs.~\ref{fig:tier3_training}--\ref{fig:n24_vs_tier3}).
+\item Fig.~S6: Overfitting analysis --- train/val/test scatter,
+  per-split metrics, repeated-split box plots, and distribution analysis
+  (Figs.~\ref{fig:tvt_scatter}--\ref{fig:distribution_analysis}).
+\item Fig.~S7: Encoder-128 results --- LOOCV scatter, head-to-head
+  comparison, training curves, train/val/test robustness, PCA
+  visualization, and variance explained
+  (Figs.~\ref{fig:encoder_loocv}--\ref{fig:encoder_pca_var}).
 \item Table~S1: Full LOOCV results for all six representations at
-  $N = 24$.
+  $N = 24$ (Table~\ref{tab:rep_n24}).
 \item Table~S2: Per-pocket breakdown of $\Psuccess$ versus experimental
   activity.
 \item Table~S3: Optuna top-10 trial configurations and metrics.
+\item Table~S4: Systematic bottleneck hierarchy
+  (Table~\ref{tab:hierarchy}).
 \item Data S1: Processed embeddings and labels for the $N = 932$ dataset
   (NumPy archive).
 \item Code S1: BayesDiff source code and pipeline scripts (GitHub
@@ -952,14 +970,12 @@ public repositories.  No external funding was received for this work.
 \end{itemize}
 
 
-%% ── Figure captions ──────────────────────────────────────────────────────
-\section*{\textbf{Figure Captions}}
+%% ── Figures ──────────────────────────────────────────────────────────────
+\section*{Figures}
 
-\begin{figure}[h!]
+\begin{figure}[H]
 \centering
-\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}
-\textbf{Figure 1 placeholder}\\
-BayesDiff pipeline overview\vspace{3cm}}}
+\includegraphics[width=\linewidth]{fig1_dashboard.png}
 \caption{\textbf{BayesDiff framework overview.}
 A protein pocket is input to the TargetDiff diffusion model, which
 generates $M = 64$ molecular conformations.  SE(3)-invariant embeddings
@@ -974,11 +990,9 @@ calibrated $\Pfinal \in [0,1]$.}
 \label{fig:pipeline}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[H]
 \centering
-\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}
-\textbf{Figure 2 placeholder}\\
-Representation comparison\vspace{3cm}}}
+\includegraphics[width=\linewidth]{embedding_comparison_bars.png}
 \caption{\textbf{Representation bottleneck analysis.}
 LOOCV Spearman $\rho$ (left) and $R^{2}$ (right) for six molecular
 representations on the $N = 932$ dataset.  All 2D fingerprint variants
@@ -989,11 +1003,9 @@ improvement.  Error bars show 95\% bootstrap confidence intervals.}
 \label{fig:representation}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[H]
 \centering
-\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}
-\textbf{Figure 3 placeholder}\\
-Calibration reliability diagram\vspace{3cm}}}
+\includegraphics[width=\linewidth]{fig5_calibration.png}
 \caption{\textbf{Calibration reliability diagram.}
 Predicted $\Psuccess$ (horizontal axis) versus observed frequency of
 activity $y \geq 7.0$ (vertical axis) for the full BayesDiff pipeline
@@ -1004,11 +1016,9 @@ over- or under-confidence.}
 \label{fig:calibration}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[H]
 \centering
-\fbox{\parbox{0.85\textwidth}{\centering\vspace{3cm}
-\textbf{Figure 4 placeholder}\\
-Ablation component contributions\vspace{3cm}}}
+\includegraphics[width=\linewidth]{fig4_ablation.png}
 \caption{\textbf{Ablation study: component contributions.}
 ECE (left) and NLL (right) for the full pipeline and four ablated
 variants.  Removing oracle variance (A2) causes the NLL to explode to
@@ -1020,14 +1030,506 @@ calibration data are available in the current evaluation setting.}
 \label{fig:ablation}
 \end{figure}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{training_curves.png}
+\caption{\textbf{Initial SVGP model diagnostics ($N = 24$, ECFP4-128).}
+Training and validation loss curves for the initial sparse variational GP
+model.  The ELBO training loss decreases monotonically from $25.2$ to
+$2.07$ over 300 epochs.  The validation loss reaches a minimum of $7.23$
+at epoch 28 and then diverges to $16.45$ by epoch 300, indicating severe
+overfitting.  No early stopping was applied in this initial configuration.
+The model achieved train $R^{2} = 0.508$ and train $\rho = 0.715$ but
+test $R^{2} = -16.5$ and test $\rho = -0.800$, revealing that training
+metrics are misleading in the $N \ll d$ regime.}
+\label{fig:svgp_training}
+\end{figure}
 
-%% ── Table captions ───────────────────────────────────────────────────────
-\section*{\textbf{Table Captions}}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{pred_vs_true_splits.png}
+\caption{\textbf{Initial SVGP predictions by data split ($N = 24$).}
+Predicted versus true $\pKd$ for the initial SVGP model (ECFP4-128,
+$16/4/4$ train/val/test split).  The training set shows apparent
+correlation ($\rho = 0.715$), but validation ($\rho = -0.400$) and test
+($\rho = -0.800$) predictions are anticorrelated with truth.  Error bars
+show GP predictive $\pm 2\sigma$.  This result motivated the transition
+to robust evaluation protocols and the systematic embedding comparison.}
+\label{fig:svgp_predictions}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{prediction_analysis.png}
+\caption{\textbf{Initial SVGP prediction diagnostics ($N = 24$).}
+Four panels: (top-left) residual histograms by split showing wider
+spread for val/test; (top-right) uncertainty calibration plot; (bottom-left)
+per-split metric comparison (RMSE, $R^{2}$, $\rho$); (bottom-right) 95\%
+CI coverage by split.  Training coverage is 100\% with test coverage
+at only 50\%, confirming poorly calibrated uncertainty estimates.  These
+diagnostic failures motivated the switch from SVGP to exact GP with
+LOOCV evaluation.}
+\label{fig:svgp_diagnostics}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{gp_model_analysis.png}
+\caption{\textbf{Embedding space and label distribution diagnostics
+(initial $N = 24$ evaluation set).}
+PCA projection of ECFP4-128 embeddings colored by $\pKd$ (left) and
+per-split $\pKd$ distribution histograms (right).  The test set
+(4 pockets) contains only low-affinity targets ($\pKd < 4.0$,
+mean~$= 2.97$), while training covers a wider range (mean~$= 5.75$).
+This severe train--test distribution mismatch contributes to the extreme
+negative $R^{2}$ on the test split and underscores the need for LOOCV
+rather than random splitting with small samples.}
+\label{fig:data_distribution}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{robust_evaluation.png}
+\caption{\textbf{Robust evaluation protocols ($N = 24$, ECFP4-128, exact GP).}
+Three complementary protocols confirm that ECFP4-128 carries no
+predictive signal for $\pKd$.  (Left) LOOCV scatter plot: predictions
+cluster near the global mean with Spearman $\rho = -0.33$ and
+$R^{2} = -0.75$.  (Center) 50$\times$ repeated 70/30 split violins:
+$\rho = -0.19 \pm 0.35$, spanning zero.  (Right) 200$\times$ bootstrap
+confidence intervals: $\rho = 0.27$ with 95\% CI $[-0.14, 0.62]$,
+not significantly different from zero.  These results establish the
+baseline against which all subsequent improvements are measured.}
+\label{fig:robust_eval}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{loocv_diagnostics.png}
+\caption{\textbf{LOOCV diagnostics ($N = 24$, ECFP4-128, exact GP).}
+(Left) Residual plot showing no systematic pattern---residuals are
+approximately Gaussian ($\mu \approx 0$, $\sigma \approx 2.6$).
+(Center) Calibration plot: observed coverage approximately follows
+the ideal diagonal, indicating that the GP correctly estimates its own
+uncertainty---it ``knows what it doesn't know.''
+(Right) QQ-plot confirming approximate normality of residuals.  The
+GP's uncertainty calibration is acceptable (CI-95\% coverage $= 88\%$)
+despite the absence of predictive signal, because predictive intervals
+are extremely wide (${\sim}7.9$ $\pKd$ units).}
+\label{fig:loocv_diagnostics}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{loocv_scatter_all.png}
+\caption{\textbf{Embedding comparison: LOOCV scatter plots ($N = 24$,
+six representations).}
+Predicted versus true $\pKd$ under LOOCV for each embedding type with
+Mat\'ern-5/2 kernel (top row) and Tanimoto kernel (bottom row, binary
+fingerprints only).  All six representations produce predictions
+dominated by the global mean ($\bar{y} \approx 5.0$).
+The high-dimensional fingerprints (ECFP4-2048, ECFP6-2048, Combined)
+collapse to constant predictions after PCA to 20 dimensions, yielding
+identical RMSE~$= 5.52$ and $R^{2} = -6.76$.  The Tanimoto kernel
+improves RMSE for binary fingerprints (ECFP4-128: $3.53 \to 2.22$) but
+$\rho$ remains negative ($-0.37$).}
+\label{fig:embedding_scatter}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{comparison_table.png}
+\caption{\textbf{Embedding comparison summary table ($N = 24$).}
+Complete metrics for all six representations under Mat\'ern, Tanimoto, and
+repeated-split protocols.  No representation achieves a positive Spearman
+$\rho$ under LOOCV.  RDKit-2D is ``least bad'' (CI-95\%~$= 75\%$,
+RMSE~$= 3.47$) among Mat\'ern results; Tanimoto-kernel ECFP4-128 has the
+lowest RMSE~$(2.22)$ but the most negative $\rho$~$(-0.37)$.  These
+results rule out the embedding \emph{type} as a differentiator at
+$N = 24$ and instead identify data scale and information content as the
+dominant factors.}
+\label{fig:comparison_table}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{bo_optimization_history.png}
+\caption{\textbf{Bayesian optimization of GP hyperparameters (200 Optuna
+trials, $N = 24$).}
+Four panels: (top-left) Optimization convergence showing RMSE stabilizing
+near $2.07$ after ${\sim}80$ trials.  (top-right) RMSE by embedding type:
+FCFP4-2048 with the rational quadratic (RQ) kernel achieves the lowest
+RMSE.  (bottom-left) RMSE by kernel type: RQ ($2.1$) substantially
+outperforms RBF ($5.2$), Mat\'ern-3/2 ($4.8$), and Mat\'ern-5/2 ($4.5$).
+(bottom-right) Spearman $\rho$ by embedding: all embeddings produce
+$\rho$ near zero or negative.  The search confirms that kernel choice
+matters (RQ is optimal) but cannot compensate for a fundamentally
+uninformative representation.}
+\label{fig:bo_history}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{bo_best_config_loocv.png}
+\caption{\textbf{Best Bayesian optimization configuration: LOOCV diagnostic
+($N = 24$, FCFP4-2048, RQ kernel).}
+(Left) LOOCV scatter: predictions are nearly constant (${\approx}5.0$),
+with RMSE~$= 2.07$ and $\rho = -0.42$.
+(Center) Residual distribution: approximately Gaussian with no
+systematic bias.
+(Right) Calibration plot: near-perfect diagonal alignment, confirming
+that the GP correctly reports its own uncertainty despite the absence
+of predictive signal.  The best configuration from 200 Optuna trials
+still cannot extract signal from 2D fingerprints.}
+\label{fig:bo_loocv}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{bo_validation_splits.png}
+\caption{\textbf{Best BO configuration: 50$\times$ repeated random split
+validation ($N = 24$).}
+Distributions of RMSE, Spearman $\rho$, and $R^{2}$ across 50 random
+70/30 splits.  Mean $\rho = 0.11 \pm 0.33$: the wide distribution
+spanning both positive and negative values demonstrates that the weak
+positive signal is statistically indistinguishable from zero at $N = 24$.
+This motivates the data expansion to $N = 932$ (Tier~3).}
+\label{fig:bo_splits}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{bo_summary_table.png}
+\caption{\textbf{Bayesian optimization summary: best GP configuration
+and top-5 trials.}
+All top-5 trials use FCFP4-2048 with the RQ kernel and PCA to 10
+dimensions, with nearly identical RMSE~$\approx 2.07$.  The optimal
+learning rate is 0.1 with an isotropic (non-ARD) kernel and an output
+scale prior.  The convergence of the top trials to the same configuration
+confirms robust optimization.}
+\label{fig:bo_summary}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{training_curve.png}
+\caption{\textbf{Tier~3 GP training convergence ($N = 932$, FCFP4-2048,
+RQ kernel).}
+Negative log marginal likelihood (NLL) decreases from $10.9$ to $2.17$
+over 200 training epochs.  Smooth convergence with no train/val
+divergence confirms that the exact GP with the RQ kernel is
+well-conditioned on the expanded dataset.  The final NLL of $2.17$ is
+comparable to the $N = 24$ value ($2.07$), indicating that additional
+data does not substantially change the per-sample likelihood---the
+representation, not the data scale, limits predictive power.}
+\label{fig:tier3_training}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{loocv_scatter.png}
+\caption{\textbf{Tier~3 LOOCV: FCFP4-2048 predictions ($N = 932$).}
+LOOCV predicted versus true $\pKd$ with points colored by predictive
+uncertainty.  Predictions cluster in a narrow band $[6.3, 7.5]$
+regardless of the true $\pKd$ (which spans $[1.28, 15.22]$).
+Spearman $\rho = 0.111$ ($p = 0.0007$): a statistically significant but
+practically negligible positive correlation.  $R^{2} = 0.013$ means only
+1\% of the variance is explained.  The GP essentially predicts the
+global mean ($\bar{y} = 7.08$) with slight modulation---a clear signature
+that the FCFP4 representation lacks binding-affinity information.}
+\label{fig:tier3_loocv}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{cv5_scatter.png}
+\caption{\textbf{Tier~3 five-fold cross-validation scatter ($N = 932$,
+FCFP4-2048).}
+Predicted versus true $\pKd$ for each of the five folds.  The horizontal
+banding pattern persists across all folds: predictions span only
+${\sim}1$ $\pKd$ unit while true values span ${\sim}14$ units.
+Per-fold $\rho$ ranges from $0.047$ (fold~1, $p = 0.53$) to $0.249$
+(fold~2, $p = 0.001$), with an overall $\rho = 0.117$ ($p = 0.0003$).
+The inconsistency across folds reflects the marginal signal available in
+2D fingerprints.}
+\label{fig:tier3_cv5}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{repeated_splits_dist.png}
+\caption{\textbf{Tier~3 repeated split distributions ($N = 932$,
+FCFP4-2048, 50$\times$ 80/20 splits).}
+Histograms of RMSE, Spearman $\rho$, and $R^{2}$ across 50 random
+splits.  RMSE is tightly concentrated ($2.078 \pm 0.099$), confirming
+measurement stability.  Spearman $\rho$ is entirely positive
+($0.134 \pm 0.055$), a qualitative improvement over the $N = 24$ results
+where the distribution spanned both signs.  $R^{2}$ is narrowly
+distributed around zero ($0.011 \pm 0.018$), confirming that FCFP4-2048
+explains effectively no variance.}
+\label{fig:tier3_splits}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{diagnostics.png}
+\caption{\textbf{Tier~3 residual and calibration diagnostics ($N = 932$,
+FCFP4-2048).}
+(Left) Residual distribution: approximately Gaussian
+($\mu = 0.07$, $\sigma = 2.07$) with no systematic bias.
+(Right) Uncertainty calibration curve: the observed coverage closely
+follows the ideal diagonal, indicating near-perfect calibration.
+The GP correctly reports high uncertainty for all predictions---the
+noise variance $\sigma_{n}^{2}$ dominates the kernel signal, consistent
+with the near-zero $R^{2}$.}
+\label{fig:tier3_diagnostics}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{comparison_n24_vs_tier3.png}
+\caption{\textbf{Data scale effect: $N = 24$ versus $N = 932$.}
+Side-by-side comparison of RMSE and Spearman $\rho$ under LOOCV for the
+initial ($N = 24$) and expanded ($N = 932$) datasets, both using
+FCFP4-2048 with the RQ kernel.  RMSE is unchanged (${\sim}2.07$),
+indicating that the prediction error is bounded by the representation,
+not the data scale.  Spearman $\rho$ flips from negative ($-0.42$) to
+positive ($+0.11$), and the standard deviation of $\rho$ across repeated
+splits decreases $6\times$ (from $0.33$ to $0.06$).  Data expansion
+produces statistical stability but does not improve predictive power.}
+\label{fig:n24_vs_tier3}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{train_val_test_scatter.png}
+\caption{\textbf{Train/validation/test overfitting analysis ($N = 932$,
+FCFP4-2048, 60/20/20 split).}
+Predicted versus true $\pKd$ for train (left, $N = 559$), validation
+(center, $N = 186$), and test (right, $N = 187$) sets.  The training set
+shows strong apparent correlation (train $R^{2} = 0.63$, $\rho = 0.98$),
+but validation and test predictions collapse to a narrow band near the
+global mean (val/test $R^{2} \approx 0.01$, $\rho \approx 0.15$).
+The prediction range contracts from $[5.0, 10.4]$ on train to
+$[6.4, 7.2]$ on val/test---a $7\times$ reduction.  This is a hallmark
+of GP overfitting in the $d \gg N_{\text{effective}}$ regime: the model
+memorizes training labels via the kernel matrix but cannot extrapolate
+to unseen pockets.}
+\label{fig:tvt_scatter}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{training_and_metrics.png}
+\caption{\textbf{Training convergence and per-split metrics ($N = 932$,
+FCFP4-2048).}
+(Left) NLL training curve showing smooth convergence.
+(Right) Per-split metric comparison bars for RMSE, Spearman $\rho$, and
+$R^{2}$.  The dramatic gap between train metrics (RMSE $= 1.25$,
+$\rho = 0.98$, $R^{2} = 0.63$) and val/test metrics (RMSE $\approx 2.1$,
+$\rho \approx 0.15$, $R^{2} \approx 0.01$) quantifies the overfitting
+severity and confirms that FCFP4-2048 features do not generalize.}
+\label{fig:tvt_metrics}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{repeated_split_boxplots.png}
+\caption{\textbf{Robustness of the train/test gap ($N = 932$, FCFP4-2048,
+30$\times$ repeated 60/20/20 splits).}
+Box plots of RMSE, Spearman $\rho$, and $R^{2}$ across 30 random splits.
+Train $\rho = 0.989 \pm 0.003$ is artificially high and extremely stable.
+Val/test $\rho = 0.14 \pm 0.05$ reflects the true (negligible) predictive
+power.  The consistent ${\sim}7\times$ gap between train and generalization
+$\rho$ across all 30 splits confirms that overfitting is systematic, not
+the result of an unlucky split.}
+\label{fig:tvt_boxplots}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{distribution_analysis.png}
+\caption{\textbf{Distribution analysis ($N = 932$, FCFP4-2048).}
+(Top) True versus predicted $\pKd$ distributions for train, validation,
+and test sets.  True labels are broadly distributed
+($\pKd \in [1.28, 15.22]$, $\sigma = 2.08$), but predicted
+distributions on val/test are extremely narrow spikes centered at
+${\approx}7.0$.  The train predicted distribution is wider but still
+compressed relative to the truth.
+(Bottom) Residual distributions: train residuals ($\sigma = 1.25$) are
+tighter than val/test residuals ($\sigma \approx 2.0$), consistent with
+overfitting.}
+\label{fig:distribution_analysis}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{encoder_loocv_scatter.png}
+\caption{\textbf{Encoder-128 LOOCV scatter ($N = 932$).}
+LOOCV predicted versus true $\pKd$ with the SE(3)-equivariant encoder
+embedding.  Compared with the FCFP4-2048 result
+(Fig.~\ref{fig:tier3_loocv}), the prediction band is substantially
+wider, spanning $[5.5, 9.0]$ versus $[6.3, 7.5]$.
+Spearman $\rho = 0.369$ ($p < 10^{-31}$), RMSE $= 1.949$,
+$R^{2} = 0.120$: a $9.2\times$ improvement in $R^{2}$ over FCFP4-2048.
+The visible positive trend confirms that the encoder embedding captures
+binding-relevant 3D features that 2D fingerprints fundamentally lack.}
+\label{fig:encoder_loocv}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{encoder_vs_fcfp_metrics.png}
+\caption{\textbf{Head-to-head comparison: Encoder-128 versus FCFP4-2048
+($N = 932$, LOOCV).}
+Bar charts comparing RMSE, Spearman $\rho$, and $R^{2}$ between the
+SE(3)-equivariant encoder embedding and the best 2D fingerprint.
+The encoder achieves $\rho = 0.369$ versus $0.111$ ($3.3\times$) and
+$R^{2} = 0.120$ versus $0.013$ ($9.2\times$).  Both improvements are
+highly significant ($p < 0.0001$ for the encoder, $p = 0.0007$ for
+FCFP4-2048).  This comparison demonstrates that the representation---not
+the GP model or data scale---is the primary bottleneck.}
+\label{fig:encoder_vs_fcfp}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{encoder_vs_fcfp_training.png}
+\caption{\textbf{GP training curve comparison: Encoder-128 versus
+FCFP4-2048 ($N = 932$).}
+NLL convergence curves for both representations.  The encoder model
+converges to a lower NLL ($2.108$) than the FCFP4 model ($2.171$),
+indicating better per-sample likelihood.  Both converge smoothly,
+confirming that the exact GP with the RQ kernel is well-conditioned for
+both embedding types.  The lower encoder NLL reflects the additional
+information content captured by 3D-aware features.}
+\label{fig:encoder_training}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{encoder_tvt_boxplots.png}
+\caption{\textbf{Encoder-128 train/val/test robustness ($N = 932$,
+30$\times$ repeated 60/20/20 splits).}
+Box plots comparing RMSE, Spearman $\rho$, and $R^{2}$ across train,
+validation, and test sets over 30 random splits.  Train $\rho = 0.891$;
+val $\rho = 0.334 \pm 0.052$; test $\rho = 0.357 \pm 0.053$.  While
+the train--test gap still indicates some overfitting (train $R^{2} = 0.59$
+versus test $R^{2} = 0.11$), the generalization metrics are dramatically
+better than FCFP4-2048 (test $\rho = 0.357$ versus $0.146$ for FCFP4;
+$2.4\times$ improvement).}
+\label{fig:encoder_tvt}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{encoder_pca.png}
+\caption{\textbf{Encoder-128 embedding PCA visualization ($N = 932$).}
+The first two principal components of the 128-dimensional encoder
+embeddings, colored by $\pKd$.  Unlike ECFP/FCFP fingerprints (which
+show no $\pKd$-correlated structure in PCA space), the encoder embeddings
+exhibit a visible gradient: high-affinity pockets (warm colors) tend to
+cluster separately from low-affinity pockets (cool colors).  This
+spatial structure confirms that the SE(3)-equivariant encoder produces
+embeddings with affinity-relevant geometric organization.}
+\label{fig:encoder_pca}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{encoder_pca_variance.png}
+\caption{\textbf{PCA variance explained for Encoder-128 embeddings.}
+Cumulative variance explained as a function of the number of principal
+components.  The first 10 components explain ${\sim}60\%$ of the
+variance, and 50 components explain ${\sim}90\%$.  The gradual
+increase---without a sharp ``elbow''---indicates that affinity-relevant
+information is distributed across many dimensions, consistent with the
+high-dimensional nature of protein--ligand interaction features
+(hydrogen bonds, hydrophobic contacts, electrostatics, shape
+complementarity) encoded by the SE(3)-equivariant network.}
+\label{fig:encoder_pca_var}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{cross_split_comparison.png}
+\caption{\textbf{Cross-split comparison and confidence analysis
+($N = 932$, FCFP4-2048).}
+Overlay of train, validation, and test predictions on a single scatter
+plot (left) and predictive standard deviation versus true $\pKd$ (right).
+Training predictions (blue) span a wide range while val/test predictions
+(orange/red) collapse to a narrow band.  The GP assigns slightly higher
+$\sigma$ to unseen data (${\sim}2.0$) than to training data
+(${\sim}1.85$), but the difference is insufficient---a well-calibrated
+model should report much larger uncertainty for out-of-distribution
+inputs in the presence of a fundamentally uninformative representation.}
+\label{fig:cross_split}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{fig6_pocket_ranking.png}
+\caption{\textbf{Pocket ranking by calibrated $\Psuccess$
+(Encoder-128, $N = 24$ evaluation set, $\ytarget = 7.0$).}
+Pockets ranked by calibrated $\Psuccess$ (vertical axis) with true
+$\pKd$ values indicated.  Active pockets ($\pKd \geq 7.0$) are assigned
+high $\Psuccess$ and inactive pockets receive low $\Psuccess$, achieving
+AUROC $= 1.0$ and Spearman $\rho = 0.757$ between $\Psuccess$ and
+true $\pKd$.}
+\label{fig:pocket_ranking}
+\end{figure}
+
+
+%% ── Tables ───────────────────────────────────────────────────────────────
+\section*{Tables}
+
+\begin{table}[h!]
+\centering
+\caption{\textbf{Initial SVGP model: per-split metrics ($N = 24$,
+ECFP4-128, 16/4/4 split).}
+The initial model achieves good training fit but catastrophic
+generalization failure.  Train $R^{2} = 0.508$ and $\rho = 0.715$ but
+test $R^{2} = -16.5$ and $\rho = -0.800$.  The overfitting is caused
+by the SVGP having thousands of free parameters fit to only 16 real
+training points in 128-dimensional space.  This result motivated the
+three subsequent optimization phases.}
+\label{tab:svgp_splits}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Split & $N$ & RMSE & $R^{2}$ & $\rho$ & NLL & 95\% CI \\
+\midrule
+Train  & 16 & 1.275 & 0.508  & 0.715  & 1.68 & 100\% \\
+Val    &  4 & 2.740 & $-1.16$ & $-0.400$ & 3.22 & 75\% \\
+Test   &  4 & 3.337 & $-16.5$ & $-0.800$ & 4.27 & 50\% \\
+All    & 24 & 2.047 & $-0.068$ & 0.470  & 2.37 & 88\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{\textbf{Robust evaluation protocols ($N = 24$, ECFP4-128,
+exact GP with Mat\'ern-5/2 kernel).}
+Three complementary evaluation protocols confirm that ECFP4-128 carries
+no predictive signal.  All Spearman $\rho$ values are negative or
+include zero within 95\% confidence intervals.  Uncertainty
+calibration is acceptable (CI-95\% coverage $88$--$92\%$) only because
+predictive intervals are extremely wide (${\sim}7$--$8$ $\pKd$ units).}
+\label{tab:robust_eval}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Protocol & RMSE & $R^{2}$ & $\rho$ & CI-95\% \\
+\midrule
+LOOCV (analytic)         & 2.62 & $-0.75$ & $-0.33$ & 88\% \\
+50$\times$ repeated 70/30 & $2.24 \pm 0.33$ & $-0.55 \pm 0.75$ & $-0.19 \pm 0.35$ & $89 \pm 11\%$ \\
+200$\times$ bootstrap    & 2.08 \small{[1.54, 2.56]} & $-0.22$ \small{[$-$0.82, 0.23]} & 0.27 \small{[$-$0.14, 0.62]} & 92\% \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{table}[h!]
 \centering
 \caption{\textbf{Representation comparison on the initial evaluation set
-($N = 24$, LOOCV).}
+($N = 24$, LOOCV with Tanimoto kernel).}
 Six molecular representations evaluated with identical GP models.  All 2D
 fingerprint variants produce negative Spearman correlations and negative
 or near-zero $R^{2}$, confirming a fundamental representation
@@ -1040,11 +1542,83 @@ divergence or numerical instability.}
 Embedding & Dim & LOOCV $\rho$ & LOOCV RMSE & LOOCV $R^{2}$ & 95\% CI \\
 \midrule
 ECFP4-128   &  128  & $-0.37$ & 2.22 & $-0.25$ & 92\% \\
-ECFP4-2048  & 2048  & $-0.30$ & 2.43 & ---     & 96\% \\
-ECFP6-2048  & 2048  & $-0.32$ & 2.49 & ---     & 96\% \\
+ECFP4-2048  & 2048  & $-0.30$ & 2.43 & $-0.51$ & 96\% \\
+ECFP6-2048  & 2048  & $-0.32$ & 2.49 & $-0.58$ & 96\% \\
 FCFP4-2048  & 2048  & $-0.23$ & 2.31 & $-0.36$ & 96\% \\
-RDKit-2D    &  217  & $-0.15$ & 3.47 & ---     & 75\% \\
-Combined    & 2265  & NaN     & 5.52 & ---     & --- \\
+RDKit-2D    &  217  & $-0.15$ & 3.47 & $-2.07$ & 75\% \\
+Combined    & 2265  & NaN     & 5.52 & $-6.76$ & 46\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{\textbf{GP kernel comparison via Bayesian optimization
+(200 Optuna trials, $N = 24$).}
+The rational quadratic (RQ) kernel substantially outperforms alternative
+kernels on LOOCV RMSE with the best embedding (FCFP4-2048).  All top-5
+trials converge to the same configuration: FCFP4-2048, RQ kernel, PCA
+to 10 dimensions, isotropic length scale, with output scale prior.
+Despite exhaustive hyperparameter search, the best LOOCV $\rho$
+remains anti-correlated ($-0.42$), confirming that the GP model is not
+the bottleneck.}
+\label{tab:kernel_comparison}
+\begin{tabular}{@{}lcccl@{}}
+\toprule
+Kernel & Best RMSE & Best $\rho$ & Best $R^{2}$ & Best Embedding \\
+\midrule
+Rational Quadratic & 2.07  & $-0.42$ & $-0.09$ & FCFP4-2048 \\
+Mat\'ern-5/2       & 4.5   & ---     & ---     & --- \\
+Mat\'ern-3/2       & 4.8   & ---     & ---     & --- \\
+RBF                & 5.2   & ---     & ---     & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{\textbf{Data scale effect: $N = 24$ versus $N = 932$
+(FCFP4-2048, RQ kernel, LOOCV).}
+Expanding the dataset $39\times$ produces statistical stability
+(standard deviation of $\rho$ drops $6\times$) and corrects the sign of
+$\rho$, but does not substantially improve predictive accuracy
+(RMSE unchanged at ${\sim}2.07$, $R^{2}$ remains near zero).
+The $p$-value becomes significant ($0.0007$) only because of the larger
+sample size; the effect size is negligible.}
+\label{tab:data_scale}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Metric & $N = 24$ & $N = 932$ & Change \\
+\midrule
+LOOCV RMSE    & 2.07  & 2.07  & 0\% \\
+LOOCV $\rho$  & $-0.42$ & $+0.11$ & Sign flip \\
+LOOCV $R^{2}$ & $-0.09$ & $+0.01$ & No longer negative \\
+$p$-value     & $>0.05$ & 0.0007 & Significant \\
+50$\times$ $\rho$ std & 0.33  & 0.055 & $6\times$ reduction \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{\textbf{Overfitting analysis: train versus generalization
+metrics ($N = 932$, FCFP4-2048, 30$\times$ repeated 60/20/20 splits).}
+The GP achieves excellent training fit (train $R^{2} = 0.63$,
+$\rho = 0.99$) by memorizing the kernel matrix, but generalizes
+poorly (test $R^{2} = 0.012$, $\rho = 0.146$).  The ${\sim}50\times$
+gap between train and test $R^{2}$ is characteristic of GP overfitting
+on uninformative high-dimensional features: the kernel finds local
+similarities in fingerprint space that do not correspond to affinity
+differences.}
+\label{tab:overfitting}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+& Train & Validation & Test \\
+\midrule
+RMSE       & $1.270 \pm 0.036$ & $2.016 \pm 0.092$ & $2.093 \pm 0.102$ \\
+$\rho$     & $0.989 \pm 0.003$ & $0.144 \pm 0.060$ & $0.146 \pm 0.048$ \\
+$R^{2}$    & $0.630 \pm 0.008$ & $0.007 \pm 0.011$ & $0.012 \pm 0.012$ \\
+Pred.\ range & $[5.0, 10.4]$ & $[6.5, 7.2]$ & $[6.4, 7.2]$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1066,7 +1640,7 @@ Metric & Encoder-128 & FCFP4-2048 & Improvement \\
 LOOCV RMSE      & 1.949  & 2.068  & 5.7\% $\downarrow$ \\
 LOOCV $\rho$    & 0.369  & 0.111  & 3.3$\times$ $\uparrow$ \\
 LOOCV $R^{2}$   & 0.120  & 0.013  & 9.2$\times$ $\uparrow$ \\
-$p$-value       & $<0.0001$ & 0.0007 & --- \\
+$p$-value       & $<10^{-31}$ & 0.0007 & --- \\
 \midrule
 50$\times$ Split $\rho$   & $0.373 \pm 0.045$ & $0.134 \pm 0.055$ & 2.8$\times$ $\uparrow$ \\
 50$\times$ Split $R^{2}$  & $0.116 \pm 0.027$ & $0.004 \pm 0.010$ & 29$\times$ $\uparrow$ \\
@@ -1076,21 +1650,90 @@ $p$-value       & $<0.0001$ & 0.0007 & --- \\
 
 \begin{table}[h!]
 \centering
+\caption{\textbf{Encoder-128 generalization: train/val/test metrics
+($N = 932$, 30$\times$ repeated 60/20/20 splits).}
+Compared with FCFP4-2048 (Table~\ref{tab:overfitting}), the encoder
+achieves $2.4\times$ higher test $\rho$ ($0.357$ versus $0.146$) and
+$9\times$ higher test $R^{2}$ ($0.109$ versus $0.012$).  The
+train--test $R^{2}$ gap narrows from $0.618$ (FCFP4) to $0.482$
+(encoder), indicating that the 3D-aware representation reduces
+overfitting by encoding genuinely informative features.}
+\label{tab:encoder_tvt}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+& Train & Validation & Test \\
+\midrule
+RMSE       & $1.335 \pm 0.044$ & $1.957 \pm 0.106$ & $1.935 \pm 0.110$ \\
+$\rho$     & $0.891 \pm 0.009$ & $0.334 \pm 0.052$ & $0.357 \pm 0.053$ \\
+$R^{2}$    & $0.591 \pm 0.017$ & $0.098 \pm 0.033$ & $0.109 \pm 0.039$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{\textbf{Encoder-128 five-fold cross-validation ($N = 932$).}
+All five folds achieve significant positive Spearman $\rho$ ($p < 10^{-4}$
+for all folds), confirming that the correlation is robust across
+different data partitions.  Per-fold $\rho$ ranges from $0.287$ to
+$0.438$, with overall $\rho = 0.354$.}
+\label{tab:encoder_cv5}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Fold & $N$ & RMSE & $\rho$ & $p$-value \\
+\midrule
+1 & 187 & 1.963 & 0.322 & $6.3 \times 10^{-6}$ \\
+2 & 186 & 1.846 & 0.378 & $7.9 \times 10^{-8}$ \\
+3 & 187 & 2.011 & 0.438 & $3.2 \times 10^{-10}$ \\
+4 & 186 & 1.804 & 0.287 & $6.3 \times 10^{-5}$ \\
+5 & 186 & 2.165 & 0.352 & $7.3 \times 10^{-7}$ \\
+\midrule
+Overall & 932 & 1.962 & 0.354 & $3.7 \times 10^{-29}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
 \caption{\textbf{Ablation study ($N = 24$, Encoder-128, $\ytarget = 7.0$).}
 Each row removes one component from the full BayesDiff pipeline.
-Removing oracle variance (A2) causes the NLL to explode, demonstrating
-that $\Uoracle$ is essential.  ECE: expected calibration error; AUROC:
-area under the ROC curve; NLL: negative log-likelihood.}
+Removing oracle variance (A2) causes the NLL to explode to
+${\sim}10^{10}$, demonstrating that $\Uoracle$ is essential for
+density estimation.  ECE: expected calibration error; AUROC: area under
+the ROC curve; NLL: negative log-likelihood.}
 \label{tab:ablation}
-\begin{tabular}{@{}llccc@{}}
+\begin{tabular}{@{}llcccc@{}}
 \toprule
-Variant & Description & ECE & AUROC & NLL \\
+Variant & Description & ECE & AUROC & NLL & Brier \\
 \midrule
-Full    & Complete pipeline       & 0.264 & 1.000 & 1.95 \\
-A1      & No $\Ugen$ ($\Siggen = 0$) & 0.230 & 1.000 & 1.95 \\
-A2      & No $\Uoracle$ ($\Uoracle = 0$) & 0.238 & 1.000 & $1.03 \times 10^{10}$ \\
-A3      & No calibration          & 0.264 & 1.000 & 1.95 \\
-A4      & Naive covariance (no L--W) & 0.275 & 1.000 & 1.98 \\
+Full    & Complete pipeline           & 0.264 & 1.000 & 1.95 & 0.103 \\
+A1      & No $\Ugen$ ($\Siggen = 0$) & 0.230 & 1.000 & 1.95 & 0.074 \\
+A2      & No $\Uoracle$ ($\Uoracle = 0$)& 0.238 & 1.000 & $1.03 \times 10^{10}$ & 0.081 \\
+A3      & No calibration              & 0.264 & 1.000 & 1.95 & 0.103 \\
+A4      & Naive covariance (no L--W)  & 0.275 & 1.000 & 1.98 & 0.109 \\
+A5      & No multimodal detection     & 0.264 & 1.000 & 1.95 & 0.103 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\caption{\textbf{Bottleneck hierarchy: systematic progression from
+initial to final configuration.}
+Each row represents a cumulative improvement.  The largest single gain
+comes from the representation switch (FCFP4 $\to$ Encoder-128),
+confirming that representation quality dominates all other factors.
+Arrows indicate the direction of improvement.}
+\label{tab:hierarchy}
+\begin{tabular}{@{}llccl@{}}
+\toprule
+Configuration & Key Change & $\rho$ & $R^{2}$ & Status \\
+\midrule
+$N\!=\!24$, ECFP4, SVGP  & Baseline & $-0.80$ (test) & $-16.5$ & Catastrophic \\
+$N\!=\!24$, ECFP4, Exact GP  & +Exact GP, LOOCV & $-0.33$ & $-0.75$ & Overfitting \\
+$N\!=\!24$, FCFP4, RQ (BO)  & +Best kernel (BO) & $-0.42$ & $-0.09$ & Near-random \\
+$N\!=\!932$, FCFP4, RQ  & +39$\times$ data & $+0.11$ & $+0.01$ & Weak signal \\
+$N\!=\!932$, Encoder-128, RQ  & +3D encoder & $+0.37$ & $+0.12$ & Meaningful \\
 \bottomrule
 \end{tabular}
 \end{table}
