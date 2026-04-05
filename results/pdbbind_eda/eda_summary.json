@@ -1,0 +1,27 @@
+{
+  "n_total": 18765,
+  "n_processed": 18765,
+  "pkd_mean": 6.385622741998464,
+  "pkd_std": 1.830141837366353,
+  "pkd_min": 0.3979400086720376,
+  "pkd_max": 15.221848749616356,
+  "affinity_types": {
+    "Kd": 6935,
+    "IC50": 6930,
+    "Ki": 4900
+  },
+  "splits": {
+    "train": 16260,
+    "val": 2220,
+    "test": 285
+  },
+  "n_quality_issues": 982,
+  "n_protein_mean": 1305.5081801225685,
+  "n_protein_std": 331.56925192882255,
+  "n_protein_min": 141,
+  "n_protein_max": 3317,
+  "n_ligand_mean": 33.1312549960032,
+  "n_ligand_std": 22.105263420138037,
+  "n_ligand_min": 4,
+  "n_ligand_max": 224
+}

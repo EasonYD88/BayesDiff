@@ -55,7 +55,6 @@ logger = logging.getLogger("s00b_eda")
 plt.rcParams.update({
     "figure.dpi": 150,
     "savefig.dpi": 150,
-    "savefig.bbox_inches": "tight",
     "font.size": 10,
 })
 

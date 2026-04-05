@@ -323,7 +323,12 @@ def cluster_stratified_split(
         f"from {len(cluster_info)} clusters ({len(val_clusters)} val clusters)"
     )
 
-    return {"train": sorted(train_codes), "val": sorted(val_codes)}
+    return {
+        "train": sorted(train_codes),
+        "val": sorted(val_codes),
+        "_cluster_info": cluster_info,
+        "_clusters": clusters,
+    }
 
 
 def _try_mmseqs_cluster(

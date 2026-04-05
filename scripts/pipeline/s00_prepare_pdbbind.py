@@ -370,32 +370,35 @@ def stage_parse(pdbbind_dir: Path, output_dir: Path) -> pd.DataFrame:
 
     df["source"] = "pdbbind"
 
-    # Parse CASF-2016
-    casf_dir = find_casf_dir(pdbbind_dir)
-    casf_codes = set(load_casf2016_codes(casf_dir))
-    logger.info(f"  CASF-2016 core set: {len(casf_codes)} PDB codes")
+    # Parse CASF-2016 (optional — graceful if missing)
+    try:
+        casf_dir = find_casf_dir(pdbbind_dir)
+        casf_codes = set(load_casf2016_codes(casf_dir))
+        logger.info(f"  CASF-2016 core set: {len(casf_codes)} PDB codes")
 
-    casf_in_pdbbind = casf_codes & set(df["pdb_code"])
-    logger.info(f"  CASF codes found in PDBbind: {len(casf_in_pdbbind)}")
-    df.loc[df["pdb_code"].isin(casf_codes), "source"] = "casf_test"
+        casf_in_pdbbind = casf_codes & set(df["pdb_code"])
+        logger.info(f"  CASF codes found in PDBbind: {len(casf_in_pdbbind)}")
+        df.loc[df["pdb_code"].isin(casf_codes), "source"] = "casf_test"
 
-    # Also parse CASF CoreSet.dat for any codes missing from INDEX
-    coreset_dat = casf_dir / "power_screening" / "CoreSet.dat"
-    if coreset_dat.exists():
-        casf_df = parse_casf_coreset(coreset_dat)
-        missing_casf = set(casf_df["pdb_code"]) - set(df["pdb_code"])
-        if missing_casf:
-            logger.warning(f"  {len(missing_casf)} CASF codes not in PDBbind INDEX")
-            for code in missing_casf:
-                if code in code_to_dir:
-                    row = casf_df[casf_df["pdb_code"] == code].iloc[0]
-                    new_row = {
-                        "pdb_code": code, "resolution": row["resolution"],
-                        "year": row["year"], "affinity_type": row.get("affinity_type", "Kd"),
-                        "affinity_value_M": np.nan, "pkd": row["pkd"],
-                        "is_exact": True, "source": "casf_test",
-                    }
-                    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        # Also parse CASF CoreSet.dat for any codes missing from INDEX
+        coreset_dat = casf_dir / "power_screening" / "CoreSet.dat"
+        if coreset_dat.exists():
+            casf_df = parse_casf_coreset(coreset_dat)
+            missing_casf = set(casf_df["pdb_code"]) - set(df["pdb_code"])
+            if missing_casf:
+                logger.warning(f"  {len(missing_casf)} CASF codes not in PDBbind INDEX")
+                for code in missing_casf:
+                    if code in code_to_dir:
+                        row = casf_df[casf_df["pdb_code"] == code].iloc[0]
+                        new_row = {
+                            "pdb_code": code, "resolution": row["resolution"],
+                            "year": row["year"], "affinity_type": row.get("affinity_type", "Kd"),
+                            "affinity_value_M": np.nan, "pkd": row["pkd"],
+                            "is_exact": True, "source": "casf_test",
+                        }
+                        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    except FileNotFoundError:
+        logger.warning("  CASF-2016 directory not found; all codes marked as pdbbind")
 
     labels_path = output_dir / "labels.csv"
     df.to_csv(labels_path, index=False)
@@ -596,6 +599,35 @@ def stage_split(
     with open(splits_path, "w") as f:
         json.dump(splits, f, indent=2)
     logger.info(f"Splits → {splits_path}")
+
+    # ── Write cluster files ──────────────────────────────────────────────
+    cluster_info = tv_splits.get("_cluster_info", [])
+    clusters_map = tv_splits.get("_clusters", {})
+
+    if cluster_info:
+        # clusters.json: {cluster_id: [pdb_code, ...]}
+        clusters_json = {str(c["cluster_id"]): c["pdbs"] for c in cluster_info}
+        clusters_path = output_dir / "clusters.json"
+        with open(clusters_path, "w") as f:
+            json.dump(clusters_json, f, indent=2)
+        logger.info(f"Clusters ({len(clusters_json)}) → {clusters_path}")
+
+        # cluster_assignments.csv: pdb_code, cluster_id, cluster_median_pkd, pkd_bin
+        rows = []
+        # Build quick lookup for cluster metadata
+        cid_to_info = {c["cluster_id"]: c for c in cluster_info}
+        for pdb_code, cid in sorted(clusters_map.items()):
+            info = cid_to_info.get(cid, {})
+            rows.append({
+                "pdb_code": pdb_code,
+                "cluster_id": cid,
+                "cluster_median_pkd": info.get("median_pkd", np.nan),
+                "pkd_bin": info.get("bin", -1),
+            })
+        ca_df = pd.DataFrame(rows)
+        ca_path = output_dir / "cluster_assignments.csv"
+        ca_df.to_csv(ca_path, index=False)
+        logger.info(f"Cluster assignments ({len(ca_df)}) → {ca_path}")
 
     df.to_csv(labels_path, index=False)
     return splits

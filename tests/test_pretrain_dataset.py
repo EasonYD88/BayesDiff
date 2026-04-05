@@ -164,11 +164,11 @@ def test_protein_family_split():
 
         assert "train" in splits
         assert "val" in splits
-        assert "cal" in splits
-        assert "test" in splits
 
         all_codes_split = []
         for name, scodes in splits.items():
+            if name.startswith("_"):  # skip metadata keys
+                continue
             all_codes_split.extend(scodes)
 
         # No overlaps
@@ -179,8 +179,7 @@ def test_protein_family_split():
         n = len(codes)
         assert len(splits["train"]) >= n * 0.5, "Train too small"
 
-        print(f"✓ M0.3: Splits OK (train={len(splits['train'])}, val={len(splits['val'])}, "
-              f"cal={len(splits['cal'])}, test={len(splits['test'])})")
+        print(f"✓ M0.3: Splits OK (train={len(splits['train'])}, val={len(splits['val'])})")
 
 
 def test_featurize_single_complex():
@@ -197,10 +196,11 @@ def test_featurize_single_complex():
 
         code = codes[0]
         pkd_map = {code: 7.5}
+        code_to_dir = {c: root / "refined-set" / c for c in codes}
 
         result = _process_one_complex(
             code,
-            pdbbind_dir=root,
+            code_to_dir=code_to_dir,
             output_dir=output_dir,
             pkd_map=pkd_map,
         )
@@ -240,9 +240,10 @@ def test_dataloader():
         df = parse_pdbbind_index(root / "INDEX_refined_data.2020")
         pkd_map = dict(zip(df["pdb_code"], df["pkd"]))
 
+        code_to_dir = {c: root / "refined-set" / c for c in codes}
         ok_codes = []
         for code in codes:
-            res = _process_one_complex(code, root, processed_dir, pkd_map)
+            res = _process_one_complex(code, code_to_dir=code_to_dir, output_dir=processed_dir, pkd_map=pkd_map)
             if res["status"] == "ok":
                 ok_codes.append(code)
 
@@ -250,9 +251,8 @@ def test_dataloader():
         n = len(ok_codes)
         splits = {
             "train": ok_codes[:int(n*0.7)],
-            "val": ok_codes[int(n*0.7):int(n*0.8)],
-            "cal": ok_codes[int(n*0.8):int(n*0.9)],
-            "test": ok_codes[int(n*0.9):],
+            "val": ok_codes[int(n*0.7):int(n*0.85)],
+            "test": ok_codes[int(n*0.85):],
         }
         with open(output_dir / "splits.json", "w") as f:
             json.dump(splits, f)
@@ -331,7 +331,7 @@ def test_full_pipeline():
 
         print(f"✓ Full pipeline: {len(df)} parsed → {n_ok} featurized → "
               f"{total} split (train={len(splits['train'])}, val={len(splits['val'])}, "
-              f"cal={len(splits['cal'])}, test={len(splits['test'])})")
+              f"test={len(splits['test'])})")
 
 
 def test_shard_parallelism():
