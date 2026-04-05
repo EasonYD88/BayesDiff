@@ -1,8 +1,10 @@
 """
+bayesdiff/data.py — Data Utilities
+───────────────────────────────────
 Data loading, PDBbind INDEX parsing, protein-family split, and label transforms.
 
 Usage:
-    python scripts/01_prepare_data.py --pdbbind_dir data/pdbbind --output_dir data/splits
+    python scripts/pipeline/s01_prepare_data.py --pdbbind_dir data/pdbbind --output_dir data/splits
 """
 
 from __future__ import annotations

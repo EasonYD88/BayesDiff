@@ -19,7 +19,7 @@
 | `external/targetdiff/pretrained_models/*.pt` | ❌ .gitignore 排除 | 需手动上传（~33MB） |
 | `external/targetdiff/data/test_set/` | ❌ .gitignore 排除 | 需手动同步（~500MB） |
 | `external/targetdiff/data/affinity_info.pkl` | ❌ .gitignore 排除 | 需手动同步（~20MB） |
-| `scripts/torch_scatter_shim.py` | ✅ git 直接追踪 | 克隆后手动 `cp` 到 TargetDiff 目录 |
+| `scripts/utils/torch_scatter_shim.py` | ✅ git 直接追踪 | 克隆后手动 `cp` 到 TargetDiff 目录 |
 
 **最简克隆命令**：
 ```bash
@@ -176,11 +176,11 @@ ls -lh external/targetdiff/data/affinity_info.pkl  # 应约 20MB
 ### S1.4 部署 torch_scatter shim
 
 TargetDiff 代码依赖旧的 `torch_scatter` 包，我们提供了兼容 shim。
-该文件已保存在 BayesDiff 仓库中（`scripts/torch_scatter_shim.py`），克隆后复制即可：
+该文件已保存在 BayesDiff 仓库中（`scripts/utils/torch_scatter_shim.py`），克隆后复制即可：
 
 ```bash
 # 从 BayesDiff 仓库的 scripts/ 目录复制到 TargetDiff 目录
-cp scripts/torch_scatter_shim.py external/targetdiff/torch_scatter.py
+cp scripts/utils/torch_scatter_shim.py external/targetdiff/torch_scatter.py
 
 # 验证
 python -c "
@@ -200,7 +200,7 @@ print('torch_scatter shim OK')
 ```bash
 conda activate bayesdiff
 cd /scratch/$USER/BayesDiff
-python scripts/_check_deps.py
+python scripts/utils/check_deps.py
 ```
 
 预期：所有依赖项 ✅。如果有缺失，按提示 `pip install` 补装。
@@ -265,7 +265,7 @@ head -5 data/splits/test_pockets.txt
 head -5 data/splits/test_pockets.txt > data/splits/smoke_pockets.txt
 
 # 快速冒烟测试（~10 min on GPU）
-python scripts/02_sample_molecules.py \
+python scripts/pipeline/s02_sample_molecules.py \
     --pocket_list data/splits/smoke_pockets.txt \
     --pdbbind_dir external/targetdiff/data/test_set \
     --targetdiff_dir external/targetdiff \
@@ -440,7 +440,7 @@ cat results/generated_molecules/sampling_summary.json | python -m json.tool | he
 Step 2 在 `sample_job.sh` 中已自动执行。如果需要单独重新提取：
 
 ```bash
-python scripts/03_extract_embeddings.py \
+python scripts/pipeline/s03_extract_embeddings.py \
     --mode generated \
     --input_dir results/generated_molecules \
     --pdbbind_dir external/targetdiff/data/test_set \
@@ -471,7 +471,7 @@ cd /scratch/$USER/BayesDiff
 sbatch slurm/train_gp.sh
 
 # 或手动运行：
-python scripts/04_train_gp.py \
+python scripts/pipeline/s04_train_gp.py \
     --embeddings results/generated_molecules/all_embeddings.npz \
     --output results/gp_model \
     --n_inducing 48 \
@@ -514,7 +514,7 @@ cat results/gp_model/train_meta.json | python -m json.tool
 ### S6.1 运行完整评估
 
 ```bash
-python scripts/05_evaluate.py \
+python scripts/pipeline/s05_evaluate.py \
     --embeddings results/generated_molecules/all_embeddings.npz \
     --gp_model results/gp_model/gp_model.pt \
     --gp_train_data results/gp_model/train_data.npz \
@@ -560,7 +560,7 @@ for k in ['ece', 'auroc', 'ef_1pct', 'hit_rate', 'spearman_rho', 'rmse', 'nll']:
 ### S7.1 运行全部消融
 
 ```bash
-python scripts/06_ablation.py \
+python scripts/pipeline/s06_ablation.py \
     --embeddings results/generated_molecules/all_embeddings.npz \
     --gp_model results/gp_model/gp_model.pt \
     --gp_train_data results/gp_model/train_data.npz \
@@ -674,7 +674,7 @@ echo "Pockets: $(wc -l < data/splits/test_pockets.txt)"
 # ── S3: 批量采样 ────────────────────────────────
 echo ""
 echo ">>> [S3] Sampling molecules (93 pockets × 64 samples × 100 steps)..."
-python scripts/02_sample_molecules.py \
+python scripts/pipeline/s02_sample_molecules.py \
     --pocket_list data/splits/test_pockets.txt \
     --pdbbind_dir external/targetdiff/data/test_set \
     --targetdiff_dir external/targetdiff \
@@ -686,7 +686,7 @@ python scripts/02_sample_molecules.py \
 # ── S5: GP 训练 ─────────────────────────────────
 echo ""
 echo ">>> [S5] Training GP oracle..."
-python scripts/04_train_gp.py \
+python scripts/pipeline/s04_train_gp.py \
     --embeddings results/generated_molecules/all_embeddings.npz \
     --affinity_pkl external/targetdiff/data/affinity_info.pkl \
     --output results/gp_model \
@@ -698,7 +698,7 @@ python scripts/04_train_gp.py \
 # ── S6: 评估 ────────────────────────────────────
 echo ""
 echo ">>> [S6] Running evaluation..."
-python scripts/05_evaluate.py \
+python scripts/pipeline/s05_evaluate.py \
     --embeddings results/generated_molecules/all_embeddings.npz \
     --gp_model results/gp_model/gp_model.pt \
     --gp_train_data results/gp_model/train_data.npz \
@@ -710,7 +710,7 @@ python scripts/05_evaluate.py \
 # ── S7: 消融 ────────────────────────────────────
 echo ""
 echo ">>> [S7] Running ablation study..."
-python scripts/06_ablation.py \
+python scripts/pipeline/s06_ablation.py \
     --embeddings results/generated_molecules/all_embeddings.npz \
     --gp_model results/gp_model/gp_model.pt \
     --gp_train_data results/gp_model/train_data.npz \
@@ -798,7 +798,7 @@ RuntimeError: CUDA out of memory
 NUM_SAMPLES=32 sbatch slurm/sample_job.sh
 
 # 或在 02_sample_molecules.py 中设置 batch_size
-python scripts/02_sample_molecules.py --batch_size 16 ...
+python scripts/pipeline/s02_sample_molecules.py --batch_size 16 ...
 ```
 
 ### C2. TargetDiff import 错误
@@ -897,12 +897,12 @@ except Exception as e:
 - [ ] `external/targetdiff/pretrained_models/pretrained_diffusion.pt` 已就位（~33MB）
 - [ ] `external/targetdiff/data/test_set/` 已就位（93 个 target 目录）
 - [ ] `external/targetdiff/data/affinity_info.pkl` 已就位（~20MB）
-- [ ] `cp scripts/torch_scatter_shim.py external/targetdiff/torch_scatter.py` 已执行
+- [ ] `cp scripts/utils/torch_scatter_shim.py external/targetdiff/torch_scatter.py` 已执行
 
 ### E2. 环境
 - [ ] Conda 环境 `bayesdiff` 创建成功
 - [ ] `torch.cuda.is_available()` → `True`
-- [ ] `python scripts/_check_deps.py` 全部通过
+- [ ] `python scripts/utils/check_deps.py` 全部通过
 - [ ] `python -c "from torch_scatter import scatter_mean; print('shim OK')"` 通过（在 BayesDiff 根目录下）
 
 ### E3. 数据验证
@@ -929,7 +929,7 @@ except Exception as e:
 ### 新增文件
 
 - `slurm/sample_array_job.sh`：并行采样主入口（Slurm job array）
-- `scripts/07_merge_sampling_shards.py`：分片 embeddings/summary 合并器
+- `scripts/scaling/s02_merge_shards.py`：分片 embeddings/summary 合并器
 - `slurm/merge_sample_shards_job.sh`：合并作业模板（CPU）
 
 ### 推荐执行流程（替代手动 split/merge）
@@ -982,7 +982,7 @@ PY
 - 现有单卡目录 `results/generated_molecules/`
 - 其他并行 run 的目录
 
-补充：`sample_array_job.sh` 通过 `scripts/08_sample_molecules_shard.py` 分片后再调用原 `scripts/02_sample_molecules.py`，原采样代码不改动。
+补充：`sample_array_job.sh` 通过 `scripts/scaling/s01_sample_shard.py` 分片后再调用原 `scripts/pipeline/s02_sample_molecules.py`，原采样代码不改动。
 
 ---
 
@@ -991,10 +991,10 @@ PY
 ### 结构补丁（并行相关）
 
 - 新增 `slurm/sample_array_job.sh`（多卡并行采样）
-- 新增 `scripts/08_sample_molecules_shard.py`（分片包装，调用原 `02_sample_molecules.py`）
-- 新增 `scripts/07_merge_sampling_shards.py`（分片合并）
+- 新增 `scripts/scaling/s01_sample_shard.py`（分片包装，调用原 `02_sample_molecules.py`）
+- 新增 `scripts/scaling/s02_merge_shards.py`（分片合并）
 - 新增 `slurm/merge_sample_shards_job.sh`（CPU 合并作业）
-- 原 `scripts/02_sample_molecules.py` / `slurm/sample_job.sh` 保持不变
+- 原 `scripts/pipeline/s02_sample_molecules.py` / `slurm/sample_job.sh` 保持不变
 
 ### 进度补丁
 

@@ -1,7 +1,9 @@
 """
-bayesdiff/fusion.py
-───────────────────
+bayesdiff/fusion.py — §4.3 Fusion Module
+─────────────────────────────────────────
 Uncertainty fusion via Delta Method (Law of Total Variance).
+Paper reference: §4.3 "Uncertainty Fusion via the Delta Method"
+Equation reference: Eq. (7)–(9) in doc/Stage_1/03_math_reference.md §5
 
 Combines generation uncertainty (Σ̂_gen) with oracle uncertainty (σ²_oracle)
 to produce total predictive variance:
@@ -68,7 +70,7 @@ def fuse_uncertainties(
         Hessian d²μ/dz² (required if hessian_correction=True).
     ood_confidence : float
         OOD confidence weight w(z) from MahalanobisOOD.score().
-        P_final = w(z) * P_success (math_explain §7.2).
+        P_final = w(z) * P_success (03_math_reference §7.2).
 
     Returns
     -------
@@ -84,7 +86,7 @@ def fuse_uncertainties(
         correction = 0.5 * np.trace(H_mu @ cov_gen)
         mu_oracle = mu_oracle + correction
 
-    # Law of Total Variance (math_explain §4):
+    # Law of Total Variance (03_math_reference §4):
     #   σ²_total ≈ E_z[σ²_oracle(z)] + J_μᵀ Σ̂_gen J_μ
     # Approximation: E_z[σ²_oracle(z)] ≈ σ²_oracle(z̄), valid when oracle
     # variance varies slowly relative to the generation distribution spread.
@@ -97,7 +99,7 @@ def fuse_uncertainties(
     z_score = (y_target - mu_oracle) / sigma_total
     p_success = 1.0 - stats.norm.cdf(z_score)
 
-    # P_final = w(z) · P_success (math_explain §7.2, §8)
+    # P_final = w(z) · P_success (03_math_reference §7.2, §8)
     p_final = ood_confidence * p_success
 
     return FusionResult(

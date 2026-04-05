@@ -1,8 +1,10 @@
 """
-bayesdiff/evaluate.py
+bayesdiff/evaluate.py — §5 Evaluation Module
+──────────────────────────────────────────────
 Evaluation metrics for BayesDiff.
+Paper reference: §5 "Experiments"
 
-Computes all metrics from plan_opendata.md section 6.2:
+Computes all metrics from 04_opendata_plan.md section 6.2:
   - ECE (Expected Calibration Error)
   - AUROC (P_success as classifier)
   - EF@1% (Enrichment Factor)
@@ -93,7 +95,7 @@ def evaluate_all(
     # ECE
     ece = compute_ece(p_success, y_binary)
 
-    # Brier Score (math_explain §6.3)
+    # Brier Score (03_math_reference §6.3)
     brier = brier_score(p_success, y_binary)
 
     # AUROC

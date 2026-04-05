@@ -15,9 +15,9 @@
 
 本指南只覆盖 `projects/BayesDiff` 当前真实使用的 HPC 流程（NYU Torch）：
 
-1. GPU 主任务：`scripts/02_sample_molecules.py`
-2. GPU 可选任务：`scripts/03_extract_embeddings.py`（重提取）
-3. CPU 任务：`scripts/04_train_gp.py`、`scripts/05_evaluate.py`、`scripts/06_ablation.py`
+1. GPU 主任务：`scripts/pipeline/s02_sample_molecules.py`
+2. GPU 可选任务：`scripts/pipeline/s03_extract_embeddings.py`（重提取）
+3. CPU 任务：`scripts/pipeline/s04_train_gp.py`、`scripts/pipeline/s05_evaluate.py`、`scripts/pipeline/s06_ablation.py`
 
 不改代码、不改现有 Slurm 脚本，仅提供可直接执行的 runbook。
 
@@ -92,7 +92,7 @@ sacctmgr -n show assoc user=$USER format=Account,User,Partition 2>/dev/null | he
 
 ```bash
 cd /scratch/${USER}/BayesDiff
-python scripts/_check_deps.py
+python scripts/utils/check_deps.py
 ```
 
 成功判据：关键依赖可导入（至少 `torch`, `torch_geometric`, `rdkit`, `easydict`, `yaml`）。
@@ -225,19 +225,19 @@ set -euo pipefail
 cd /scratch/${USER}/BayesDiff
 eval "$(conda shell.bash hook)" 2>/dev/null || true
 conda activate bayesdiff 2>/dev/null || source activate bayesdiff 2>/dev/null || true
-python scripts/04_train_gp.py \
+python scripts/pipeline/s04_train_gp.py \
   --embeddings results/generated_molecules/all_embeddings.npz \
   --affinity_pkl external/targetdiff/data/affinity_info.pkl \
   --output results/gp_model \
   --n_inducing 128 --n_epochs 200 --batch_size 64 --augment_to 200
-python scripts/05_evaluate.py \
+python scripts/pipeline/s05_evaluate.py \
   --embeddings results/generated_molecules/all_embeddings.npz \
   --gp_model results/gp_model/gp_model.pt \
   --gp_train_data results/gp_model/train_data.npz \
   --affinity_pkl external/targetdiff/data/affinity_info.pkl \
   --output results/evaluation \
   --y_target 7.0 --confidence_threshold 0.5 --bootstrap_n 1000
-python scripts/06_ablation.py \
+python scripts/pipeline/s06_ablation.py \
   --embeddings results/generated_molecules/all_embeddings.npz \
   --gp_model results/gp_model/gp_model.pt \
   --gp_train_data results/gp_model/train_data.npz \
@@ -386,7 +386,7 @@ slurm/logs/*.err
 ## 13. 延伸阅读
 
 1. `doc/hpc_execution_plan.md`：完整阶段执行计划
-2. `doc/plan_opendata.md`：公开数据策略与实验背景
+2. `doc/04_opendata_plan.md`：公开数据策略与实验背景
 3. `doc/nyu_torch_coding_agent_guide.md`：NYU Torch 通用使用规则
 
 ---
@@ -396,7 +396,7 @@ slurm/logs/*.err
 为提升 S3 采样效率，新增并行脚本组，且不修改原有 `slurm/sample_job.sh`：
 
 - `slurm/sample_array_job.sh`
-- `scripts/07_merge_sampling_shards.py`
+- `scripts/scaling/s02_merge_shards.py`
 - `slurm/merge_sample_shards_job.sh`
 
 ### 并行采样（4 卡示例）
@@ -437,7 +437,7 @@ results/generated_molecules_parallel/<your_run_tag>/all_embeddings.npz
 
 并行输出使用 `OUTPUT_ROOT/<RUN_TAG>/...`，`RUN_TAG` 含时间戳与 job id，默认不会覆盖已有 `results/generated_molecules/` 数据。
 
-补充：并行作业通过 `scripts/08_sample_molecules_shard.py` 做 pocket 列表切片，再调用原 `scripts/02_sample_molecules.py`。
+补充：并行作业通过 `scripts/scaling/s01_sample_shard.py` 做 pocket 列表切片，再调用原 `scripts/pipeline/s02_sample_molecules.py`。
 
 ---
 

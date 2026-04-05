@@ -1,7 +1,9 @@
 """
-bayesdiff/gp_oracle.py
-──────────────────────
+bayesdiff/gp_oracle.py — §4.2 Oracle Module
+──────────────────────────────────────────────
 Sparse Variational Gaussian Process (SVGP) for oracle uncertainty.
+Paper reference: §4.2 "SVGP Oracle with ARD Matérn-5/2 Kernel"
+Equation reference: Eq. (5)–(6) in doc/Stage_1/03_math_reference.md §4
 
 Predicts μ_oracle(z) and σ²_oracle(z) given encoder embedding z.
 Uses GPyTorch with ARD Matérn-5/2 kernel and J=512 inducing points.

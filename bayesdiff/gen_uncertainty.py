@@ -1,7 +1,9 @@
 """
-bayesdiff/gen_uncertainty.py
-────────────────────────────
+bayesdiff/gen_uncertainty.py — §4.1 Generation Uncertainty
+────────────────────────────────────────────────────────────
 Generation-side uncertainty estimation (U_gen).
+Paper reference: §4.1 "Generation Uncertainty via Ledoit-Wolf Shrinkage"
+Equation reference: Eq. (2)–(4) in doc/Stage_1/03_math_reference.md §2–3
 
 Given M samples from a diffusion model for a single pocket:
   1. Compute sample covariance Σ̂_gen with Ledoit-Wolf shrinkage
@@ -123,7 +125,7 @@ def estimate_gen_uncertainty(
             gmm_weights = gmm_final.weights_  # (K,)
             gmm_covs = gmm_final.covariances_  # (K, d, d)
 
-            # Aggregate GMM global mean and covariance (math_explain §2.3):
+            # Aggregate GMM global mean and covariance (03_math_reference §2.3):
             #   z̄ = Σ π_k μ_k
             #   Σ_gen = Σ π_k [Σ_k + (μ_k - z̄)(μ_k - z̄)ᵀ]
             z_bar = gmm_weights @ gmm_means  # (d,)
