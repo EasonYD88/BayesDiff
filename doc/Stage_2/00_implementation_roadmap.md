@@ -16,21 +16,49 @@ Stage 2 addresses the three core bottlenecks identified in [problem_and_solution
 
 | # | Sub-Plan | File | Priority | Dependency |
 |---|----------|------|----------|------------|
-| 1 | Multi-Granularity Representation | [01_multi_granularity_repr.md](01_multi_granularity_repr.md) | **P0 — Critical** | None |
-| 2 | Attention-Based Aggregation | [02_attention_aggregation.md](02_attention_aggregation.md) | **P0 — Critical** | None |
-| 3 | Multi-Layer Fusion | [03_multi_layer_fusion.md](03_multi_layer_fusion.md) | **P1 — High** | None |
-| 4 | Hybrid Predictor (DKL) | [04_hybrid_predictor.md](04_hybrid_predictor.md) | **P1 — High** | Sub-Plans 1–3 |
-| 5 | Multi-Task Learning | [05_multi_task_learning.md](05_multi_task_learning.md) | **P2 — Medium** | Sub-Plans 1–3 |
-| 6 | Physics-Aware Features | [06_physics_aware_features.md](06_physics_aware_features.md) | **P2 — Medium** | None |
-| 7 | Uncertainty-Guided Generation | [07_uncertainty_guided_generation.md](07_uncertainty_guided_generation.md) | **P3 — Future** | Sub-Plans 1–6 |
+| **0** | **PDBbind v2020 数据集准备** | [00a_supervised_pretraining.md](00a_supervised_pretraining.md) | **P0 — Critical (前置)** | None |
+| 1 | Multi-Granularity Representation | [01_multi_granularity_repr.md](01_multi_granularity_repr.md) | **P0 — Critical** | Sub-Plan 0 |
+| 2 | Attention-Based Aggregation | [02_attention_aggregation.md](02_attention_aggregation.md) | **P0 — Critical** | Sub-Plan 0 |
+| 3 | Multi-Layer Fusion | [03_multi_layer_fusion.md](03_multi_layer_fusion.md) | **P1 — High** | Sub-Plan 0 |
+| 4 | Hybrid Predictor (DKL) | [04_hybrid_predictor.md](04_hybrid_predictor.md) | **P1 — High** | Sub-Plans 0–3 |
+| 5 | Multi-Task Learning | [05_multi_task_learning.md](05_multi_task_learning.md) | **P2 — Medium** | Sub-Plans 0–3 |
+| 6 | Physics-Aware Features | [06_physics_aware_features.md](06_physics_aware_features.md) | **P2 — Medium** | Sub-Plan 0 |
+| 7 | Uncertainty-Guided Generation | [07_uncertainty_guided_generation.md](07_uncertainty_guided_generation.md) | **P3 — Future** | Sub-Plans 0–6 |
 
 ---
 
 ## Implementation Phases
 
+### Phase 0: PDBbind v2020 数据集准备 (Sub-Plan 0)
+
+**Goal**: 整理 PDBbind v2020 refined set (~5,316 complexes) 为统一的 pair-level 训练数据集，供后续所有 Sub-Plan 使用。
+
+**内容**：
+- 解析 INDEX 文件，提取 pdb_code → pKd 映射
+- 提取 10Å pocket，featurize（与 TargetDiff 同 featurizer）
+- 按蛋白家族 30% identity 聚类划分 Train / Val / Cal / Test
+- 构建 `PDBbindPairDataset` DataLoader
+
+**为什么必须前置**：
+- 后续所有 Sub-Plan 的训练和评估都基于此数据集
+- 使用实验数据（晶体结构 + 实验 pKd）而非生成分子，大幅提升信号质量
+
+```
+  PDBbind v2020 refined set       data/pdbbind_v2020/
+  ~5,316 complexes        ────►   ├── processed/*.pt
+  + INDEX_refined_data.2020       ├── labels.csv
+                                  └── splits.json
+```
+
+**详细设计**：见 [00a_supervised_pretraining.md](00a_supervised_pretraining.md)
+
+**验收标准**：DataLoader 能正确 batch 不等长蛋白-配体 pair，split 无家族泄漏
+
+---
+
 ### Phase A: Representation Upgrade (Sub-Plans 1–3)
 
-**Goal**: Replace the current mean-pooled 128-dim embedding with a richer, multi-granularity representation.
+**Goal**: Replace the current mean-pooled 128-dim embedding with a richer, multi-granularity representation. **Builds on the pretrained encoder from Phase 0.**
 
 ```
                       ┌─────────────────────┐
@@ -83,15 +111,17 @@ Each produces a candidate embedding; final system combines the best choices.
 
 ### New Modules to Create
 
-| Module | Location | Purpose |
-|--------|----------|---------|
-| `bayesdiff/interaction_graph.py` | New | Build pocket-ligand interaction graphs |
-| `bayesdiff/attention_pool.py` | New | Attention-based aggregation module |
-| `bayesdiff/layer_fusion.py` | New | Multi-layer embedding extraction & fusion |
-| `bayesdiff/hybrid_oracle.py` | New | DKL and NN+GP hybrid predictors |
-| `bayesdiff/multi_task.py` | New | Multi-task heads (regression + rank + classification) |
-| `bayesdiff/physics_features.py` | New | Physics-aware feature extraction |
-| `bayesdiff/guided_sampling.py` | New | Uncertainty-guided generation |
+| Module | Location | Purpose | Sub-Plan |
+|--------|----------|---------|----------|
+| `bayesdiff/pretrain_dataset.py` | New | PDBbind pair-level dataset & dataloader | 0 |
+| `bayesdiff/pair_model.py` | New | Pair-level encoder + aggregation + predictor | 1–4 |
+| `bayesdiff/interaction_graph.py` | New | Build pocket-ligand interaction graphs | 1 |
+| `bayesdiff/attention_pool.py` | New | Attention-based aggregation module | 2 |
+| `bayesdiff/layer_fusion.py` | New | Multi-layer embedding extraction & fusion | 3 |
+| `bayesdiff/hybrid_oracle.py` | New | DKL and NN+GP hybrid predictors | 4 |
+| `bayesdiff/multi_task.py` | New | Multi-task heads (regression + rank + classification) | 5 |
+| `bayesdiff/physics_features.py` | New | Physics-aware feature extraction | 6 |
+| `bayesdiff/guided_sampling.py` | New | Uncertainty-guided generation | 7 |
 
 ### Modified Modules
 
@@ -105,24 +135,26 @@ Each produces a candidate embedding; final system combines the best choices.
 
 ### New Pipeline Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/pipeline/s08_extract_atom_embeddings.py` | Extract atom-level embeddings from TargetDiff |
-| `scripts/pipeline/s09_build_interaction_graphs.py` | Construct pocket-ligand interaction graphs |
-| `scripts/pipeline/s10_train_enhanced.py` | Train with new representation + predictor |
-| `scripts/pipeline/s11_ablation_stage2.py` | Stage 2 ablation studies |
+| Script | Purpose | Sub-Plan |
+|--------|---------|----------|
+| `scripts/pipeline/s00_prepare_pdbbind.py` | Prepare PDBbind v2020 refined set (pocket extraction, splits) | 0 |
+| `scripts/pipeline/s08_extract_atom_embeddings.py` | Extract atom-level embeddings from encoder | 1 |
+| `scripts/pipeline/s09_build_interaction_graphs.py` | Construct pocket-ligand interaction graphs | 1 |
+| `scripts/pipeline/s10_train_enhanced.py` | Train with new representation + predictor | 1–4 |
+| `scripts/pipeline/s11_ablation_stage2.py` | Stage 2 ablation studies | All |
 
 ### New Test Files
 
-| Test File | Coverage |
-|-----------|----------|
-| `tests/test_interaction_graph.py` | Interaction graph construction |
-| `tests/test_attention_pool.py` | Attention pooling module |
-| `tests/test_layer_fusion.py` | Multi-layer fusion module |
-| `tests/test_hybrid_oracle.py` | DKL / hybrid predictor |
-| `tests/test_multi_task.py` | Multi-task heads |
-| `tests/test_physics_features.py` | Physics feature extraction |
-| `tests/test_stage2_integration.py` | End-to-end Stage 2 pipeline |
+| Test File | Coverage | Sub-Plan |
+|-----------|----------|----------|
+| `tests/stage2/test_pretrain_dataset.py` | PDBbind 数据加载 | 0 |
+| `tests/stage2/test_interaction_graph.py` | Interaction graph construction | 1 |
+| `tests/stage2/test_attention_pool.py` | Attention pooling module | 2 |
+| `tests/stage2/test_layer_fusion.py` | Multi-layer fusion module | 3 |
+| `tests/stage2/test_hybrid_oracle.py` | DKL / hybrid predictor | 4 |
+| `tests/stage2/test_multi_task.py` | Multi-task heads | 5 |
+| `tests/stage2/test_physics_features.py` | Physics feature extraction | 6 |
+| `tests/stage2/test_stage2_integration.py` | End-to-end Stage 2 pipeline | All |
 
 ---
 
@@ -187,6 +219,9 @@ Each row = one configuration; columns = all metrics above.
 
 | Component | Estimated GPU-hours | Hardware |
 |-----------|-------------------|----------|
+| **Phase 0: 数据集准备** | | |
+| PDBbind data preparation (INDEX + pocket + featurize + split) | 7–14h | CPU |
+| **Phase A: Representation Upgrade** | | |
 | Atom-level embedding extraction | 20–40h | A100 |
 | Interaction graph construction | 2–4h | CPU |
 | Attention pooling training | 10–20h | A100 |
