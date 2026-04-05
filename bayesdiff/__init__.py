@@ -32,3 +32,6 @@ from .evaluate import evaluate_all
 
 # === Data Utilities ===
 from .data import parse_pdbbind_index, protein_family_split
+
+# === Pretrain Dataset (Stage 2) ===
+from .pretrain_dataset import PDBbindPairDataset, get_pdbbind_dataloader
