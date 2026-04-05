@@ -16,7 +16,7 @@ Stage 2 addresses the three core bottlenecks identified in [problem_and_solution
 
 | # | Sub-Plan | File | Priority | Dependency |
 |---|----------|------|----------|------------|
-| **0** | **PDBbind v2020 数据集准备** | [00a_supervised_pretraining.md](00a_supervised_pretraining.md) | **P0 — Critical (前置)** | None |
+| **0** | **PDBbind v2020 R1 + CASF-2016 数据集准备** | [00a_supervised_pretraining.md](00a_supervised_pretraining.md) | **P0 — Critical (前置)** | None |
 | 1 | Multi-Granularity Representation | [01_multi_granularity_repr.md](01_multi_granularity_repr.md) | **P0 — Critical** | Sub-Plan 0 |
 | 2 | Attention-Based Aggregation | [02_attention_aggregation.md](02_attention_aggregation.md) | **P0 — Critical** | Sub-Plan 0 |
 | 3 | Multi-Layer Fusion | [03_multi_layer_fusion.md](03_multi_layer_fusion.md) | **P1 — High** | Sub-Plan 0 |
@@ -29,30 +29,42 @@ Stage 2 addresses the three core bottlenecks identified in [problem_and_solution
 
 ## Implementation Phases
 
-### Phase 0: PDBbind v2020 数据集准备 (Sub-Plan 0)
+### Phase 0: PDBbind v2020 R1 + CASF-2016 数据集准备 (Sub-Plan 0)
 
-**Goal**: 整理 PDBbind v2020 refined set (~5,316 complexes) 为统一的 pair-level 训练数据集，供后续所有 Sub-Plan 使用。
+**Goal**: 整理 PDBbind v2020 R1 general set (19,037 P-L complexes) 为训练/验证集，使用 CASF-2016 (285 complexes) 作为标准化测试集，供后续所有 Sub-Plan 使用。
 
 **内容**：
-- 解析 INDEX 文件，提取 pdb_code → pKd 映射
-- 提取 10Å pocket，featurize（与 TargetDiff 同 featurizer）
-- 按蛋白家族 30% identity 聚类划分 Train / Val / Cal / Test
-- 构建 `PDBbindPairDataset` DataLoader
+- 解析 `INDEX_general_PL.2020R1.lst`，提取 pdb_code → pKd 映射，过滤不精确标签
+- 从有效集中**剔除 CASF-2016 的 285 个复合物**
+- 提取蛋白序列 → mmseqs2 30% identity 聚类 → 按蛋白簇分层抽样划分 Train/Val
+- CASF-2016 core set (285 complexes, 57 targets × 5 ligands) 作为独立 Test set
+- Featurize（与 TargetDiff 同 featurizer），构建 `PDBbindPairDataset` DataLoader
+
+**数据划分策略**：
+1. 剔除 CASF-2016 后，提取每个复合物蛋白序列，用 mmseqs2 按 30% seq identity 聚类
+2. 按蛋白簇（而非单个样本）划分：同一 cluster 的所有样本必须全部进 Train 或全部进 Val
+3. 分层抽样：按 cluster median pKd 分位数分箱，在每个 bin 内抽 ~10–15% 的 clusters 作为 Val
+4. **Test**: CASF-2016 core set（285 complexes）— 固定 benchmark，不参与训练
 
 **为什么必须前置**：
 - 后续所有 Sub-Plan 的训练和评估都基于此数据集
 - 使用实验数据（晶体结构 + 实验 pKd）而非生成分子，大幅提升信号质量
+- CASF-2016 是 scoring function 领域公认的标准 benchmark，便于与其他方法（OnionNet-2、PIGNet 等）直接对比
 
 ```
-  PDBbind v2020 refined set       data/pdbbind_v2020/
-  ~5,316 complexes        ────►   ├── processed/*.pt
-  + INDEX_refined_data.2020       ├── labels.csv
-                                  └── splits.json
+  PDBbind v2020 R1                data/pdbbind_v2020/
+  19,037 P-L complexes    ────►   ├── processed/*.pt
+  + INDEX_general_PL.2020R1.lst   ├── labels.csv
+  (过滤后取有效 binding data)   ├── clusters.json
+                                  └── splits.json  (train / val / test)
+  CASF-2016 core set
+  285 complexes           ────►   test split (独立 benchmark)
+  + CoreSet.dat
 ```
 
 **详细设计**：见 [00a_supervised_pretraining.md](00a_supervised_pretraining.md)
 
-**验收标准**：DataLoader 能正确 batch 不等长蛋白-配体 pair，split 无家族泄漏
+**验收标准**：DataLoader 能正确 batch 不等长蛋白-配体 pair；Train/Val 中不含 CASF-2016 PDB code；同一 protein cluster 不跨 Train/Val；Val pKd 分布与 Train 接近
 
 ---
 
@@ -137,7 +149,7 @@ Each produces a candidate embedding; final system combines the best choices.
 
 | Script | Purpose | Sub-Plan |
 |--------|---------|----------|
-| `scripts/pipeline/s00_prepare_pdbbind.py` | Prepare PDBbind v2020 refined set (pocket extraction, splits) | 0 |
+| `scripts/pipeline/s00_prepare_pdbbind.py` | Prepare PDBbind v2020 R1 train/val + CASF-2016 test (pocket extraction, splits) | 0 |
 | `scripts/pipeline/s08_extract_atom_embeddings.py` | Extract atom-level embeddings from encoder | 1 |
 | `scripts/pipeline/s09_build_interaction_graphs.py` | Construct pocket-ligand interaction graphs | 1 |
 | `scripts/pipeline/s10_train_enhanced.py` | Train with new representation + predictor | 1–4 |

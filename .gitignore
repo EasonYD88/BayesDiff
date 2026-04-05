@@ -11,6 +11,14 @@ build/
 
 # ── Data (manually downloaded, too large for git) ────────────
 data/pdbbind/
+data/PDBbind_data_set/
+data/pdbbind_v2020/
+
+# ── SLURM logs ───────────────────────────────────────────────
+slurm/logs/
+
+# ── Tools (local binaries) ───────────────────────────────────
+tools/
 
 # ── External: ignore large binaries, track source code ───────
 external/targetdiff/data/

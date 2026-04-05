@@ -31,7 +31,13 @@ from .ood import MahalanobisOOD
 from .evaluate import evaluate_all
 
 # === Data Utilities ===
-from .data import parse_pdbbind_index, protein_family_split
+from .data import (
+    parse_pdbbind_index,
+    parse_casf_coreset,
+    load_casf2016_codes,
+    protein_family_split,
+    cluster_stratified_split,
+)
 
 # === Pretrain Dataset (Stage 2) ===
 from .pretrain_dataset import PDBbindPairDataset, get_pdbbind_dataloader

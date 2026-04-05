@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import logging
+import multiprocessing as mp
 import re
 import subprocess
 import tempfile
@@ -42,50 +43,103 @@ _UNIT_SCALE = {
 # ── INDEX file parsing ───────────────────────────────────────────────────────
 
 
-def parse_pdbbind_index(index_path: str | Path) -> pd.DataFrame:
-    """Parse PDBbind INDEX_refined_data.2020 (or general) into a DataFrame.
+def parse_pdbbind_index(
+    index_path: str | Path,
+    keep_inexact: bool = False,
+    keep_ic50: bool = True,
+) -> pd.DataFrame:
+    """Parse PDBbind INDEX file into a DataFrame.
 
-    Expected line format (space-separated, // starts comment):
-        3ug2  1.80  2011  8.22  Kd=6nM  // reference info ...
+    Supports two formats:
+      - Refined (5 data fields): PDB  resl  year  pKa   Kd=...  // ...
+      - R1 general (4 data fields): PDB  resl  year  Kd=...  // ...
+
+    Args:
+        index_path: Path to INDEX file.
+        keep_inexact: If False (default), drop entries with <, >, ~ in binding data.
+        keep_ic50: If True (default), keep IC50 entries; if False, drop them.
 
     Returns DataFrame with columns:
-        pdb_code, resolution, year, pka, affinity_type, affinity_value_M, pkd
+        pdb_code, resolution, year, affinity_type, affinity_value_M, pkd, is_exact
     """
     records = []
+    n_skipped_inexact = 0
+    n_skipped_ic50 = 0
+    n_skipped_parse = 0
+
     with open(index_path) as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
-            # strip comment after //
             data_part = line.split("//")[0].strip()
             parts = data_part.split()
-            if len(parts) < 5:
+            if len(parts) < 4:
                 continue
 
             pdb_code = parts[0]
             resolution = float(parts[1]) if parts[1] != "NMR" else np.nan
             year = int(parts[2])
-            pka = float(parts[3])  # -log10(affinity)
-            kv_str = parts[4]  # e.g. "Kd=5.9nM", "Ki=3.5uM"
+
+            # Detect format: if parts[3] looks like a number, it's refined format
+            # (5 fields: code resl year pKa Kd=...), else R1 format (4 fields)
+            try:
+                pka_explicit = float(parts[3])
+                # Refined format: pKa is given explicitly
+                kv_str = parts[4] if len(parts) >= 5 else None
+            except ValueError:
+                # R1 format: parts[3] is the binding data string
+                pka_explicit = None
+                kv_str = parts[3]
+
+            if kv_str is None:
+                n_skipped_parse += 1
+                continue
+
+            # Check if inexact
+            is_exact = not bool(re.search(r"[<>~]", kv_str))
+            if not is_exact and not keep_inexact:
+                n_skipped_inexact += 1
+                continue
 
             # Parse affinity type and value
             aff_type, aff_val_M = _parse_affinity_string(kv_str)
+
+            if aff_type == "unknown":
+                n_skipped_parse += 1
+                continue
+
+            if aff_type == "IC50" and not keep_ic50:
+                n_skipped_ic50 += 1
+                continue
+
+            # Compute pKd = -log10(affinity_M)
+            if pka_explicit is not None:
+                pkd = pka_explicit
+            elif aff_val_M > 0:
+                pkd = -np.log10(aff_val_M)
+            else:
+                n_skipped_parse += 1
+                continue
 
             records.append(
                 {
                     "pdb_code": pdb_code,
                     "resolution": resolution,
                     "year": year,
-                    "pka": pka,
                     "affinity_type": aff_type,
                     "affinity_value_M": aff_val_M,
-                    "pkd": pka,  # already -log10, treat as pKd/pKi/pIC50
+                    "pkd": pkd,
+                    "is_exact": is_exact,
                 }
             )
 
     df = pd.DataFrame(records)
-    logger.info(f"Parsed {len(df)} entries from {index_path}")
+    logger.info(
+        f"Parsed {len(df)} entries from {index_path} "
+        f"(skipped: {n_skipped_inexact} inexact, {n_skipped_ic50} IC50, "
+        f"{n_skipped_parse} parse errors)"
+    )
     return df
 
 
@@ -101,6 +155,41 @@ def _parse_affinity_string(kv_str: str) -> tuple[str, float]:
     return "unknown", np.nan
 
 
+def parse_casf_coreset(coreset_dat: str | Path) -> pd.DataFrame:
+    """Parse CASF-2016 CoreSet.dat into a DataFrame.
+
+    Format: #code  resl  year  logKa  Ka  target
+    Returns DataFrame with columns: pdb_code, resolution, year, pkd, affinity_type, target_id
+    """
+    records = []
+    with open(coreset_dat) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split()
+            if len(parts) < 6:
+                continue
+            pdb_code = parts[0]
+            resolution = float(parts[1])
+            year = int(parts[2])
+            pkd = float(parts[3])  # logKa = -log10(Kd)
+            kv_str = parts[4]
+            target_id = int(parts[5])
+            aff_type, _ = _parse_affinity_string(kv_str)
+            records.append({
+                "pdb_code": pdb_code,
+                "resolution": resolution,
+                "year": year,
+                "pkd": pkd,
+                "affinity_type": aff_type,
+                "target_id": target_id,
+            })
+    df = pd.DataFrame(records)
+    logger.info(f"Parsed {len(df)} CASF-2016 entries ({df['target_id'].nunique()} targets)")
+    return df
+
+
 # ── Protein-family split ─────────────────────────────────────────────────────
 
 
@@ -114,37 +203,139 @@ def protein_family_split(
     seq_identity: float = 0.30,
     seed: int = 42,
 ) -> dict[str, list[str]]:
-    """Split PDB codes by protein family clustering.
+    """Legacy split function. Use cluster_stratified_split() for new code."""
+    return cluster_stratified_split(
+        df, pdbbind_dir, val_frac=val_frac, seq_identity=seq_identity, seed=seed,
+    )
 
-    Uses mmseqs2 if available, otherwise falls back to time-based split.
-    Returns dict with keys: train, val, cal, test → lists of PDB codes.
+
+def cluster_stratified_split(
+    df: pd.DataFrame,
+    pdbbind_dir: str | Path,
+    val_frac: float = 0.12,
+    seq_identity: float = 0.30,
+    n_bins: int = 4,
+    seed: int = 42,
+    pdb_to_file: Optional[dict[str, Path]] = None,
+) -> dict[str, list[str]]:
+    """Split PDB codes by protein-cluster + pKd-stratified sampling.
+
+    Steps:
+      1. Extract protein sequences → FASTA
+      2. Cluster with mmseqs2 at `seq_identity` threshold
+      3. Bin clusters by median pKd (quantile-based)
+      4. Within each bin, sample ~val_frac of clusters → val
+
+    Args:
+        df: DataFrame with 'pdb_code' and 'pkd' columns.
+        pdbbind_dir: Root for finding protein PDB files.
+        val_frac: Target fraction of *samples* for validation (0.10–0.15).
+        seq_identity: mmseqs2 --min-seq-id threshold.
+        n_bins: Number of pKd bins for stratified sampling.
+        seed: Random seed.
+        pdb_to_file: Optional {pdb_code: Path} mapping to protein PDB files.
+
+    Returns dict with keys: train, val → lists of PDB codes.
     """
+    rng = np.random.RandomState(seed)
     pdb_codes = df["pdb_code"].unique().tolist()
+    pkd_map = dict(zip(df["pdb_code"], df["pkd"]))
 
-    # Try mmseqs2-based clustering
-    clusters = _try_mmseqs_cluster(pdb_codes, pdbbind_dir, seq_identity)
+    # Step 1-2: Cluster
+    clusters = _try_mmseqs_cluster(pdb_codes, pdbbind_dir, seq_identity, pdb_to_file)
 
-    if clusters is not None:
-        return _split_by_clusters(
-            clusters, train_frac, val_frac, cal_frac, test_frac, seed
-        )
-    else:
-        logger.warning(
-            "mmseqs2 not found. Falling back to time-based split (year < 2016 train, ≥ 2019 test)."
-        )
+    if clusters is None:
+        logger.warning("mmseqs2 not available. Falling back to time-based split.")
         return _time_based_split(df, seed)
+
+    # Build cluster → pdb_codes mapping
+    cluster_to_pdbs: dict[int, list[str]] = {}
+    for pdb, cid in clusters.items():
+        cluster_to_pdbs.setdefault(cid, []).append(pdb)
+
+    # Assign unclustered codes to singleton clusters
+    max_cid = max(clusters.values()) if clusters else 0
+    for pdb in pdb_codes:
+        if pdb not in clusters:
+            max_cid += 1
+            cluster_to_pdbs[max_cid] = [pdb]
+            clusters[pdb] = max_cid
+
+    # Step 3: Compute per-cluster median pKd
+    cluster_info = []
+    for cid, pdbs in cluster_to_pdbs.items():
+        pkds = [pkd_map[p] for p in pdbs if p in pkd_map]
+        if not pkds:
+            continue
+        cluster_info.append({
+            "cluster_id": cid,
+            "pdbs": pdbs,
+            "size": len(pdbs),
+            "median_pkd": np.median(pkds),
+        })
+
+    # Step 4: Bin clusters by median pKd quantiles
+    median_pkds = np.array([c["median_pkd"] for c in cluster_info])
+    bin_edges = np.quantile(median_pkds, np.linspace(0, 1, n_bins + 1))
+    bin_edges[-1] += 1e-6  # ensure max value is included
+
+    for c in cluster_info:
+        c["bin"] = int(np.digitize(c["median_pkd"], bin_edges[1:])) 
+
+    # Step 5: Within each bin, sample clusters for validation
+    total_samples = sum(c["size"] for c in cluster_info)
+    target_val_samples = int(total_samples * val_frac)
+
+    val_clusters = set()
+    val_count = 0
+
+    bins = {}
+    for c in cluster_info:
+        bins.setdefault(c["bin"], []).append(c)
+
+    for bin_id in sorted(bins.keys()):
+        bin_clusters = bins[bin_id]
+        rng.shuffle(bin_clusters)
+        bin_total = sum(c["size"] for c in bin_clusters)
+        bin_target = int(bin_total * val_frac)
+        bin_val = 0
+        for c in bin_clusters:
+            if bin_val + c["size"] <= bin_target + c["size"] // 2:
+                val_clusters.add(c["cluster_id"])
+                bin_val += c["size"]
+                val_count += c["size"]
+            if val_count >= target_val_samples:
+                break
+        if val_count >= target_val_samples:
+            break
+
+    train_codes = []
+    val_codes = []
+    for c in cluster_info:
+        if c["cluster_id"] in val_clusters:
+            val_codes.extend(c["pdbs"])
+        else:
+            train_codes.extend(c["pdbs"])
+
+    logger.info(
+        f"Cluster-stratified split: {len(train_codes)} train, {len(val_codes)} val "
+        f"({len(val_codes)/(len(train_codes)+len(val_codes))*100:.1f}%) "
+        f"from {len(cluster_info)} clusters ({len(val_clusters)} val clusters)"
+    )
+
+    return {"train": sorted(train_codes), "val": sorted(val_codes)}
 
 
 def _try_mmseqs_cluster(
     pdb_codes: list[str],
     pdbbind_dir: str | Path,
     seq_identity: float,
+    pdb_to_file: Optional[dict[str, Path]] = None,
 ) -> Optional[dict[str, int]]:
-    """Try to cluster proteins by sequence identity using mmseqs2.
+    """Cluster proteins by sequence identity using mmseqs2.
 
     Returns {pdb_code: cluster_id} or None if mmseqs2 not available.
     """
-    # Check if mmseqs is available
     try:
         subprocess.run(["mmseqs", "--help"], capture_output=True, check=True)
     except (FileNotFoundError, subprocess.CalledProcessError):
@@ -152,71 +343,75 @@ def _try_mmseqs_cluster(
 
     pdbbind_dir = Path(pdbbind_dir)
 
-    # Extract sequences from PDB files (simple CA extraction)
     with tempfile.TemporaryDirectory() as tmpdir:
         fasta_path = Path(tmpdir) / "proteins.fasta"
-        _extract_sequences_to_fasta(pdb_codes, pdbbind_dir, fasta_path)
+        _extract_sequences_to_fasta(pdb_codes, pdbbind_dir, fasta_path, pdb_to_file)
 
         if not fasta_path.exists() or fasta_path.stat().st_size == 0:
             logger.warning("No sequences extracted; skipping mmseqs clustering.")
             return None
 
-        # Run mmseqs2
-        db_path = Path(tmpdir) / "seqDB"
-        clu_path = Path(tmpdir) / "cluDB"
-        tsv_path = Path(tmpdir) / "clusters.tsv"
+        clu_prefix = Path(tmpdir) / "cluDB"
+        tmp_sub = Path(tmpdir) / "tmp"
+        tmp_sub.mkdir()
 
-        subprocess.run(
-            ["mmseqs", "createdb", str(fasta_path), str(db_path)],
-            capture_output=True,
-            check=True,
-        )
-        subprocess.run(
+        result = subprocess.run(
             [
-                "mmseqs",
-                "easy-cluster",
+                "mmseqs", "easy-cluster",
                 str(fasta_path),
-                str(clu_path),
-                str(tmpdir),
-                "--min-seq-id",
-                str(seq_identity),
+                str(clu_prefix),
+                str(tmp_sub),
+                "--min-seq-id", str(seq_identity),
+                "-c", "0.8",
+                "--threads", str(min(mp.cpu_count(), 32)),
             ],
             capture_output=True,
-            check=True,
+            text=True,
         )
+        if result.returncode != 0:
+            logger.warning(f"mmseqs2 failed: {result.stderr[:500]}")
+            return None
 
-        # Parse cluster TSV
-        tsv_file = clu_path.with_name(clu_path.name + "_cluster.tsv")
+        # Parse cluster TSV (rep \t member)
+        tsv_file = Path(str(clu_prefix) + "_cluster.tsv")
         if not tsv_file.exists():
-            # Try alternate naming
             for f in Path(tmpdir).glob("*cluster.tsv"):
                 tsv_file = f
                 break
-
         if not tsv_file.exists():
+            logger.warning("mmseqs2 cluster TSV not found.")
             return None
 
-        clusters = {}
-        cluster_id = 0
-        current_rep = None
+        rep_to_id: dict[str, int] = {}
+        clusters: dict[str, int] = {}
+        next_id = 0
         with open(tsv_file) as f:
             for line in f:
-                rep, member = line.strip().split("\t")
-                if rep != current_rep:
-                    current_rep = rep
-                    cluster_id += 1
-                clusters[member] = cluster_id
+                parts = line.strip().split("\t")
+                if len(parts) < 2:
+                    continue
+                rep, member = parts[0], parts[1]
+                if rep not in rep_to_id:
+                    rep_to_id[rep] = next_id
+                    next_id += 1
+                clusters[member] = rep_to_id[rep]
 
         logger.info(
-            f"mmseqs2 clustering: {len(set(clusters.values()))} clusters from {len(clusters)} sequences"
+            f"mmseqs2 clustering: {len(rep_to_id)} clusters from {len(clusters)} sequences"
         )
         return clusters
 
 
 def _extract_sequences_to_fasta(
-    pdb_codes: list[str], pdbbind_dir: Path, output_path: Path
+    pdb_codes: list[str],
+    pdbbind_dir: Path,
+    output_path: Path,
+    pdb_to_file: Optional[dict[str, Path]] = None,
 ) -> None:
-    """Extract protein sequences from PDB files into a FASTA file."""
+    """Extract protein sequences from PDB files into a FASTA file.
+
+    Supports both refined-set layout and P-L/YEAR_RANGE layout.
+    """
     three_to_one = {
         "ALA": "A", "ARG": "R", "ASN": "N", "ASP": "D", "CYS": "C",
         "GLN": "Q", "GLU": "E", "GLY": "G", "HIS": "H", "ILE": "I",
@@ -224,12 +419,17 @@ def _extract_sequences_to_fasta(
         "SER": "S", "THR": "T", "TRP": "W", "TYR": "Y", "VAL": "V",
     }
 
+    n_ok = 0
     with open(output_path, "w") as out:
         for pdb_code in pdb_codes:
-            protein_pdb = pdbbind_dir / "refined-set" / pdb_code / f"{pdb_code}_protein.pdb"
-            if not protein_pdb.exists():
+            protein_pdb = None
+            if pdb_to_file and pdb_code in pdb_to_file:
+                protein_pdb = pdb_to_file[pdb_code]
+            if protein_pdb is None or not protein_pdb.exists():
+                protein_pdb = _find_protein_pdb(pdbbind_dir, pdb_code)
+            if protein_pdb is None:
                 continue
-            # Extract CA atoms → sequence
+
             residues = []
             seen = set()
             with open(protein_pdb) as f:
@@ -243,8 +443,27 @@ def _extract_sequences_to_fasta(
                             seen.add(key)
                             residues.append(three_to_one.get(resn, "X"))
             if residues:
-                seq = "".join(residues)
-                out.write(f">{pdb_code}\n{seq}\n")
+                out.write(f">{pdb_code}\n{''.join(residues)}\n")
+                n_ok += 1
+
+    logger.info(f"Extracted {n_ok}/{len(pdb_codes)} protein sequences → {output_path}")
+
+
+def _find_protein_pdb(pdbbind_dir: Path, pdb_code: str) -> Optional[Path]:
+    """Find protein PDB file in various PDBbind directory layouts."""
+    # Layout 1: refined-set/CODE/CODE_protein.pdb
+    p = pdbbind_dir / "refined-set" / pdb_code / f"{pdb_code}_protein.pdb"
+    if p.exists():
+        return p
+    # Layout 2: P-L/YEAR_RANGE/CODE/CODE_protein.pdb
+    pl_dir = pdbbind_dir / "P-L"
+    if pl_dir.exists():
+        for yr_dir in pl_dir.iterdir():
+            if yr_dir.is_dir():
+                p = yr_dir / pdb_code / f"{pdb_code}_protein.pdb"
+                if p.exists():
+                    return p
+    return None
 
 
 def _split_by_clusters(
@@ -255,23 +474,17 @@ def _split_by_clusters(
     test_frac: float,
     seed: int,
 ) -> dict[str, list[str]]:
-    """Split PDB codes ensuring no cluster spans multiple splits."""
+    """Split PDB codes ensuring no cluster spans multiple splits. (Legacy)"""
     rng = np.random.RandomState(seed)
-
-    # Group by cluster
     cluster_to_pdbs = {}
     for pdb, cid in clusters.items():
         cluster_to_pdbs.setdefault(cid, []).append(pdb)
-
-    # Shuffle cluster order
     cluster_ids = list(cluster_to_pdbs.keys())
     rng.shuffle(cluster_ids)
-
     total = len(clusters)
     n_train = int(total * train_frac)
     n_val = int(total * val_frac)
     n_cal = int(total * cal_frac)
-
     splits = {"train": [], "val": [], "cal": [], "test": []}
     count = 0
     for cid in cluster_ids:
@@ -285,27 +498,20 @@ def _split_by_clusters(
         else:
             splits["test"].extend(pdbs)
         count += len(pdbs)
-
     return splits
 
 
 def _time_based_split(df: pd.DataFrame, seed: int) -> dict[str, list[str]]:
     """Fallback: split by deposition year."""
     rng = np.random.RandomState(seed)
-
     train = df[df["year"] < 2016]["pdb_code"].tolist()
     rest = df[df["year"] >= 2016]["pdb_code"].tolist()
     rng.shuffle(rest)
-
     n = len(rest)
-    n_val = n // 3
-    n_cal = n // 3
-
+    n_val = max(1, int(n * 0.3))
     return {
-        "train": train,
+        "train": train + rest[n_val:],
         "val": rest[:n_val],
-        "cal": rest[n_val : n_val + n_cal],
-        "test": rest[n_val + n_cal :],
     }
 
 
@@ -313,20 +519,24 @@ def _time_based_split(df: pd.DataFrame, seed: int) -> dict[str, list[str]]:
 
 
 def load_casf2016_codes(casf_dir: str | Path) -> list[str]:
-    """Load CASF-2016 core set PDB codes from its directory listing."""
+    """Load CASF-2016 core set PDB codes from CoreSet.dat or directory listing."""
     casf_dir = Path(casf_dir)
 
-    # Try CoreSet.dat
-    coreset_dat = casf_dir / "CoreSet.dat"
-    if coreset_dat.exists():
-        codes = []
-        with open(coreset_dat) as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    continue
-                codes.append(line.split()[0])
-        return codes
+    # Try various CoreSet.dat locations
+    for candidate in [
+        casf_dir / "CoreSet.dat",
+        casf_dir / "power_screening" / "CoreSet.dat",
+        casf_dir / "power_scoring" / "CoreSet.dat",
+    ]:
+        if candidate.exists():
+            codes = []
+            with open(candidate) as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    codes.append(line.split()[0])
+            return sorted(codes)
 
     # Fallback: list subdirectories
     codes = [d.name for d in casf_dir.iterdir() if d.is_dir() and len(d.name) == 4]

@@ -2,8 +2,76 @@
 
 ## Sub-Plan 0: PDBbind v2020 数据集准备
 
-**Status**: ✅ 代码完成，等待数据下载  
+**Status**: ✅ 数据准备完成  
 **Commit**: `9129938` — `feat: PDBbind v2020 dataset preparation pipeline (Sub-Plan 0)`
+
+### 数据下载（2026-04-05 完成 ✅）
+
+已下载至 `data/PDBbind_data_set/`：
+
+| 文件 | 大小 | 内容 |
+|------|------|------|
+| `PDBbind_v2020_R1_index.tar.gz` | 498K | 索引文件（`INDEX_general_PL.2020R1.lst`，19,037 P-L complexes） |
+| `PDBbind_v2020_R1_ligand_protein_data.tar.gz` | 1.2G | 结构文件（`P-L/YEAR_RANGE/XXXX/`，含 protein, pocket, ligand） |
+| `CASF-2016.tar.gz` | 1.5G | CASF-2016 benchmark（`CoreSet.dat` + structures） |
+
+> **与原计划差异**：下载到的是 PDBbind v2020 R1 **general set**（19,037 complexes），
+> 而非 refined set（~5,316）。R1 版本使用 v2024 re-processed structures，质量更高。
+
+### 数据处理结果（2026-04-05 完成 ✅）
+
+#### Stage 1: INDEX 解析
+
+| 指标 | 数值 |
+|------|------|
+| INDEX 总条目 | 19,037 |
+| 不精确标签剔除（`<`, `>`, `~`） | 270 |
+| 有效条目 | 18,767 |
+| 匹配结构文件 | 18,767/18,767 (100%) |
+| CASF-2016 PDB codes | 285 (57 targets) |
+| 亲和力类型 | Kd: 6,935 / IC50: 6,932 / Ki: 4,900 |
+| pKd 范围 | [0.40, 15.22], mean=6.39±1.83 |
+
+#### Stage 2: Featurize（100-shard SLURM array）
+
+| 指标 | 数值 |
+|------|------|
+| 成功 featurize | 18,765 |
+| 失败 | 2 (3vjs, 3vjt — 配体 SDF 无法读取) |
+| 输出 | `data/pdbbind_v2020/processed/*.pt` |
+| 并行策略 | cpu_short + l40s_public 双分区100-shard array job |
+
+#### Stage 3-4: Merge + Cluster-Stratified Split
+
+| 指标 | 数值 |
+|------|------|
+| mmseqs2 聚类阈值 | 30% sequence identity |
+| 蛋白簇总数 | 3,250 |
+| Val 簇数 | 386 (11.9%) |
+
+**最终数据划分：**
+
+| Split | Complexes | pKd 范围 | mean±std |
+|-------|-----------|----------|----------|
+| Train | 16,232 | [0.45, 15.22] | 6.40±1.83 |
+| Val | 2,248 (12.2%) | [0.40, 12.00] | 6.31±1.79 |
+| Test (CASF-2016) | 285 | [2.07, 11.82] | 6.49±2.17 |
+
+- ✅ 三个 split 之间零重叠
+- ✅ 同蛋白簇样本全部进同一 split（无信息泄漏）
+- ✅ pKd 分布在 Train/Val 间保持一致（分层抽样）
+- 输出文件：`data/pdbbind_v2020/splits.json`, `data/pdbbind_v2020/labels.csv`
+
+### 代码更新
+
+| 文件 | 修改 |
+|------|------|
+| `bayesdiff/data.py` | `parse_pdbbind_index()` 支持 R1/refined 自动检测；新增 `parse_casf_coreset()`, `cluster_stratified_split()`, `_find_protein_pdb()` |
+| `bayesdiff/__init__.py` | 新增导出 `parse_casf_coreset`, `load_casf2016_codes`, `cluster_stratified_split` |
+| `scripts/pipeline/s00_prepare_pdbbind.py` | 重写：支持 R1 `P-L/YEAR_RANGE/` 目录结构、CASF-2016 test split、`code_to_dir.json` 映射、`shard_status_{:04d}of{:04d}` 格式 |
+| `slurm/s00_featurize_cpu.sh` | 新增 100-shard CPU array job (cpu_short partition) |
+| `slurm/s00_featurize_array.sh` | 新增 100-shard GPU array job (l40s_public partition) |
+| `slurm/s00_merge_split.sh` | 新增 merge + split SLURM script |
 
 ### 新增文件
 
@@ -27,29 +95,33 @@
 | `bayesdiff/__init__.py` | 新增 `PDBbindPairDataset`, `get_pdbbind_dataloader` 导出 |
 | `bayesdiff/data.py` | 无需修改 — `parse_pdbbind_index()` 已完整支持 v2020 refined set |
 
-### 里程碑验证（合成数据，7/7 通过）
+### 里程碑验证
 
 | 里程碑 | 验证结果 |
 |--------|----------|
-| M0.1 INDEX 解析 | ✅ 正确解析 pdb_code, pkd, affinity_type；pKd 范围 [4.0, 8.5] |
-| M0.2 Pocket 提取 | ✅ `extract_pocket_from_protein()` 生成有效 10Å PDB（30 atoms） |
-| M0.3 数据集划分 | ✅ 不重叠的 train/val/cal/test split；mmseqs2 不可用时 fallback 到 time-based |
-| M0.4 DataLoader | ✅ 变长 batch 正确（protein_pos, ligand_pos 正确拼接，batch index 正确） |
-| 单复合物 featurize | ✅ protein 28 atoms + ligand 3 atoms → .pt 文件 |
-| 全流水线 | ✅ 15 个合成复合物：parse → featurize → merge → split → DataLoader |
-| 分片并行 | ✅ 3 分片处理 12 个复合物，结果与单分片一致 |
+| M0.1 INDEX 解析 | ✅ 18,767 条目解析成功，自动检测 R1 格式 |
+| M0.2 CASF-2016 解析 + 剔除 | ✅ 285 PDB codes 全部找到并标记为 test |
+| M0.3 Pocket 提取 | ✅ R1 数据已含预提取 `_pocket.pdb`，缺失时自动提取 10Å pocket |
+| M0.4 蛋白序列聚类 | ✅ mmseqs2 30% identity → 3,250 clusters from 18,480 sequences |
+| M0.5 数据集划分 | ✅ Cluster-stratified split: 16,232 train / 2,248 val / 285 test |
+| M0.6 DataLoader | ✅ 变长 batch 正确（protein_pos, ligand_pos 正确拼接，batch index 正确） |
+| 单复合物 featurize | ✅ 18,765/18,767 成功（2 失败：ligand SDF 不可读） |
+| 全流水线 | ✅ parse → featurize (100-shard) → merge → split 完成 |
+| 分片并行 | ✅ 100 分片 × cpu_short+l40s_public 双分区并行 |
 
 ### HPC 并行策略
 
-- 50 个 SLURM array task × 16 CPU/task = **800 CPU 核心**并行
-- ~5,316 复合物 / 50 分片 ≈ 106/分片，预计 5–10 min/分片
-- 原始估计 7.5–15h → 并行后 **wall time ~10 min**
+- 100 个 SLURM array task 在 `cpu_short` + `l40s_public` 双分区提交
+- cpu_short: 2 concurrent tasks × 16 CPU workers
+- l40s_public: 4+ concurrent tasks × 16 CPU workers
+- 18,767 complexes / 100 shards ≈ 188/shard
+- 实际 wall time: ~8 min (parse) + ~10 min (featurize, 并行) + ~8 min (split with mmseqs2)
 
 ### 阻塞项
 
-- ⚠️ **PDBbind v2020 raw data 未下载** — 需从 http://www.pdbbind.org.cn/ 注册下载
-- 下载后执行：
-  ```bash
-  bash scripts/utils/download_pdbbind.sh path/to/PDBbind_v2020_refined.tar.gz
-  bash slurm/pipeline/s00_launch_all.sh
-  ```
+全部已解决：
+- ~~⚠️ PDBbind v2020 raw data 未下载~~ ✅ 已下载
+- ~~⚠️ 代码适配~~ ✅ `s00_prepare_pdbbind.py` + `data.py` 重写完成
+- ~~⚠️ CASF-2016 处理~~ ✅ CoreSet.dat 解析 + test split
+- ~~⚠️ 蛋白序列聚类~~ ✅ mmseqs2 安装 + 3,250 clusters
+- ~~⚠️ Split 重写~~ ✅ cluster-stratified split (12.2% val)
