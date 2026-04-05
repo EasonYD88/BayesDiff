@@ -1,7 +1,9 @@
 """
-bayesdiff/calibration.py
-────────────────────────
+bayesdiff/calibration.py — §4.4 Calibration Module
+────────────────────────────────────────────────────
 Probability calibration and ECE evaluation.
+Paper reference: §4.4 "Isotonic Regression Calibration"
+Equation reference: doc/Stage_1/03_math_reference.md §6
 
 Uses Isotonic Regression on a held-out calibration set to map
 raw P_success → calibrated P_success such that ECE is minimized.

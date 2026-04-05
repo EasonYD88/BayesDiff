@@ -1,8 +1,9 @@
 """
-bayesdiff/sampler.py
-────────────────────
+bayesdiff/sampler.py — §4.1 Generation Module
+────────────────────────────────────────────────
 Wrapper around TargetDiff for pocket-conditioned molecular sampling
 and SE(3)-equivariant embedding extraction.
+Paper reference: §4.1 "Molecular Generation and Embedding Extraction"
 
 This module handles:
   1. Loading the pretrained TargetDiff checkpoint
@@ -177,7 +178,7 @@ class TargetDiffSampler:
     def load_pocket_data(self, pt_path: str | Path):
         """Load a pre-processed pocket Data object from a .pt file.
 
-        These files are produced by scripts/15_prepare_tier3.py from LMDB.
+        These files are produced by scripts/scaling/s03_prepare_tier3.py from LMDB.
         The data dict contains protein_element, protein_pos, etc.
         We reconstruct a PyG Data object and apply FeaturizeProteinAtom.
         """

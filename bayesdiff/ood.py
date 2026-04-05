@@ -1,6 +1,9 @@
 """
-bayesdiff/ood.py
+bayesdiff/ood.py — §4.4 OOD Detection Module
+──────────────────────────────────────────────
 Out-of-Distribution detection for generated molecules.
+Paper reference: §4.4 "Mahalanobis OOD Detection"
+Equation reference: doc/Stage_1/03_math_reference.md §7
 
 Implements:
   - Mahalanobis distance (primary, from plan)
