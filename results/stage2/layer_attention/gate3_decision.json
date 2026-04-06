@@ -1,0 +1,30 @@
+{
+  "best_single_layer": 8,
+  "best_single_layer_val_R2": 0.250136137008667,
+  "best_weighted_sum_config": "all",
+  "best_weighted_sum_val_R2": 0.23883116245269775,
+  "best_attention_config": "top2",
+  "best_attention_val_R2": 0.2024974822998047,
+  "best_attention_val_rho": 0.505199096092471,
+  "improvement_vs_single_pct": -19.045090916716152,
+  "improvement_vs_ws_pct": -15.213123689455395,
+  "gate3_pass": false,
+  "decision": "STOP \u2014 layer attention (top2) val R\u00b2=0.2025 did not beat baseline R\u00b2=0.2501",
+  "weight_analysis_summary": {
+    "top2": {
+      "weights_vary": true,
+      "max_cv": 0.5675663352012634,
+      "summary": "Attention weights vary meaningfully across samples (CV > 0.1)"
+    },
+    "top4": {
+      "weights_vary": true,
+      "max_cv": 1.3075753450393677,
+      "summary": "Attention weights vary meaningfully across samples (CV > 0.1)"
+    },
+    "all": {
+      "weights_vary": true,
+      "max_cv": 4.792820453643799,
+      "summary": "Attention weights vary meaningfully across samples (CV > 0.1)"
+    }
+  }
+}

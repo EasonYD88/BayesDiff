@@ -1,0 +1,96 @@
+{
+  "n_total_layers": 10,
+  "d": 128,
+  "n_train": 16108,
+  "n_val": 2372,
+  "n_test": 285,
+  "results": [
+    {
+      "config": "top2",
+      "layers": "[8, 6]",
+      "n_layers_fused": 2,
+      "final_loss": 1.507591403178965,
+      "val_R2": 0.2024974822998047,
+      "val_spearman_rho": 0.505199096092471,
+      "val_spearman_p": 7.23566041855109e-154,
+      "val_RMSE": 1.5846117734909058,
+      "val_NLL": 2.0586421489715576,
+      "test_R2": 0.49386388063430786,
+      "test_spearman_rho": 0.6831236788039207,
+      "test_spearman_p": 1.6246596453582721e-40,
+      "test_RMSE": 1.5441046953201294,
+      "test_NLL": 2.0079619884490967,
+      "mean_weights": "{\"L8\": 0.44402140378952026, \"L6\": 0.5559785962104797}",
+      "weight_entropy_norm": 0.8231645174256308,
+      "max_cv": 0.5675663352012634
+    },
+    {
+      "config": "top4",
+      "layers": "[8, 6, 9, 5]",
+      "n_layers_fused": 4,
+      "final_loss": 1.5156181008696763,
+      "val_R2": 0.11836063861846924,
+      "val_spearman_rho": 0.457834018791506,
+      "val_spearman_p": 3.118402594274828e-123,
+      "val_RMSE": 1.666104793548584,
+      "val_NLL": 2.170731782913208,
+      "test_R2": 0.4913448691368103,
+      "test_spearman_rho": 0.6784830429659505,
+      "test_spearman_p": 8.65873881571856e-40,
+      "test_RMSE": 1.5479423999786377,
+      "test_NLL": 2.0145881175994873,
+      "mean_weights": "{\"L8\": 0.2766510248184204, \"L6\": 0.13917528092861176, \"L9\": 0.11972768604755402, \"L5\": 0.4644460380077362}",
+      "weight_entropy_norm": 0.685227380144973,
+      "max_cv": 1.3075753450393677
+    },
+    {
+      "config": "all",
+      "layers": "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]",
+      "n_layers_fused": 10,
+      "final_loss": 1.5100863827408648,
+      "val_R2": 0.11986595392227173,
+      "val_spearman_rho": 0.45793405283554034,
+      "val_spearman_p": 2.7176045308305428e-123,
+      "val_RMSE": 1.6646817922592163,
+      "val_NLL": 2.1573402881622314,
+      "test_R2": 0.5134075880050659,
+      "test_spearman_rho": 0.7169499846592762,
+      "test_spearman_p": 2.989456780088152e-46,
+      "test_RMSE": 1.513999581336975,
+      "test_NLL": 1.9630508422851562,
+      "mean_weights": "{\"L0\": 0.26958146691322327, \"L1\": 0.24550577998161316, \"L2\": 0.07107649743556976, \"L3\": 0.010048278607428074, \"L4\": 0.006221663672477007, \"L5\": 0.0114069115370512, \"L6\": 0.009370226413011551, \"L7\": 0.051474716514348984, \"L8\": 0.20191837847232819, \"L9\": 0.12339602410793304}",
+      "weight_entropy_norm": 0.6518349824856218,
+      "max_cv": 4.792820453643799
+    }
+  ],
+  "gate3": {
+    "best_single_layer": 8,
+    "best_single_layer_val_R2": 0.250136137008667,
+    "best_weighted_sum_config": "all",
+    "best_weighted_sum_val_R2": 0.23883116245269775,
+    "best_attention_config": "top2",
+    "best_attention_val_R2": 0.2024974822998047,
+    "best_attention_val_rho": 0.505199096092471,
+    "improvement_vs_single_pct": -19.045090916716152,
+    "improvement_vs_ws_pct": -15.213123689455395,
+    "gate3_pass": false,
+    "decision": "STOP \u2014 layer attention (top2) val R\u00b2=0.2025 did not beat baseline R\u00b2=0.2501",
+    "weight_analysis_summary": {
+      "top2": {
+        "weights_vary": true,
+        "max_cv": 0.5675663352012634,
+        "summary": "Attention weights vary meaningfully across samples (CV > 0.1)"
+      },
+      "top4": {
+        "weights_vary": true,
+        "max_cv": 1.3075753450393677,
+        "summary": "Attention weights vary meaningfully across samples (CV > 0.1)"
+      },
+      "all": {
+        "weights_vary": true,
+        "max_cv": 4.792820453643799,
+        "summary": "Attention weights vary meaningfully across samples (CV > 0.1)"
+      }
+    }
+  }
+}

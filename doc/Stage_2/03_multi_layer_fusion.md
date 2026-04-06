@@ -610,12 +610,17 @@ The encoder layers themselves remain **frozen** (pretrained TargetDiff weights).
   - all (L0–L9): L9=0.592, L8=0.407, all others→0, val R²=0.239
   - Conclusion: weighted sum degenerates to L8+L9 blend, no improvement over single layer
 
-### Stage 3: Layer Attention (proceed only if Gate 2 passes)
-- [ ] Implement `LayerAttentionFusion` in `layer_fusion.py`
-- [ ] Write unit test T1.3
-- [ ] Run E3.1: layer attention vs. weighted sum
-- [ ] Run E3.2: per-sample weight variance analysis
-- [ ] **Gate 3 decision**: Does input-dependent weighting help?
+### Stage 3: Layer Attention (proceeded despite Gate 2 STOP)
+- [x] Implement `LayerAttentionFusion` in `layer_fusion.py`
+- [x] Write unit test T1.3
+- [x] Run E3.1: layer attention vs. weighted sum
+- [x] Run E3.2: per-sample weight variance analysis
+- [x] **Gate 3 decision**: ❌ STOP — attention val R²=0.203 < best single L8 R²=0.250 (−19.0%)
+  - top2 (L8,L6): val R²=0.203, test R²=0.494, entropy=0.82, CV=0.57
+  - top4 (L8,L6,L9,L5): val R²=0.118, test R²=0.491, CV=1.31
+  - all (L0–L9): val R²=0.120, test R²=0.513, CV=4.79
+  - E3.2: Weights DO vary across samples (high CV), but extra parameters cause overfitting
+  - Notable: test R² improves (0.513 > 0.449) despite poor val R² — train/val overfit
 
 ### Stage 4: Concat + MLP (proceed only if Gate 3 passes)
 - [ ] Implement `ConcatMLPFusion` in `layer_fusion.py`
