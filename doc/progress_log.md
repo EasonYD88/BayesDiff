@@ -166,6 +166,103 @@
 
 ### 下一步
 
-- 提交 SLURM extraction job（18,765 complexes × 50 shards）
-- 合并 embeddings → `results/multilayer_embeddings/all_multilayer_embeddings.npz`
-- 开始 Stage 1: Single-Layer Probing（s09a_single_layer_probe.py）
+- ~~提交 SLURM extraction job（18,765 complexes × 50 shards）~~ ✅ 完成
+- ~~合并 embeddings → `results/multilayer_embeddings/all_multilayer_embeddings.npz`~~ ✅ 完成
+- ~~开始 Stage 1: Single-Layer Probing（s09a_single_layer_probe.py）~~ ✅ 完成
+
+---
+
+## Sub-Plan 1: Multi-Layer Fusion — Stage 0b: Extraction Run
+
+**Status**: ✅ 完成  
+**Date**: 2026-04-06
+
+### 提取结果
+
+| 指标 | 数值 |
+|------|------|
+| 总复合物 | 18,765 |
+| 成功提取 | 18,765 (100%) |
+| 失败 | 0 |
+| 50-shard 并行耗时 | ~2 min/shard |
+| 合并文件大小 | 155 MB |
+| 合并 keys | 225,180 (18,765 × 12: 10 layers + z_global + n_layers) |
+| 输出 | `results/multilayer_embeddings/all_multilayer_embeddings.npz` |
+
+### Bugfix
+
+- `protein_atom_to_aa_type >= 20`（非标准氨基酸）→ clamp 到 [0,19]
+- `.pt` 文件缺少 `ligand_hybridization` → 手动从 `ligand_atom_feature` 的 aromatic 列计算 `ligand_atom_feature_full`（`add_aromatic` mode 只需 element + aromatic）
+- SLURM 脚本 conda activation 修复
+
+---
+
+## Sub-Plan 1: Multi-Layer Fusion — Stage 1: Single-Layer Probing
+
+**Status**: ✅ 完成  
+**Date**: 2026-04-06  
+**Commit**: (pending)
+
+### E1.1 — Per-Layer GP Metrics
+
+| Layer | Val R² | Val ρ | Val RMSE | Val NLL | Test R² | Test ρ | Test RMSE | Test NLL |
+|-------|--------|-------|----------|---------|---------|--------|-----------|----------|
+| L0 | 0.114 | 0.356 | 1.670 | 1.932 | 0.129 | 0.434 | 2.026 | 2.158 |
+| L1 | 0.213 | 0.458 | 1.574 | 1.872 | 0.309 | 0.577 | 1.804 | 2.033 |
+| L2 | 0.216 | 0.474 | 1.572 | 1.870 | 0.348 | 0.617 | 1.753 | 1.996 |
+| L3 | 0.205 | 0.462 | 1.582 | 1.876 | 0.359 | 0.640 | 1.738 | 1.987 |
+| L4 | 0.219 | 0.465 | 1.569 | 1.868 | 0.381 | 0.659 | 1.708 | 1.966 |
+| L5 | 0.224 | 0.479 | 1.564 | 1.865 | 0.427 | 0.683 | 1.643 | 1.923 |
+| L6 | 0.233 | 0.495 | 1.554 | 1.859 | 0.429 | 0.681 | 1.639 | 1.923 |
+| L7 | 0.221 | 0.487 | 1.566 | 1.867 | 0.418 | 0.674 | 1.656 | 1.936 |
+| **L8** | **0.250** | **0.512** | **1.537** | **1.847** | 0.432 | 0.686 | 1.636 | 1.921 |
+| L9 | 0.232 | 0.498 | 1.555 | 1.860 | **0.449** | **0.697** | **1.612** | **1.903** |
+
+**关键发现：**
+- L0（init embedding）信号最弱（Val R²=0.114），与预期一致
+- 性能随层数单调递增后在 L5-L6 趋于平台
+- **L8 在验证集上超过 L9**（Val R²=0.250 vs 0.232），说明倒数第二层可能更适合
+- L9 在测试集上略优（Test R²=0.449 vs 0.432），可能due to CASF-2016 的 distribution shift
+- 所有层表现远超之前 50mol GP（ρ≈0.4），得益于 16K 训练样本
+
+### E1.2 — CKA Similarity Matrix
+
+- 保存为 `results/stage2/layer_probing/cka_matrix.npy`
+- 可视化保存为 `results/stage2/layer_probing/cka_heatmap.png`
+
+### Gate 1 Decision
+
+| 指标 | 值 |
+|------|------|
+| Last layer (L9) val R² | 0.2323 |
+| Best non-final (L8) val R² | 0.2501 |
+| Ratio | 1.077 |
+| Threshold | 0.90 |
+| **Decision** | ✅ **PROCEED** to Stage 2 |
+
+> L8 在验证集上 R² 比 L9 高 7.7%，且 L5-L8 都与 L9 可比，
+> 说明不同层包含互补信息，multi-layer fusion 有潜力。
+
+### 代码更新
+
+| 文件 | 修改/新增 | 说明 |
+|------|-----------|------|
+| `scripts/pipeline/s09a_single_layer_probe.py` | 新增 | Per-layer GP + CKA + Gate 1 决策脚本 |
+| `slurm/s09a_layer_probe.sh` | 新增 | SLURM job script |
+
+### 输出文件
+
+| 文件 | 说明 |
+|------|------|
+| `results/stage2/layer_probing/layer_probing.csv` | 10 层 × 8 metrics |
+| `results/stage2/layer_probing/layer_probing.png` | Bar chart (Fig L.1) |
+| `results/stage2/layer_probing/cka_heatmap.png` | CKA 矩阵热图 (Fig L.2) |
+| `results/stage2/layer_probing/gate1_decision.json` | Gate 1 决策记录 |
+| `results/stage2/layer_probing/stage1_summary.json` | 完整汇总 |
+| `results/stage2/layer_probing/gp_layer_*.pt` | 10 个 per-layer GP 模型 |
+
+### 下一步
+
+- Stage 2: Weighted Sum Fusion — 实现 `WeightedSumFusion` 可学习层权重
+- 在已有 multi-layer embeddings 上训练 weighted sum GP
+- Gate 2: 多层融合是否超过最佳单层？

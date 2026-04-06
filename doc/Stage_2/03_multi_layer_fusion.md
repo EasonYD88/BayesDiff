@@ -593,10 +593,10 @@ The encoder layers themselves remain **frozen** (pretrained TargetDiff weights).
 - [x] Write `s08b_extract_multilayer.py` — extract all layers for all complexes
 
 ### Stage 1: Single-Layer Probing
-- [ ] Write `s09a_single_layer_probe.py` — GP per layer
-- [ ] Run E1.1: per-layer GP metrics
-- [ ] Run E1.2: CKA similarity matrix
-- [ ] **Gate 1 decision**: Do non-final layers carry useful signal?
+- [x] Write `s09a_single_layer_probe.py` — GP per layer
+- [x] Run E1.1: per-layer GP metrics
+- [x] Run E1.2: CKA similarity matrix
+- [x] **Gate 1 decision**: ✅ PROCEED — L8 val R²=0.250 > L9 val R²=0.232, ratio=1.077
 
 ### Stage 2: Weighted Sum (proceed only if Gate 1 passes)
 - [ ] Implement `WeightedSumFusion` in `layer_fusion.py`

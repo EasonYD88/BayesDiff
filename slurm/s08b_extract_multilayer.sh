@@ -17,7 +17,8 @@
 set -e
 
 cd /scratch/yd2915/BayesDiff
-source /scratch/yd2915/conda_envs/bayesdiff/bin/activate
+eval "$(/scratch/yd2915/miniconda3/bin/conda shell.bash hook)"
+conda activate /scratch/yd2915/conda_envs/bayesdiff
 
 echo "=== Job Info ==="
 echo "Array Task ID: $SLURM_ARRAY_TASK_ID"

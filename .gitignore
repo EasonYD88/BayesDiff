@@ -26,3 +26,8 @@ external/targetdiff/pretrained_models/*.pt
 external/targetdiff/pretrained_models/*.pkl
 external/targetdiff/**/__pycache__/
 external/targetdiff/**/*.pyc
+
+# Large result files
+results/multilayer_embeddings/
+results/stage2/layer_probing/gp_layer_*.pt
+results/stage2/layer_probing/*.png

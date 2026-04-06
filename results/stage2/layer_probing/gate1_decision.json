@@ -1,0 +1,9 @@
+{
+  "last_layer_R2": 0.23225665092468262,
+  "best_nonfinal_R2": 0.250136137008667,
+  "best_nonfinal_layer": 8,
+  "ratio": 1.0769815891721544,
+  "threshold": 0.9,
+  "gate1_pass": true,
+  "decision": "PROCEED to Stage 2"
+}
