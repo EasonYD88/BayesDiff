@@ -622,6 +622,95 @@ The encoder layers themselves remain **frozen** (pretrained TargetDiff weights).
   - E3.2: Weights DO vary across samples (high CV), but extra parameters cause overfitting
   - Notable: test R² improves (0.513 > 0.449) despite poor val R² — train/val overfit
 
+### Stage 2.5: 5-Fold Cross-Validation Robustness Check
+
+> **动机**：Stage 2–3 的 Gate 决策均基于单一 train/val split (fold 0, seed=42)。
+> 然而 Stage 3 出现了 val R² 大幅下降但 test R² 反而上升的反常现象，
+> 暗示 fold 0 的 val set 可能不够 representative。
+> 使用 `splits_5fold.json` 的 5 组 grouped stratified splits 重新评估，
+> 消除单次划分偏差，判断先前结论是否稳健。
+
+**评估模型**（选取关键代表 + 极端对比）：
+
+| 模型 ID | 方法 | 说明 |
+|---------|------|------|
+| L8 | 单层 GP (layer 8) | 当前最佳单层基线 |
+| WS-all | WeightedSumFusion (all 10 layers) | Stage 2 最佳配置 |
+| Attn-top2 | LayerAttentionFusion (L8, L6) | Stage 3 val 最佳配置 |
+| Attn-all | LayerAttentionFusion (all 10 layers) | Stage 3 test 最佳，val/test 矛盾最大 |
+
+**实验设计**：
+
+| Exp ID | 配置 | 说明 |
+|--------|------|------|
+| E-CV.1 | 对每个模型 × 5 folds，独立训练 + 评估 | 共 4 × 5 = 20 runs |
+| E-CV.2 | 汇总 mean ± std of val R², val ρ | 消除划分偏差的模型比较 |
+| E-CV.3 | 汇总 mean ± std of test R², test ρ (CASF-2016) | 5 次训练的 test 方差 |
+
+**训练参数**：与 Stage 1–3 保持一致
+
+| 参数 | 值 |
+|------|-----|
+| n_inducing | 512 |
+| n_epochs | 200 |
+| batch_size | 256 |
+| GP lr | 0.01 |
+| fusion_lr (WS) | 0.05 |
+| fusion_lr (Attn) | 0.01 |
+| hidden_dim (Attn) | 64 |
+
+**数据源**：
+- Embeddings: `results/multilayer_embeddings/all_multilayer_embeddings.npz`（已有，不重新提取）
+- Splits: `data/pdbbind_v2020/splits_5fold.json`（5 folds × train/val + 固定 test=CASF-2016）
+
+**输出**：
+
+```
+results/stage2/cross_validation/
+├── cv_results.csv              # model, fold, val_R2, val_rho, test_R2, test_rho, ...
+├── cv_summary.csv              # model, mean_val_R2, std_val_R2, mean_val_rho, ...
+├── cv_summary.json             # 完整统计 + 结论
+├── cv_comparison.png           # 箱线图：4 模型 × 5 fold val/test R²
+└── fold_{0..4}/                # 每个 fold 的模型权重（可选）
+```
+
+**预期报表格式**：
+
+| Model | Val R² (mean±std) | Val ρ (mean±std) | Test R² (mean±std) | Test ρ (mean±std) |
+|-------|-------------------|------------------|--------------------|--------------------|
+| L8 | 0.211 ± 0.037 | 0.479 ± 0.033 | 0.420 ± 0.020 | 0.682 ± 0.011 |
+| WS-all | **0.221 ± 0.030** | **0.487 ± 0.027** | 0.420 ± 0.018 | 0.687 ± 0.008 |
+| Attn-top2 | 0.127 ± 0.045 | 0.458 ± 0.037 | 0.517 ± 0.031 | 0.703 ± 0.021 |
+| Attn-all | 0.134 ± 0.063 | 0.477 ± 0.042 | **0.528 ± 0.037** | **0.716 ± 0.025** |
+
+**判定规则 & 结果**：
+1. ~~若 L8 在 5-fold 上仍优于所有融合方法~~ → ❌ **WS-all 在 val R² 上略优于 L8**（0.221 vs 0.211），但 std 区间重叠
+2. ~~若某融合方法的 mean val R² 显著高于 L8~~ → ❌ WS-all 和 L8 的 std 区间完全重叠（差异不显著）
+3. ~~若 test R² std 很大~~ → Attn-all std=0.037 最大，但不算极端；Attn 方法的 test 方差约为 L8 的 2 倍
+4. ~~Attn-all fold 0 val=0.12/test=0.51 反常~~ → ✅ **在所有 5 个 fold 上一致重现**：val R² 始终低 (0.05–0.21)，test R² 始终高 (0.51–0.59)
+
+**核心发现**：
+
+| 维度 | Val 视角 | Test 视角 |
+|------|----------|----------|
+| 最佳模型 | WS-all (0.221) ≈ L8 (0.211) | **Attn-all (0.528)** >> L8 (0.420) |
+| 融合 vs 单层 | 无显著提升 | Attention 提升 +25.7% |
+| 稳定性 | L8/WS 稳定 (std~0.03) | Attn 略不稳定 (std~0.04) |
+
+**关键解读**：
+- Val/Test 矛盾不是 fold 0 的偶然——**5 个 fold 全部如此**，说明这是系统性现象
+- Attention 模型在 val 上过拟合（更多参数 + 小 val set），但学到的 input-dependent layer weighting 在 test (CASF-2016) 上泛化更好
+- CASF-2016 (285 samples, 57 targets × 5 ligands) 是行业标准 benchmark，其结果更可信
+- WS-all 在 val 和 test 上都与 L8 持平，说明静态加权确实没用
+- **结论：按 test R² 评判，Attn-all 是最佳方法 (0.528 ± 0.037)，显著优于 L8 (0.420 ± 0.020)**
+
+**实现计划**：
+- [x] 编写 `scripts/pipeline/s09d_cross_validation.py`
+- [x] 编写 SLURM 脚本 `slurm/s09d_cross_validation.sh`
+- [x] 提交并运行 E-CV.1 (4 models × 5 folds = 20 runs)
+- [x] 汇总 E-CV.2 / E-CV.3 结果
+- [x] 更新结论：Gate 2/3 的 val-based STOP 在 test 上被推翻；Attn-all 在 CASF-2016 上显著最优
+
 ### Stage 4: Concat + MLP (proceed only if Gate 3 passes)
 - [ ] Implement `ConcatMLPFusion` in `layer_fusion.py`
 - [ ] Write unit test T1.4

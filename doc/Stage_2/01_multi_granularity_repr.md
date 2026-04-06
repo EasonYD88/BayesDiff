@@ -3,7 +3,8 @@
 > **Priority**: P0 — Critical  
 > **Dependency**: Sub-Plan 0 (PDBbind v2020 数据集)  
 > **Training Data**: PDBbind v2020 R1 general set (19,037), 见 [00a_supervised_pretraining.md](00a_supervised_pretraining.md)  
-> **Estimated Effort**: 2–3 weeks implementation + 1 week testing  
+> **Data Split**: 默认使用 `splits.json`（= fold 0 单次划分: Train / Val / CASF-2016 Test）。5-fold 仅在需要稳健性评估或超参选择时启用（见 §8）。  
+> **Estimated Effort**: 1–2 weeks MVP implementation + testing; 1 week v2 extensions (conditional on MVP gain)  
 > **Paper Section**: §3.X Enhanced Representation Learning
 
 ---
@@ -56,17 +57,25 @@ $$
 
 ### 2.2 Interaction Graph Construction
 
-Given ligand atom positions $\{r_i^{(L)}\}$ and pocket residue positions $\{r_j^{(P)}\}$:
+> **Design rationale (MVP-first)**: The pocket side uses **heavy atoms** (all non-hydrogen atoms), not Cα.  
+> Cα coordinates are too coarse — they sit at the backbone and are often >5 Å from the true contact surface, making any distance cutoff unreliable. Heavy atoms faithfully represent the side-chain geometry that actually contacts the ligand.  
+> If graph size becomes a bottleneck, the fallback is **side-chain centroid / functional-atom proxy** per residue (e.g., Nζ for Lys, Oδ for Asp), NOT Cα.
 
-1. **Contact edges**: $(i, j)$ if $\|r_i^{(L)} - r_j^{(P)}\| \leq d_{\text{cutoff}}$ (default: 4.5 Å)
-2. **Edge features** for each contact $(i, j)$:
+Given ligand atom positions $\{r_i^{(L)}\}$ and pocket heavy-atom positions $\{r_j^{(P)}\}$:
+
+1. **Pocket node extraction**: For each pocket residue within 10 Å of the ligand center-of-mass, extract all heavy atoms (C, N, O, S, etc.). Typical pocket yields 200–500 heavy atoms.
+2. **Contact edges**: $(i, j)$ if $\|r_i^{(L)} - r_j^{(P)}\| \leq d_{\text{cutoff}}$ (default: 4.5 Å). At heavy-atom resolution this cutoff is geometrically faithful.
+3. **Edge features (MVP)** for each contact $(i, j)$:
    - Distance: $d_{ij} = \|r_i^{(L)} - r_j^{(P)}\|$
    - Radial basis: $\text{RBF}(d_{ij}) \in \mathbb{R}^{16}$ (Gaussian expansion, 0–8 Å, 16 centers)
-   - Atom type pair: one-hot encoding of (ligand atom type, residue type)
+   - Ligand atom type: one-hot encoding of element (C/N/O/S/F/Cl/Br/P/other)
+   - Pocket atom type: one-hot encoding of element + parent residue type (20 amino acids)
+4. **Edge features (deferred to v2, after MVP shows stable gain)**:
    - Interaction type indicator: hydrogen bond / hydrophobic / π-π / salt bridge / van der Waals
-3. **Node features**:
+   - Rationale for deferral: rule-based interaction labels on generated (noisy) poses inject hard-coded chemical priors that are difficult to validate and may introduce systematic bias. Adding them only after the geometry-only branch shows improvement isolates the contribution of each component.
+5. **Node features**:
    - Ligand atoms: $h_i^{(L)}$ from TargetDiff encoder
-   - Pocket residues: $h_j^{(P)}$ from pocket encoder or pre-computed (ESM-2 / per-residue features)
+   - Pocket heavy atoms: element embedding + parent residue embedding (learned, d=32 each → concatenated to d=64). No external pretrained encoder in MVP.
 
 ### 2.3 Interaction GNN
 
@@ -114,31 +123,53 @@ $$
 
 ```python
 class InteractionGraphBuilder:
-    """Constructs pocket-ligand bipartite interaction graphs."""
+    """Constructs pocket-ligand bipartite interaction graphs at heavy-atom resolution."""
     
-    def __init__(self, cutoff: float = 4.5, rbf_centers: int = 16, max_rbf_dist: float = 8.0):
+    def __init__(self, cutoff: float = 4.5, rbf_centers: int = 16, max_rbf_dist: float = 8.0,
+                 pocket_radius: float = 10.0, use_heavy_atoms: bool = True):
         ...
     
-    def build_graph(self, ligand_pos, ligand_features, pocket_pos, pocket_features):
+    def extract_pocket_heavy_atoms(self, protein_atoms, ligand_center, radius=10.0):
+        """
+        Extract heavy atoms within `radius` of ligand center-of-mass.
+        
+        Args:
+            protein_atoms: dict with 'positions' (N_all, 3), 'elements' (N_all,),
+                          'residue_types' (N_all,), 'is_hydrogen' (N_all,) bool mask
+            ligand_center: (3,) ligand center-of-mass
+            radius: pocket extraction radius (default 10.0 Å)
+        
+        Returns:
+            pocket_pos: (N_P, 3) heavy atom coordinates
+            pocket_elements: (N_P,) element indices
+            pocket_residue_types: (N_P,) residue type indices
+        """
+        ...
+    
+    def build_graph(self, ligand_pos, ligand_features, pocket_pos, pocket_features,
+                    ligand_elements=None, pocket_elements=None, pocket_residue_types=None):
         """
         Args:
             ligand_pos: (N_L, 3) ligand atom coordinates
             ligand_features: (N_L, d) ligand atom embeddings from encoder
-            pocket_pos: (N_P, 3) pocket residue Cα coordinates
-            pocket_features: (N_P, d_p) pocket residue features
+            pocket_pos: (N_P, 3) pocket heavy-atom coordinates
+            pocket_features: (N_P, d_p) pocket atom features (element + residue embeddings)
+            ligand_elements: (N_L,) ligand element type indices
+            pocket_elements: (N_P,) pocket element type indices
+            pocket_residue_types: (N_P,) residue type indices for each pocket atom
         
         Returns:
             PyG Data object with:
               - x: (N_L + N_P, d_max) node features
               - edge_index: (2, E) bipartite edges
-              - edge_attr: (E, d_edge) edge features
+              - edge_attr: (E, d_edge) edge features (RBF + atom types, NO interaction type)
               - batch: (N_L + N_P,) batch indices
               - node_type: (N_L + N_P,) 0=ligand, 1=pocket
         """
         ...
     
-    def _compute_edge_features(self, dist, ligand_types, pocket_types):
-        """Compute RBF distance + atom pair + interaction type features."""
+    def _compute_edge_features(self, dist, ligand_elements, pocket_elements, pocket_residue_types):
+        """Compute RBF distance + ligand atom type + pocket atom/residue type (MVP: no interaction type)."""
         ...
     
     def _gaussian_rbf(self, dist):
@@ -178,7 +209,7 @@ class BipartiteMessagePassing(nn.Module):
 class MultiGranularityEncoder(nn.Module):
     """Combines atom-level, interaction-level, and global-level representations."""
     
-    def __init__(self, atom_dim, interaction_dim, global_dim, output_dim=256, fusion='concat_mlp'):
+    def __init__(self, atom_dim, interaction_dim, global_dim, output_dim=128, fusion='concat_mlp'):
         ...
     
     def forward(self, atom_embeddings, interaction_graph, global_embedding):
@@ -213,8 +244,10 @@ class TargetDiffSampler:
             'atom_embeddings': atom_embs,  # list of M tensors, each (N_i, d)
             'atom_positions': atom_pos,    # list of M tensors, each (N_i, 3)
             'atom_types': atom_types,      # list of M tensors, each (N_i,)
-            'pocket_positions': pocket_pos,  # (N_P, 3)
-            'pocket_features': pocket_feat,  # (N_P, d_p)
+            'pocket_positions': pocket_pos,  # (N_P, 3) — heavy-atom coords
+            'pocket_elements': pocket_elem,   # (N_P,) element type indices
+            'pocket_residue_types': pocket_res,  # (N_P,) amino acid type indices
+            'pocket_features': pocket_feat,  # (N_P, d_p) — element + residue embeddings
         }
 ```
 
@@ -233,7 +266,7 @@ Usage:
 Output per pocket:
     data/atom_embeddings/{pdb_code}/
         mol_{i}_atoms.npz   # atom_embeddings, atom_positions, atom_types
-        pocket.npz           # pocket_positions, pocket_features
+        pocket.npz           # pocket_heavy_atom_positions, pocket_elements, pocket_residue_types
 """
 ```
 
@@ -326,7 +359,7 @@ def test_graph_construction_basic():
 | Test ID | Test Name | What It Verifies |
 |---------|-----------|-----------------|
 | T4.1 | `test_full_pipeline_synthetic` | Synthetic data → interaction graph → GNN → fusion → GP → metrics |
-| T4.2 | `test_gen_uncertainty_higher_dim` | gen_uncertainty works with d=256 embeddings |
+| T4.2 | `test_gen_uncertainty_higher_dim` | gen_uncertainty works with d=128 (or 192) embeddings |
 | T4.3 | `test_delta_method_compatibility` | Jacobian computation works with new representation |
 | T4.4 | `test_metric_improvement_synthetic` | On constructed data, multi-gran outperforms mean-pool |
 
@@ -343,6 +376,8 @@ def test_graph_construction_basic():
 | A1.7 | Full multi-granularity (gated) | Alternative fusion |
 | A1.8 | Cutoff sensitivity: 3.5 / 4.5 / 6.0 / 8.0 Å | Hyperparameter sensitivity |
 | A1.9 | GNN layers: 1 / 2 / 3 | Architecture sensitivity |
+| A1.10 | z_interaction with **shuffled contact edges** (random bipartite edges, same edge count) | Sanity check: does contact topology matter, or is it just node features? If z_interaction doesn’t beat the shuffled-edge control, the interaction branch is not learning real structure. |
+| A1.11 | output_dim: 128 / 192 / 256 | Embedding dimension vs GP sample efficiency |
 
 ---
 
@@ -359,9 +394,9 @@ def test_graph_construction_basic():
 
 ### 5.2 Diagnostic Metrics
 
-- **Interaction graph statistics**: avg edges/molecule, avg distance, contact type distribution
+- **Interaction graph statistics**: avg edges/molecule, avg distance, heavy-atom count per pocket
 - **Representation analysis**: t-SNE/UMAP of z_new colored by pKd → expect better separation
-- **Learned gate values** (gated fusion): which level contributes most across pockets
+- **Shuffled-edge Δ**: performance gap between real-topology and shuffled-edge z_interaction (must be significant)
 
 ### 5.3 Failure Criteria
 
@@ -381,7 +416,7 @@ def test_graph_construction_basic():
 > 
 > 1. *Atom-level representation* $z_{\text{atom}}$: preserves individual pharmacophore features via attention-weighted pooling over ligand atom embeddings $\{h_i^{(L)}\}$ from the SE(3)-equivariant encoder.
 > 
-> 2. *Interaction-level representation* $z_{\text{interaction}}$: encodes the binding interface via a lightweight message-passing GNN operating on a pocket-ligand contact graph, where edges connect atom pairs within a distance cutoff of $d_c$ = 4.5 Å.
+> 2. *Interaction-level representation* $z_{\text{interaction}}$: encodes the binding interface via a lightweight message-passing GNN operating on a pocket-ligand contact graph constructed at **heavy-atom resolution** (not Cα), where edges connect atom pairs within a distance cutoff of $d_c$ = 4.5 Å. Edge features are purely geometric in the MVP (distance RBF + atom/residue type); chemistry-aware interaction type labels are deferred to avoid injecting rule-based priors before geometric gains are validated.
 > 
 > 3. *Global representation* $z_{\text{global}}$: the original mean-pooled embedding, capturing overall molecular shape and property distributions.
 > 
@@ -393,7 +428,7 @@ def test_graph_construction_basic():
 |--------|---------|---------|
 | Fig. X.1 | Architecture diagram with three levels | Explain the method |
 | Fig. X.2 | t-SNE: z_global vs z_new, colored by pKd | Show improved representation |
-| Fig. X.3 | Ablation bar chart (A1.1–A1.7) | Justify design choices |
+| Fig. X.3 | Ablation bar chart (A1.1–A1.7, **A1.10 shuffled-edge**) | Justify design choices |
 | Fig. X.4 | Interaction graph example visualization | Intuitive illustration |
 | Fig. X.5 | Gate values heatmap (gated fusion) | Interpretability |
 
@@ -403,7 +438,8 @@ def test_graph_construction_basic():
 |-------|---------|
 | Tab. X.1 | Ablation: representation level vs. metrics |
 | Tab. X.2 | Cutoff sensitivity (A1.8) |
-| Tab. X.3 | Interaction graph statistics (avg edges, contact types) |
+| Tab. X.3 | Interaction graph statistics (avg edges, heavy-atom count, pocket size) |
+| Tab. X.4 | Shuffled-edge control: real topology vs random edges (A1.10) |
 
 ---
 
@@ -413,24 +449,59 @@ def test_graph_construction_basic():
 |------|--------|------|--------|
 | Ligand atom positions | PDBbind v2020 crystal structures | ~5,316 complexes | ✅ Available |
 | Ligand atom embeddings | SE(3) encoder hidden states | ~5,316 × (N_atoms, 128) | ⚠️ Requires forward pass |
-| Pocket residue positions | PDBbind v2020 structures | ~5,316 complexes | ✅ Available |
-| Pocket residue features | Per-residue encoding | ~5,316 × (N_res, d_p) | ⚠️ Need to extract |
+| Pocket heavy-atom positions | PDBbind v2020 structures (all non-H atoms within 10 Å of ligand) | ~5,316 complexes × 200–500 atoms/pocket | ✅ Available (extract from PDB) |
+| Pocket atom element types | Parsed from PDB ATOM records | ~5,316 complexes | ✅ Available |
+| Pocket residue types (per atom) | Parsed from PDB ATOM records | ~5,316 complexes | ✅ Available |
 | pKd labels | PDBbind v2020 INDEX | ~5,316 complexes | ✅ Available |
 
 ---
 
-## 8. Implementation Checklist
+## 8. Implementation Phasing
 
-- [ ] Modify `sampler.py` to expose atom-level embeddings and positions
-- [ ] Implement `interaction_graph.py` with `InteractionGraphBuilder`
+### Phase 1 — MVP (must ship first, gate for Phase 2)
+
+| Component | MVP Scope | Deferred to v2 |
+|-----------|-----------|----------------|
+| **Data split** | `splits.json`（fold 0 单次 Train/Val/Test） | 5-fold（`splits_5fold.json`）仅在超参选择或稳健性评估时启用 |
+| Pocket graph nodes | Heavy atoms (all non-H) | — |
+| Edge features | distance + RBF + ligand element + pocket element/residue type | H-bond / hydrophobic / π-π / salt bridge / vdW interaction labels |
+| Fusion | concat + MLP | Gated fusion |
+| Output dim | 128 | 192 / 256 (ablation A1.11) |
+| Ablation | A1.1–A1.6, **A1.10 (shuffled-edge control)** | A1.7 (gated), A1.8–A1.9, A1.11 |
+
+**Data split 策略**：
+- MVP 全程使用 `splits.json`（= fold 0），快速迭代，避免 5× 训练开销。
+- 在 CASF-2016 test set 上报告最终指标。
+- 只有在 MVP 通过 gate criterion 后、准备写论文或对比超参时，才切换到 `splits_5fold.json` 做 5-fold 评估（报告 Val 均值 ± std）。
+
+**Gate criterion**: MVP must show $\Delta R^2 \geq +0.03$ AND $\Delta \rho \geq +0.04$ over baseline AND z_interaction must beat shuffled-edge control (p < 0.05). Only then proceed to Phase 2.
+
+### Phase 2 — Extensions (conditional)
+
+- 5-fold 稳健性评估（`splits_5fold.json`），报告 Val 指标均值 ± std
+- Chemistry-aware edge features (interaction type indicators)
+- Gated fusion (A1.7)
+- Higher output dimensions (A1.11)
+- Cutoff / layer-count sweeps (A1.8–A1.9)
+- ESM-2 pocket features (replaces learned embeddings)
+
+---
+
+## 9. Implementation Checklist
+
+- [ ] Modify `sampler.py` to expose atom-level embeddings, positions, and pocket heavy-atom data
+- [ ] Implement `interaction_graph.py` with `InteractionGraphBuilder` (heavy-atom resolution, MVP edge features only)
 - [ ] Implement `interaction_gnn.py` with `InteractionGNN`
-- [ ] Implement `multi_granularity.py` with `MultiGranularityEncoder`
-- [ ] Write `s08_extract_atom_embeddings.py` pipeline script
+- [ ] Implement `multi_granularity.py` with `MultiGranularityEncoder` (output_dim=128, concat+MLP)
+- [ ] Write `s08_extract_atom_embeddings.py` pipeline script (include pocket heavy-atom extraction)
 - [ ] Write `s09_build_interaction_graphs.py` pipeline script
 - [ ] Update `gen_uncertainty.py` for variable-dim embeddings
 - [ ] Update `fusion.py` for variable-dim Jacobians
 - [ ] Write all unit tests (T1.1–T3.6)
 - [ ] Write integration tests (T4.1–T4.4)
-- [ ] Run ablation experiments (A1.1–A1.9)
+- [ ] Implement shuffled-edge graph builder for ablation A1.10
+- [ ] Run MVP ablation experiments (A1.1–A1.6, A1.10)
+- [ ] **Decision gate**: evaluate MVP results against gate criteria
+- [ ] (Phase 2) Add chemistry-aware edge features, gated fusion, extended ablations
 - [ ] Generate paper figures and tables
 - [ ] Draft methods section text
