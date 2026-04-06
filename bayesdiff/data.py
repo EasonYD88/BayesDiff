@@ -325,6 +325,159 @@ def cluster_stratified_split(
     }
 
 
+def cluster_stratified_split_nfold(
+    df: pd.DataFrame,
+    n_folds: int = 5,
+    val_frac: float = 0.12,
+    n_bins: int = 10,
+    base_seed: int = 42,
+    clusters_json: Optional[str | Path] = None,
+    pdbbind_dir: Optional[str | Path] = None,
+    seq_identity: float = 0.30,
+    pdb_to_file: Optional[dict[str, Path]] = None,
+) -> dict:
+    """Generate N grouped Train/Val splits from pre-computed protein clusters.
+
+    Re-uses the same clustering for all folds; only the random sampling seed
+    differs (seed = base_seed + fold_id).
+
+    Args:
+        df: DataFrame with 'pdb_code' and 'pkd' columns (non-CASF pool only).
+        n_folds: Number of folds to generate.
+        val_frac: Target validation fraction of samples.
+        n_bins: Number of pKd quantile bins for stratified sampling.
+        base_seed: Base random seed; fold i uses base_seed + i.
+        clusters_json: Path to existing clusters.json. If provided, skip
+            mmseqs2 clustering and load clusters from file.
+        pdbbind_dir: PDBbind root (needed only if clusters_json is None).
+        seq_identity: mmseqs2 --min-seq-id (needed only if clusters_json is None).
+        pdb_to_file: Optional {pdb_code: Path} mapping.
+
+    Returns dict:
+        {
+            "folds": {
+                "0": {"train": [...], "val": [...], "seed": 42},
+                ...
+            },
+            "cluster_info": {
+                "n_clusters": N,
+                "clustering_params": {"min_seq_id": 0.30, "coverage": 0.8}
+            }
+        }
+    """
+    pdb_codes = df["pdb_code"].unique().tolist()
+    pkd_map = dict(zip(df["pdb_code"], df["pkd"]))
+
+    # ── Load or compute clusters ──
+    if clusters_json is not None:
+        clusters_json = Path(clusters_json)
+        with open(clusters_json) as f:
+            raw = json.load(f)
+        # clusters.json format: {cluster_id_str: [pdb_code, ...]}
+        clusters: dict[str, int] = {}
+        cluster_to_pdbs: dict[int, list[str]] = {}
+        pool_set = set(pdb_codes)
+        for cid_str, pdbs in raw.items():
+            cid = int(cid_str)
+            members = [p for p in pdbs if p in pool_set]
+            if members:
+                cluster_to_pdbs[cid] = members
+                for p in members:
+                    clusters[p] = cid
+        logger.info(
+            f"Loaded {len(cluster_to_pdbs)} clusters from {clusters_json} "
+            f"({len(clusters)} PDB codes in pool)"
+        )
+    else:
+        if pdbbind_dir is None:
+            raise ValueError("Either clusters_json or pdbbind_dir must be provided")
+        clusters = _try_mmseqs_cluster(pdb_codes, pdbbind_dir, seq_identity, pdb_to_file)
+        if clusters is None:
+            raise RuntimeError("mmseqs2 not available and no clusters_json provided")
+        cluster_to_pdbs = {}
+        for pdb, cid in clusters.items():
+            cluster_to_pdbs.setdefault(cid, []).append(pdb)
+
+    # Assign unclustered codes to singleton clusters
+    max_cid = max(clusters.values()) if clusters else 0
+    for pdb in pdb_codes:
+        if pdb not in clusters:
+            max_cid += 1
+            cluster_to_pdbs[max_cid] = [pdb]
+            clusters[pdb] = max_cid
+
+    # Compute per-cluster median pKd
+    cluster_info_list = []
+    for cid, pdbs in cluster_to_pdbs.items():
+        pkds = [pkd_map[p] for p in pdbs if p in pkd_map]
+        if not pkds:
+            continue
+        cluster_info_list.append({
+            "cluster_id": cid,
+            "pdbs": pdbs,
+            "size": len(pdbs),
+            "median_pkd": float(np.median(pkds)),
+        })
+
+    # Bin clusters by median pKd quantiles (shared across folds)
+    median_pkds = np.array([c["median_pkd"] for c in cluster_info_list])
+    bin_edges = np.quantile(median_pkds, np.linspace(0, 1, n_bins + 1))
+    bin_edges[-1] += 1e-6
+
+    for c in cluster_info_list:
+        c["bin"] = int(np.digitize(c["median_pkd"], bin_edges[1:]))
+
+    bins: dict[int, list[dict]] = {}
+    for c in cluster_info_list:
+        bins.setdefault(c["bin"], []).append(c)
+
+    # ── Generate each fold ──
+    folds = {}
+    for fold_id in range(n_folds):
+        seed = base_seed + fold_id
+        rng = np.random.RandomState(seed)
+
+        val_clusters = set()
+        for bin_id in sorted(bins.keys()):
+            bin_clusters = list(bins[bin_id])  # copy to avoid in-place mutation
+            rng.shuffle(bin_clusters)
+            bin_total = sum(c["size"] for c in bin_clusters)
+            bin_target = int(bin_total * val_frac)
+            bin_val = 0
+            for c in bin_clusters:
+                if bin_val + c["size"] <= bin_target + c["size"] // 2:
+                    val_clusters.add(c["cluster_id"])
+                    bin_val += c["size"]
+
+        train_codes = []
+        val_codes = []
+        for c in cluster_info_list:
+            if c["cluster_id"] in val_clusters:
+                val_codes.extend(c["pdbs"])
+            else:
+                train_codes.extend(c["pdbs"])
+
+        folds[str(fold_id)] = {
+            "train": sorted(train_codes),
+            "val": sorted(val_codes),
+            "seed": seed,
+        }
+        logger.info(
+            f"Fold {fold_id} (seed={seed}): {len(train_codes)} train, "
+            f"{len(val_codes)} val "
+            f"({len(val_codes)/(len(train_codes)+len(val_codes))*100:.1f}%), "
+            f"{len(val_clusters)} val clusters"
+        )
+
+    return {
+        "folds": folds,
+        "cluster_info": {
+            "n_clusters": len(cluster_info_list),
+            "clustering_params": {"min_seq_id": seq_identity, "coverage": 0.8},
+        },
+    }
+
+
 def _try_mmseqs_cluster(
     pdb_codes: list[str],
     pdbbind_dir: str | Path,

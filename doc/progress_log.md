@@ -128,6 +128,63 @@
 
 ---
 
+## Sub-Plan 0: 5-Fold Grouped Train/Val Splits
+
+**Status**: ✅ 完成  
+**Date**: 2026-04-06
+
+### 动机
+
+单一 Train/Val 划分可能引入划分偏差。为保证模型选择和超参调优的稳健性，在同一蛋白聚类结果上执行 5 次不同随机种子的 grouped + stratified Train/Val 划分。CASF-2016 永远固定为独立 test benchmark。
+
+### 5-Fold 划分结果
+
+| Fold | Seed | Train | Val | Val% | Train pKd mean | Val pKd mean | KS p-value | Pass |
+|------|------|-------|-----|------|----------------|--------------|------------|------|
+| 0 | 42 | 16,108 | 2,372 | 12.8% | 6.383 | 6.393 | 0.244 | ✅ |
+| 1 | 43 | 16,253 | 2,227 | 12.1% | 6.383 | 6.392 | 0.379 | ✅ |
+| 2 | 44 | 16,159 | 2,321 | 12.6% | 6.376 | 6.437 | 0.142 | ✅ |
+| 3 | 45 | 16,211 | 2,269 | 12.3% | 6.381 | 6.406 | 0.089 | ✅ |
+| 4 | 50 | 16,102 | 2,378 | 12.9% | 6.386 | 6.373 | 0.090 | ✅ |
+
+- Test (CASF-2016): 285 complexes（5 个 fold 共享）
+- 蛋白簇: 3,250（mmseqs2 30% seq identity，共享同一聚类结果）
+- 所有 fold KS test $p > 0.05$ ✅
+- Fold 间 Val Jaccard 最大重叠率: 0.162（远低于 0.8 退化阈值）✅
+- 同 cluster 不跨 Train/Val ✅
+
+> **注**：默认 seed 规则为 `42 + fold_id`，但 fold 4 的原始 seed=46 未通过 KS test（$p = 2.4 \times 10^{-6}$），替换为 seed=50（$p = 0.090$，PASS）。
+
+### 代码更新
+
+| 文件 | 修改 | 说明 |
+|------|------|------|
+| `bayesdiff/data.py` | 新增 `cluster_stratified_split_nfold()` | 5-fold grouped stratified split 核心函数 |
+| `scripts/pipeline/s00_prepare_pdbbind.py` | 新增 `--n_folds` 参数 | `stage_split()` 中调用 nfold 函数，生成 `splits_5fold.json` |
+| `bayesdiff/pretrain_dataset.py` | 新增 `fold_id` 参数 | `PDBbindPairDataset` 支持从 `splits_5fold.json` 加载指定 fold |
+| `scripts/pipeline/s00b_pdbbind_eda.py` | 新增 `--only_5fold` 参数 | 5-fold 质量检查输出至 `results/pdbbind_eda/5fold/` |
+| `doc/Stage_2/00a_supervised_pretraining.md` | 新增 §1.3.2, §2.3.1 等 | 5-fold 方案文档化 |
+
+### 输出文件
+
+| 文件 | 说明 |
+|------|------|
+| `data/pdbbind_v2020/splits_5fold.json` | 5-fold splits（含 seed、cluster_info） |
+| `data/pdbbind_v2020/splits.json` | 默认划分 = fold 0（向后兼容） |
+| `results/pdbbind_eda/5fold/5fold_val_sizes.png` | 5 fold Val 样本数对比 |
+| `results/pdbbind_eda/5fold/5fold_val_pkd_kde.png` | 5 fold Val pKd 分布叠加 |
+| `results/pdbbind_eda/5fold/5fold_ks_test_summary.csv` | KS test 汇总 |
+| `results/pdbbind_eda/5fold/5fold_val_overlap_heatmap.png` | Fold 间 Val Jaccard 热图 |
+| `results/pdbbind_eda/5fold/eda_summary.json` | 5-fold EDA 汇总 |
+
+### 里程碑验证
+
+| 里程碑 | 验证结果 |
+|--------|----------|
+| M0.5 5-fold grouped split | ✅ 5 组 Train/Val + 固定 Test；所有 KS test p > 0.05；max Jaccard = 0.162 < 0.8 |
+
+---
+
 ## Sub-Plan 1: Multi-Layer Fusion — Stage 0: Infrastructure
 
 **Status**: ✅ 完成  

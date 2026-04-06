@@ -1,0 +1,12 @@
+{
+  "n_folds": 5,
+  "all_ks_pass": true,
+  "max_val_overlap_jaccard": 0.16192126764050507,
+  "fold_val_sizes": {
+    "0": 2372,
+    "1": 2227,
+    "2": 2321,
+    "3": 2269,
+    "4": 2378
+  }
+}

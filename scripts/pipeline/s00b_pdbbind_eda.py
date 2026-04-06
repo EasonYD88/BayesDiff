@@ -518,11 +518,175 @@ def check_data_quality(labels: pd.DataFrame, processed_dir: Path, output_dir: Pa
     return issues
 
 
+# ── 5-Fold Split Quality Checks (§2.3.1) ────────────────────────────────────
+
+
+def load_5fold_splits(data_dir: Path) -> dict | None:
+    """Load splits_5fold.json if it exists."""
+    fivefold_path = data_dir / "splits_5fold.json"
+    if not fivefold_path.exists():
+        logger.warning("splits_5fold.json not found; skipping 5-fold EDA")
+        return None
+    with open(fivefold_path) as f:
+        return json.load(f)
+
+
+def plot_5fold_val_sizes(fivefold: dict, output_dir: Path):
+    """Bar chart comparing Val sample counts across 5 folds."""
+    folds = fivefold["folds"]
+    fold_ids = sorted(folds.keys(), key=int)
+    val_sizes = [len(folds[fid]["val"]) for fid in fold_ids]
+    train_sizes = [len(folds[fid]["train"]) for fid in fold_ids]
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    x = np.arange(len(fold_ids))
+    width = 0.35
+    bars_train = ax.bar(x - width / 2, train_sizes, width, label="Train", color="steelblue",
+                        edgecolor="black")
+    bars_val = ax.bar(x + width / 2, val_sizes, width, label="Val", color="orange",
+                      edgecolor="black")
+
+    # Annotate val percentages
+    for i, (tr, va) in enumerate(zip(train_sizes, val_sizes)):
+        pct = va / (tr + va) * 100
+        ax.text(x[i] + width / 2, va + 20, f"{pct:.1f}%", ha="center", fontsize=8)
+
+    ax.set_xlabel("Fold")
+    ax.set_ylabel("Number of complexes")
+    ax.set_title(f"5-Fold Val Sizes (Test fixed: {len(fivefold['test'])})")
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"Fold {fid}" for fid in fold_ids])
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(output_dir / "5fold_val_sizes.png")
+    plt.close(fig)
+    logger.info("Saved 5fold_val_sizes.png")
+
+
+def plot_5fold_val_pkd_kde(fivefold: dict, labels: pd.DataFrame, output_dir: Path):
+    """Overlay KDE of Val pKd distributions across 5 folds."""
+    folds = fivefold["folds"]
+    fold_ids = sorted(folds.keys(), key=int)
+    colors = plt.cm.tab10(np.linspace(0, 0.5, len(fold_ids)))
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for i, fid in enumerate(fold_ids):
+        val_codes = set(folds[fid]["val"])
+        val_pkd = labels[labels["pdb_code"].isin(val_codes)]["pkd"]
+        if len(val_pkd) > 10:
+            val_pkd.plot.kde(ax=ax, label=f"Fold {fid} (N={len(val_pkd)})",
+                            color=colors[i], linewidth=1.5)
+
+    # Also plot train of fold 0 as reference
+    train_codes_0 = set(folds["0"]["train"])
+    train_pkd_0 = labels[labels["pdb_code"].isin(train_codes_0)]["pkd"]
+    if len(train_pkd_0) > 10:
+        train_pkd_0.plot.kde(ax=ax, label=f"Train fold 0 (N={len(train_pkd_0)})",
+                            color="black", linewidth=2, linestyle="--")
+
+    ax.set_xlabel("pKd")
+    ax.set_ylabel("Density")
+    ax.set_title("5-Fold Val pKd Distributions")
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(output_dir / "5fold_val_pkd_kde.png")
+    plt.close(fig)
+    logger.info("Saved 5fold_val_pkd_kde.png")
+
+
+def compute_5fold_ks_tests(fivefold: dict, labels: pd.DataFrame, output_dir: Path) -> pd.DataFrame:
+    """KS test: Train vs Val pKd for each fold. Save CSV summary."""
+    from scipy import stats as sp_stats
+
+    folds = fivefold["folds"]
+    fold_ids = sorted(folds.keys(), key=int)
+    rows = []
+
+    for fid in fold_ids:
+        train_pkd = labels[labels["pdb_code"].isin(folds[fid]["train"])]["pkd"].values
+        val_pkd = labels[labels["pdb_code"].isin(folds[fid]["val"])]["pkd"].values
+        if len(train_pkd) > 0 and len(val_pkd) > 0:
+            ks_stat, ks_p = sp_stats.ks_2samp(train_pkd, val_pkd)
+        else:
+            ks_stat, ks_p = float("nan"), float("nan")
+        rows.append({
+            "fold": int(fid),
+            "seed": folds[fid]["seed"],
+            "n_train": len(folds[fid]["train"]),
+            "n_val": len(folds[fid]["val"]),
+            "val_pct": len(folds[fid]["val"]) / (len(folds[fid]["train"]) + len(folds[fid]["val"])) * 100,
+            "train_pkd_mean": float(np.mean(train_pkd)) if len(train_pkd) > 0 else float("nan"),
+            "val_pkd_mean": float(np.mean(val_pkd)) if len(val_pkd) > 0 else float("nan"),
+            "ks_statistic": float(ks_stat),
+            "ks_p_value": float(ks_p),
+            "pass": ks_p > 0.05,
+        })
+
+    ks_df = pd.DataFrame(rows)
+    ks_path = output_dir / "5fold_ks_test_summary.csv"
+    ks_df.to_csv(ks_path, index=False)
+    logger.info(f"Saved 5fold_ks_test_summary.csv")
+
+    # Log results
+    for _, row in ks_df.iterrows():
+        status = "PASS" if row["pass"] else "FAIL"
+        logger.info(
+            f"  Fold {int(row['fold'])}: KS stat={row['ks_statistic']:.4f}, "
+            f"p={row['ks_p_value']:.4f} [{status}], "
+            f"val={row['val_pct']:.1f}%"
+        )
+
+    return ks_df
+
+
+def plot_5fold_val_overlap_heatmap(fivefold: dict, output_dir: Path):
+    """Heatmap of pairwise Jaccard similarity between fold Val sets."""
+    folds = fivefold["folds"]
+    fold_ids = sorted(folds.keys(), key=int)
+    n = len(fold_ids)
+    jaccard = np.zeros((n, n))
+
+    val_sets = [set(folds[fid]["val"]) for fid in fold_ids]
+
+    for i in range(n):
+        for j in range(n):
+            inter = len(val_sets[i] & val_sets[j])
+            union = len(val_sets[i] | val_sets[j])
+            jaccard[i, j] = inter / union if union > 0 else 0
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    im = sns.heatmap(
+        jaccard,
+        annot=True, fmt=".3f", cmap="YlOrRd",
+        xticklabels=[f"Fold {fid}" for fid in fold_ids],
+        yticklabels=[f"Fold {fid}" for fid in fold_ids],
+        ax=ax, vmin=0, vmax=1, linewidths=0.5,
+    )
+    ax.set_title("Val Set Jaccard Overlap Between Folds")
+    fig.tight_layout()
+    fig.savefig(output_dir / "5fold_val_overlap_heatmap.png")
+    plt.close(fig)
+
+    # Check non-degeneracy (off-diagonal < 0.8)
+    off_diag = jaccard[np.triu_indices(n, k=1)]
+    max_overlap = float(np.max(off_diag)) if len(off_diag) > 0 else 0
+    logger.info(
+        f"Saved 5fold_val_overlap_heatmap.png "
+        f"(max off-diag Jaccard={max_overlap:.3f}, "
+        f"{'PASS' if max_overlap < 0.8 else 'WARN: high overlap'})"
+    )
+    return max_overlap
+
+
 def main():
     parser = argparse.ArgumentParser(description="PDBbind v2020 EDA")
     parser.add_argument("--data_dir", type=str, default="data/pdbbind_v2020")
     parser.add_argument("--pdbbind_dir", type=str, default="data/pdbbind")
     parser.add_argument("--output_dir", type=str, default="results/pdbbind_eda")
+    parser.add_argument(
+        "--only_5fold", action="store_true",
+        help="Only run 5-fold split quality checks (skip single-split EDA)",
+    )
     args = parser.parse_args()
 
     data_dir = Path(args.data_dir)
@@ -530,28 +694,55 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # 5-fold outputs always go to a separate subdirectory
+    fivefold_output_dir = output_dir / "5fold"
+    fivefold_output_dir.mkdir(parents=True, exist_ok=True)
+
     labels, splits, processed_dir = load_data(data_dir)
 
-    # ── 2.1 Label distribution ──
-    plot_pkd_distribution(labels, output_dir)
-    plot_pkd_by_split(labels, splits, output_dir)
-    plot_affinity_type_pie(labels, output_dir)
-    plot_resolution_vs_pkd(labels, output_dir)
+    ks_stats = {}
+    size_stats = {}
+    issues = []
 
-    # ── 2.2 Protein & ligand statistics ──
-    size_stats = plot_pocket_ligand_sizes(processed_dir, output_dir)
-    plot_ligand_properties(data_dir, labels, output_dir)
+    if not args.only_5fold:
+        # ── 2.1 Label distribution ──
+        plot_pkd_distribution(labels, output_dir)
+        plot_pkd_by_split(labels, splits, output_dir)
+        plot_affinity_type_pie(labels, output_dir)
+        plot_resolution_vs_pkd(labels, output_dir)
 
-    # ── 2.3 Split quality ──
-    plot_split_summary(splits, output_dir)
-    plot_family_distribution(data_dir, output_dir)
-    plot_family_split_heatmap(data_dir, splits, output_dir)
-    ks_stats = plot_pkd_kde_by_split(labels, splits, output_dir)
-    plot_chemical_space_tsne(data_dir, labels, splits, output_dir)
-    plot_cluster_size_hist(data_dir, output_dir)
+        # ── 2.2 Protein & ligand statistics ──
+        size_stats = plot_pocket_ligand_sizes(processed_dir, output_dir)
+        plot_ligand_properties(data_dir, labels, output_dir)
 
-    # ── 2.4 Data quality ──
-    issues = check_data_quality(labels, processed_dir, output_dir)
+        # ── 2.3 Split quality ──
+        plot_split_summary(splits, output_dir)
+        plot_family_distribution(data_dir, output_dir)
+        plot_family_split_heatmap(data_dir, splits, output_dir)
+        ks_stats = plot_pkd_kde_by_split(labels, splits, output_dir)
+        plot_chemical_space_tsne(data_dir, labels, splits, output_dir)
+        plot_cluster_size_hist(data_dir, output_dir)
+
+        # ── 2.4 Data quality ──
+        issues = check_data_quality(labels, processed_dir, output_dir)
+
+    # ── 2.3.1 5-Fold Split quality checks → output to 5fold/ subdirectory ──
+    fivefold = load_5fold_splits(data_dir)
+    fivefold_stats = {}
+    if fivefold is not None:
+        plot_5fold_val_sizes(fivefold, fivefold_output_dir)
+        plot_5fold_val_pkd_kde(fivefold, labels, fivefold_output_dir)
+        ks_df = compute_5fold_ks_tests(fivefold, labels, fivefold_output_dir)
+        max_overlap = plot_5fold_val_overlap_heatmap(fivefold, fivefold_output_dir)
+        fivefold_stats = {
+            "n_folds": len(fivefold["folds"]),
+            "all_ks_pass": bool(ks_df["pass"].all()),
+            "max_val_overlap_jaccard": float(max_overlap),
+            "fold_val_sizes": {
+                fid: len(fivefold["folds"][fid]["val"])
+                for fid in sorted(fivefold["folds"].keys(), key=int)
+            },
+        }
 
     # ── Summary JSON ──
     summary = {
@@ -566,11 +757,21 @@ def main():
         "n_quality_issues": len(issues),
         **(ks_stats if ks_stats else {}),
         **size_stats,
+        **({"fivefold": fivefold_stats} if fivefold_stats else {}),
     }
+
+    # Write main summary to output_dir (always)
     summary_path = output_dir / "eda_summary.json"
     with open(summary_path, "w") as f:
         json.dump(summary, f, indent=2)
     logger.info(f"EDA summary → {summary_path}")
+
+    # Also write 5-fold summary to the 5fold subdirectory
+    if fivefold_stats:
+        fivefold_summary_path = fivefold_output_dir / "5fold_eda_summary.json"
+        with open(fivefold_summary_path, "w") as f:
+            json.dump(fivefold_stats, f, indent=2)
+        logger.info(f"5-fold summary → {fivefold_summary_path}")
 
     logger.info("=" * 60)
     logger.info("EDA complete!")

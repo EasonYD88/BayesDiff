@@ -25,5 +25,17 @@
   "n_ligand_mean": 33.1312549960032,
   "n_ligand_std": 22.105263420138037,
   "n_ligand_min": 4,
-  "n_ligand_max": 224
+  "n_ligand_max": 224,
+  "fivefold": {
+    "n_folds": 5,
+    "all_ks_pass": true,
+    "max_val_overlap_jaccard": 0.16192126764050507,
+    "fold_val_sizes": {
+      "0": 2372,
+      "1": 2227,
+      "2": 2321,
+      "3": 2269,
+      "4": 2378
+    }
+  }
 }

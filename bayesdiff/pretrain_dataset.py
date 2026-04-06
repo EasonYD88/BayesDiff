@@ -45,33 +45,66 @@ class PDBbindPairDataset(Dataset):
         self,
         data_dir: str | Path,
         split: str = "train",
+        fold_id: Optional[int] = None,
         transform=None,
     ):
         """
         Args:
             data_dir:  Root directory containing processed/, labels.csv, splits.json.
             split:     One of 'train', 'val', 'cal', 'test', or 'all'.
+            fold_id:   If specified, load train/val from splits_5fold.json
+                       using this fold index (0–4). Test split always uses
+                       the fixed CASF-2016 codes. If None, uses splits.json.
             transform: Optional callable applied to each data dict.
         """
         self.data_dir = Path(data_dir)
         self.processed_dir = self.data_dir / "processed"
         self.transform = transform
 
-        # Load splits
-        splits_path = self.data_dir / "splits.json"
-        if not splits_path.exists():
-            raise FileNotFoundError(f"splits.json not found at {splits_path}")
-        with open(splits_path) as f:
-            splits = json.load(f)
-
-        if split == "all":
-            self.pdb_codes = []
-            for codes in splits.values():
-                self.pdb_codes.extend(codes)
-        elif split not in splits:
-            raise ValueError(f"Unknown split '{split}'. Available: {list(splits.keys())}")
+        # Load splits — either from splits_5fold.json or splits.json
+        if fold_id is not None:
+            fivefold_path = self.data_dir / "splits_5fold.json"
+            if not fivefold_path.exists():
+                raise FileNotFoundError(
+                    f"splits_5fold.json not found at {fivefold_path}. "
+                    f"Run s00_prepare_pdbbind.py --stage split first."
+                )
+            with open(fivefold_path) as f:
+                fivefold = json.load(f)
+            fold_key = str(fold_id)
+            if fold_key not in fivefold["folds"]:
+                available = list(fivefold["folds"].keys())
+                raise ValueError(f"fold_id={fold_id} not found. Available: {available}")
+            if split == "test":
+                self.pdb_codes = fivefold["test"]
+            elif split in ("train", "val"):
+                self.pdb_codes = fivefold["folds"][fold_key][split]
+            elif split == "all":
+                self.pdb_codes = (
+                    fivefold["folds"][fold_key]["train"]
+                    + fivefold["folds"][fold_key]["val"]
+                    + fivefold["test"]
+                )
+            else:
+                raise ValueError(
+                    f"Unknown split '{split}' for fold mode. Use 'train', 'val', 'test', or 'all'."
+                )
+            logger.info(f"Using fold {fold_id} (seed={fivefold['folds'][fold_key]['seed']})")
         else:
-            self.pdb_codes = splits[split]
+            splits_path = self.data_dir / "splits.json"
+            if not splits_path.exists():
+                raise FileNotFoundError(f"splits.json not found at {splits_path}")
+            with open(splits_path) as f:
+                splits = json.load(f)
+
+            if split == "all":
+                self.pdb_codes = []
+                for codes in splits.values():
+                    self.pdb_codes.extend(codes)
+            elif split not in splits:
+                raise ValueError(f"Unknown split '{split}'. Available: {list(splits.keys())}")
+            else:
+                self.pdb_codes = splits[split]
 
         # Filter to only codes that have .pt files
         available = set(p.stem for p in self.processed_dir.glob("*.pt"))
@@ -207,9 +240,10 @@ def get_pdbbind_dataloader(
     num_workers: int = 4,
     transform=None,
     pin_memory: bool = True,
+    fold_id: Optional[int] = None,
 ) -> DataLoader:
     """Convenience function to create a PDBbind DataLoader."""
-    dataset = PDBbindPairDataset(data_dir, split=split, transform=transform)
+    dataset = PDBbindPairDataset(data_dir, split=split, fold_id=fold_id, transform=transform)
     return DataLoader(
         dataset,
         batch_size=batch_size,

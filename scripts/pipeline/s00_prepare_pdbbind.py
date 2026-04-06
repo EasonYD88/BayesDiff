@@ -532,8 +532,14 @@ def stage_split(
     output_dir: Path,
     val_frac: float = 0.12,
     seed: int = 42,
+    n_folds: int = 5,
 ) -> dict:
-    """Stage 4: Cluster-stratified Train/Val + CASF-2016 Test split."""
+    """Stage 4: Cluster-stratified Train/Val + CASF-2016 Test split.
+
+    Generates both:
+      - splits.json: default single split (backward-compatible, = fold 0)
+      - splits_5fold.json: N-fold grouped splits for robustness evaluation
+    """
     labels_path = output_dir / "labels.csv"
     if not labels_path.exists():
         raise FileNotFoundError(f"labels.csv not found at {labels_path}. Run --stage parse first.")
@@ -630,6 +636,46 @@ def stage_split(
         logger.info(f"Cluster assignments ({len(ca_df)}) → {ca_path}")
 
     df.to_csv(labels_path, index=False)
+
+    # ── Generate 5-fold grouped splits ───────────────────────────────────
+    from bayesdiff.data import cluster_stratified_split_nfold
+
+    clusters_path = output_dir / "clusters.json"
+    if clusters_path.exists() and n_folds > 1:
+        logger.info(f"Generating {n_folds}-fold grouped Train/Val splits...")
+        nfold_result = cluster_stratified_split_nfold(
+            df=train_pool,
+            n_folds=n_folds,
+            val_frac=val_frac,
+            n_bins=10,
+            base_seed=seed,
+            clusters_json=clusters_path,
+        )
+
+        # Add fixed test set
+        nfold_output = {
+            "test": test_codes,
+            "folds": nfold_result["folds"],
+            "cluster_info": nfold_result["cluster_info"],
+        }
+
+        # Verify each fold
+        for fid, fold in nfold_output["folds"].items():
+            f_train = set(fold["train"])
+            f_val = set(fold["val"])
+            assert not (f_train & f_val), f"Fold {fid}: Train/Val overlap!"
+            assert not (f_train & test_set), f"Fold {fid}: Train/Test overlap!"
+            assert not (f_val & test_set), f"Fold {fid}: Val/Test overlap!"
+
+        logger.info(f"All {n_folds} folds verified: no overlaps")
+
+        fivefold_path = output_dir / "splits_5fold.json"
+        with open(fivefold_path, "w") as f:
+            json.dump(nfold_output, f, indent=2)
+        logger.info(f"5-fold splits → {fivefold_path}")
+    elif n_folds > 1:
+        logger.warning("clusters.json not found; skipping 5-fold split generation")
+
     return splits
 
 
@@ -661,6 +707,10 @@ def main():
     parser.add_argument("--radius", type=float, default=10.0)
     parser.add_argument("--val_frac", type=float, default=0.12)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--n_folds", type=int, default=5,
+        help="Number of grouped Train/Val folds to generate (default: 5)",
+    )
     args = parser.parse_args()
 
     pdbbind_dir = Path(args.pdbbind_dir)
@@ -703,7 +753,8 @@ def main():
         stage_merge(output_dir)
 
     if "split" in stages:
-        stage_split(pdbbind_dir, output_dir, val_frac=args.val_frac, seed=args.seed)
+        stage_split(pdbbind_dir, output_dir, val_frac=args.val_frac, seed=args.seed,
+                    n_folds=args.n_folds)
 
     logger.info("Done!")
 

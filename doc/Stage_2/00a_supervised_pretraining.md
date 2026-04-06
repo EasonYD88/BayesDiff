@@ -91,7 +91,7 @@ data/PDBbind_data_set/
 
 1. **解析 INDEX 文件**：解析 `INDEX_general_PL.2020R1.lst` 获取 pdb_code → binding_data 映射
    - 解析 binding_data 字符串（如 `Kd=49uM`, `Ki=0.068nM`, `IC50=1.2uM`）
-   - 转换为统一 pKd 尺度：$pKd = -\log_{10}(K_d)$
+   - 转换为统一的负对数亲和力尺度（下游字段名仍沿用 `pkd` 以兼容现有代码）：$p\text{Affinity} = -\log_{10}(K)$，其中 $K$ 为以 M 为单位的 `Kd` / `Ki` / `IC50`
    - **过滤**：排除不精确标签（`<`, `>`, `~`）、排除 IC50（可选）、排除无配体结构的条目
 2. **解析 CASF-2016 CoreSet.dat**：提取 285 个 test PDB code 列表
 3. **剔除 CASF-2016**：从 PDBbind v2020 R1 中移除所有 CASF-2016 PDB code
@@ -144,6 +144,69 @@ data/PDBbind_data_set/
 - Val 与 Train 的 pKd 分布应接近（通过分箱分层抽样保证）
 - CASF-2016 的蛋白若与 Train/Val 中的蛋白属于同一 cluster，记录但不剔除（CASF 标准实践）
 
+#### 1.3.2 5-Fold Grouped Train/Val Splits（稳健性评估）
+
+> 更准确地说，这里采用的是 **5 次 repeated grouped stratified holdout / resampling**，而不是经典“互斥样本”的 K-fold CV。
+
+单一 Train/Val 划分可能引入划分偏差。为保证模型选择和超参调优的稳健性，在**同一蛋白聚类结果**上执行 5 次不同随机种子的 grouped + stratified Train/Val 划分。
+
+**核心原则**：
+- **CASF-2016 永远固定为独立 test benchmark**，不参与任何一次重划，5 个 fold 共享同一个 test set
+- 5 次重划仅针对**非 CASF-2016 的 PDBbind v2020 R1 样本池**
+- 每一次划分中，同一 protein cluster 的全部样本只能进 Train 或 Val，**绝不跨 split**
+- 每次 Val 约占 10–15% 的 clusters
+- 每次划分后 Val 与 Train 的 pKd 分布尽量接近（通过分箱分层抽样保证）
+
+**划分流程**：
+
+```
+非 CASF-2016 的有效集合
+  + 蛋白序列聚类结果（§1.3.1 步骤 ①②，只做一次）
+        │
+        ▼
+  对 fold_id ∈ {0, 1, 2, 3, 4}:
+        │
+        ▼
+  ③ 计算每个 cluster 的 pKd 统计量（同 §1.3.1）
+     cluster_median_pkd, cluster_size
+        │
+        ▼
+  ④ 按 pKd 分位数对 cluster 分箱（4 bins）
+        │
+        ▼
+  ⑤ 在每个 bin 内，用不同的 random seed = fold_id
+     随机抽取 ~10–15% 的 clusters 进 validation
+     → 不同 seed 产生不同的 Val 集合
+        │
+        ▼
+  ⑥ 输出该 fold 的 train/val 列表
+```
+
+**5 个 fold 的 seed 规则**：
+- 推荐默认规则为 `seed = 42 + fold_id`（fold_id ∈ {0, 1, 2, 3, 4}）；**实际执行应以 `splits_5fold.json` 中记录的 `seed` 字段为准**
+- 当前已生成产物中，5 个 fold 的 seed 分别为 `42, 43, 44, 45, 50`
+- 步骤 ①②（序列提取 + mmseqs2 聚类）只执行一次，5 个 fold 共享同一聚类结果
+- 步骤 ⑤ 中的随机抽样使用不同 seed，产生 5 组不同的 Val cluster 集合
+
+**Fold 间约束**：
+- 5 个 fold 的 test set 完全相同（= CASF-2016，285 complexes）
+- 各 fold 的 Val 集合**可以有重叠**（这不是 K-fold CV，而是 5 次独立分层随机抽样）
+- 每个 fold 内部必须满足：
+  - 同 cluster 不跨 Train/Val
+  - Val pKd 分布与 Train 接近（KS test $p > 0.05$）
+  - Val 样本占比在 10–15%
+
+**使用场景**：
+
+| 用途 | 方式 |
+|------|------|
+| **模型开发迭代** | 使用 fold 0（默认 seed=42）快速迭代 |
+| **超参选择** | 在 5 个 fold 的 Val 上取平均指标，选最优超参 |
+| **模型稳健性评估** | 报告 5 个 fold 的 Val 指标均值 ± 标准差 |
+| **最终评估** | 在 CASF-2016 上报告单一最终结果（不取平均） |
+
+> **注意**：5 个 fold 的划分不改变 §1.3 中步骤 1–6（数据处理、featurize）。处理后的 `.pt` 文件只存一份，5 个 fold 只是 `splits_5fold.json` 中的不同 PDB code 列表。
+
 ### 1.4 输出格式
 
 ```
@@ -154,10 +217,26 @@ data/pdbbind_v2020/
 ├── labels.csv                 # pdb_code, pKd, affinity_type, source (pdbbind/casf)
 ├── clusters.json              # {cluster_id: [pdb_code, ...], ...}
 ├── cluster_assignments.csv    # pdb_code, cluster_id, cluster_median_pkd, pkd_bin
-└── splits.json                # {train: [...], val: [...], test: [...]}
-                               # test = CASF-2016 PDB codes (固定)
-                               # train/val 按蛋白簇分层抽样划分
+├── splits.json                # 默认划分 (fold 0)，向后兼容
+│                              # {train: [...], val: [...], test: [CASF-2016]}
+└── splits_5fold.json          # 5-fold grouped splits
+                               # {
+                               #   "test": [CASF-2016 PDB codes],   ← 固定不变
+                               #   "folds": {
+                               #     "0": {"train": [...], "val": [...], "seed": 42},
+                               #     "1": {"train": [...], "val": [...], "seed": 43},
+                               #     "2": {"train": [...], "val": [...], "seed": 44},
+                               #     "3": {"train": [...], "val": [...], "seed": 45},
+                               #     "4": {"train": [...], "val": [...], "seed": 50}
+                               #   },
+                               #   "cluster_info": {
+                               #     "n_clusters": N,
+                               #     "clustering_params": {"min_seq_id": 0.3, "coverage": 0.8}
+                               #   }
+                               # }
 ```
+
+> `splits.json` 保留为默认划分（= fold 0），确保向后兼容现有代码。
 
 ### 1.5 数据加载器
 
@@ -212,6 +291,18 @@ class PDBbindPairDataset(Dataset):
 | Cluster 大小分布 | 直方图：每个 cluster 的样本数 | 检查是否有极大 cluster 主导 val |
 | Split 样本数汇总 | 柱状图：Train / Val / Test (CASF-2016) 样本数 | 确认 Val 比例在 10–15% |
 
+### 2.3.1 5-Fold Split 质量检查（新增）
+
+对 5 个 fold 的额外验证：
+
+| 可视化 | 内容 | 目的 |
+|--------|------|------|
+| Fold 间 Val 样本数对比 | 5 个 fold 的 Val 样本数柱状图 | 确认各 fold 的 Val 大小一致（10–15%） |
+| Fold 间 pKd 分布对比 | 5 条 KDE 曲线叠加（Val fold 0–4） | 确认各 fold 的 Val pKd 分布接近 |
+| KS test 汇总表 | 每个 fold 的 Train vs Val KS statistic + p-value | 所有 fold 的 $p > 0.05$ |
+| Fold 间 Val 重叠率 | 10×热力图：fold $i$ vs fold $j$ 的 Val 样本 Jaccard 系数 | 确认各 fold 间有足够差异（非退化为同一划分） |
+| Fold 间 cluster 分配一致性 | 每个 fold 中 Val cluster 列表的集合交集 | 防止所有 fold 抽到相同 clusters |
+
 ### 2.4 数据质量排查
 
 | 检查项 | 方法 | 处理 |
@@ -238,6 +329,10 @@ results/pdbbind_eda/
 ├── chemical_space_tsne.png        # 化学空间降维
 ├── cluster_size_hist.png          # cluster 大小分布
 ├── split_summary.png              # Split 样本数 (Train/Val/CASF-2016)
+├── 5fold_val_sizes.png            # 5 fold Val 样本数对比
+├── 5fold_val_pkd_kde.png          # 5 fold Val pKd 分布叠加
+├── 5fold_ks_test_summary.csv      # 每 fold Train vs Val KS test
+├── 5fold_val_overlap_heatmap.png  # fold 间 Val Jaccard 重叠率
 ├── data_quality_report.csv        # 异常样本汇总
 └── eda_summary.json               # 关键统计数字（供下游引用）
 ```
@@ -276,9 +371,9 @@ results/pdbbind_eda/
 
 | 文件 | 用途 |
 |------|------|
-| `bayesdiff/pretrain_dataset.py` | PDBbind pair-level 数据集类与 DataLoader |
-| `scripts/pipeline/s00_prepare_pdbbind.py` | 数据处理脚本：解析 INDEX、解析 CASF-2016 CoreSet、剔除 test PDB codes、提取 pocket、featurize、划分 |
-| `scripts/pipeline/s00b_pdbbind_eda.py` | EDA 脚本：数据可视化、分布分析、质量检查 |
+| `bayesdiff/pretrain_dataset.py` | PDBbind pair-level 数据集类与 DataLoader（支持 `fold_id` 参数加载不同 fold） |
+| `scripts/pipeline/s00_prepare_pdbbind.py` | 数据处理脚本：解析 INDEX、解析 CASF-2016 CoreSet、剔除 test PDB codes、提取 pocket、featurize、生成 5-fold grouped splits |
+| `scripts/pipeline/s00b_pdbbind_eda.py` | EDA 脚本：数据可视化、分布分析、质量检查（含 5-fold split 质量检查） |
 
 ### 3.2 修改文件
 
@@ -294,7 +389,7 @@ results/pdbbind_eda/
 | M0.2 | CASF-2016 解析 + 剔除 | 285 个 PDB code 已从训练池移除，无泄漏 |
 | M0.3 | Pocket 提取完成 | 每个复合物有对应 pocket 文件 |
 | M0.4 | 蛋白序列聚类完成 | mmseqs2 聚类输出 clusters.json，同 cluster 蛋白 seq identity ≥ 30% |
-| M0.5 | 数据集划分完成 | Train/Val/Test 3 个 split；同 cluster 不跨 Train/Val；Val pKd 分布与 Train 接近（KS test p > 0.05） |
+| M0.5 | 数据集 5-fold grouped split 完成 | 5 组 Train/Val + 固定 Test (CASF-2016)；每个 fold 同 cluster 不跨 Train/Val；所有 fold 的 Val pKd 分布与 Train 接近（KS test p > 0.05）；各 fold 的 Val Jaccard 重叠率 < 0.8（确认非退化，当前约为 0.04–0.16） |
 | M0.6 | DataLoader 可运行 | 能正确 batch 不等长蛋白-配体 pair |
 | M0.7 | EDA 完成 | 所有可视化生成，无严重数据质量问题 |
 
