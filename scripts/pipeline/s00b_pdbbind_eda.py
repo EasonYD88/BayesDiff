@@ -84,22 +84,29 @@ def plot_pkd_distribution(df: pd.DataFrame, output_dir: Path):
 
 def plot_pkd_by_split(df: pd.DataFrame, splits: dict, output_dir: Path):
     """pKd distributions compared across splits."""
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharex=True)
-    split_names = ["train", "val", "cal", "test"]
-    colors = ["steelblue", "orange", "green", "red"]
+    split_names = [s for s in ["train", "val", "test"] if s in splits]
+    colors = {"train": "steelblue", "val": "orange", "test": "red"}
+    n_plots = len(split_names)
+    ncols = min(n_plots, 3)
+    nrows = (n_plots + ncols - 1) // ncols
+    fig, axes = plt.subplots(nrows, ncols, figsize=(5 * ncols, 4 * nrows), sharex=True, squeeze=False)
 
-    for ax, name, color in zip(axes.flat, split_names, colors):
+    for i, name in enumerate(split_names):
+        ax = axes[i // ncols][i % ncols]
         codes = splits.get(name, [])
         split_df = df[df["pdb_code"].isin(codes)]
         if split_df.empty:
             ax.text(0.5, 0.5, f"No data for {name}", transform=ax.transAxes, ha="center")
             continue
-        ax.hist(split_df["pkd"], bins=np.arange(0, 15, 0.5), edgecolor="black", alpha=0.7, color=color)
-        ax.set_title(f"{name} (N={len(split_df)}, μ={split_df['pkd'].mean():.2f})")
+        ax.hist(split_df["pkd"], bins=np.arange(0, 15, 0.5), edgecolor="black", alpha=0.7,
+                color=colors.get(name, "gray"))
+        ax.set_title(f"{name} (N={len(split_df)}, \u03bc={split_df['pkd'].mean():.2f})")
         ax.set_ylabel("Count")
 
-    axes[1, 0].set_xlabel("pKd")
-    axes[1, 1].set_xlabel("pKd")
+    # Hide unused axes
+    for i in range(n_plots, nrows * ncols):
+        axes[i // ncols][i % ncols].set_visible(False)
+
     fig.suptitle("pKd Distribution by Split", fontsize=14)
     fig.tight_layout()
     fig.savefig(output_dir / "pKd_by_split.png")
@@ -190,7 +197,7 @@ def plot_pocket_ligand_sizes(processed_dir: Path, output_dir: Path) -> dict:
     }
 
 
-def plot_ligand_properties(pdbbind_dir: Path, labels: pd.DataFrame, output_dir: Path):
+def plot_ligand_properties(data_dir: Path, labels: pd.DataFrame, output_dir: Path):
     """Ligand physicochemical properties (MW, logP, TPSA, HBD/HBA)."""
     try:
         from rdkit import Chem
@@ -199,10 +206,22 @@ def plot_ligand_properties(pdbbind_dir: Path, labels: pd.DataFrame, output_dir: 
         logger.warning("RDKit not available; skipping ligand properties plot")
         return
 
+    # Load code_to_dir mapping
+    code_to_dir_path = data_dir / "code_to_dir.json"
+    if code_to_dir_path.exists():
+        with open(code_to_dir_path) as f:
+            code_to_dir = json.load(f)
+    else:
+        logger.warning("code_to_dir.json not found; skipping ligand properties plot")
+        return
+
     mw_list, logp_list, tpsa_list, hbd_list, hba_list, rot_list = [], [], [], [], [], []
 
     for code in labels["pdb_code"]:
-        sdf_path = pdbbind_dir / "refined-set" / code / f"{code}_ligand.sdf"
+        base = code_to_dir.get(code)
+        if base is None:
+            continue
+        sdf_path = Path(base) / f"{code}_ligand.sdf"
         if not sdf_path.exists():
             continue
         mol = Chem.MolFromMolFile(str(sdf_path), removeHs=True, sanitize=True)
@@ -257,6 +276,204 @@ def plot_split_summary(splits: dict, output_dir: Path):
     fig.savefig(output_dir / "split_summary.png")
     plt.close(fig)
     logger.info("Saved split_summary.png")
+
+
+def plot_family_distribution(data_dir: Path, output_dir: Path):
+    """Top-20 cluster (protein family) sizes as bar chart."""
+    clusters_path = data_dir / "clusters.json"
+    if not clusters_path.exists():
+        logger.warning("clusters.json not found; skipping family distribution plot")
+        return
+    with open(clusters_path) as f:
+        clusters = json.load(f)
+
+    sizes = [(cid, len(pdbs)) for cid, pdbs in clusters.items()]
+    sizes.sort(key=lambda x: -x[1])
+    top20 = sizes[:20]
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.bar(range(len(top20)), [s for _, s in top20], color="steelblue", edgecolor="black")
+    ax.set_xticks(range(len(top20)))
+    ax.set_xticklabels([cid for cid, _ in top20], rotation=45, ha="right", fontsize=7)
+    ax.set_xlabel("Cluster ID")
+    ax.set_ylabel("Number of complexes")
+    ax.set_title(f"Top-20 Protein Clusters by Size (of {len(clusters)} total)")
+    fig.tight_layout()
+    fig.savefig(output_dir / "family_distribution.png")
+    plt.close(fig)
+    logger.info("Saved family_distribution.png")
+
+
+def plot_family_split_heatmap(data_dir: Path, splits: dict, output_dir: Path):
+    """Heatmap: cluster × split to verify no cluster spans train AND val."""
+    ca_path = data_dir / "cluster_assignments.csv"
+    if not ca_path.exists():
+        logger.warning("cluster_assignments.csv not found; skipping family-split heatmap")
+        return
+
+    ca = pd.read_csv(ca_path)
+    split_map = {}
+    for split_name, codes in splits.items():
+        for c in codes:
+            split_map[c] = split_name
+    ca["split"] = ca["pdb_code"].map(split_map)
+    ca = ca.dropna(subset=["split"])
+
+    # Cross-tab: cluster_id × split
+    ct = pd.crosstab(ca["cluster_id"], ca["split"])
+    # Only show clusters that have >1 member and appear in at least 2 splits
+    multi_split = ct[(ct > 0).sum(axis=1) > 1]
+    n_leaking = len(multi_split[multi_split.get("train", 0) > 0][multi_split.get("val", 0) > 0]) if "train" in ct.columns and "val" in ct.columns else 0
+
+    # For the heatmap, show top-30 largest clusters
+    cluster_sizes = ca.groupby("cluster_id").size().sort_values(ascending=False)
+    top30 = cluster_sizes.head(30).index
+    ct_top = ct.loc[ct.index.isin(top30)].reindex(columns=["train", "val", "test"], fill_value=0)
+    ct_top = ct_top.sort_values("train", ascending=False)
+
+    fig, ax = plt.subplots(figsize=(6, 10))
+    sns.heatmap(ct_top, annot=True, fmt="d", cmap="YlOrRd", ax=ax, linewidths=0.5)
+    ax.set_title(f"Top-30 Clusters × Split\n(train/val leaking clusters: {n_leaking})")
+    ax.set_ylabel("Cluster ID")
+    fig.tight_layout()
+    fig.savefig(output_dir / "family_split_heatmap.png")
+    plt.close(fig)
+    logger.info(f"Saved family_split_heatmap.png (train/val leak: {n_leaking})")
+
+
+def plot_pkd_kde_by_split(df: pd.DataFrame, splits: dict, output_dir: Path):
+    """KDE overlay of train vs val pKd distributions + KS test."""
+    from scipy import stats as sp_stats
+
+    train_pkd = df[df["pdb_code"].isin(splits.get("train", []))]["pkd"]
+    val_pkd = df[df["pdb_code"].isin(splits.get("val", []))]["pkd"]
+    test_pkd = df[df["pdb_code"].isin(splits.get("test", []))]["pkd"]
+
+    ks_stat, ks_p = sp_stats.ks_2samp(train_pkd, val_pkd) if len(val_pkd) > 0 else (0, 1)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    if len(train_pkd) > 0:
+        train_pkd.plot.kde(ax=ax, label=f"Train (N={len(train_pkd)})", color="steelblue", linewidth=2)
+    if len(val_pkd) > 0:
+        val_pkd.plot.kde(ax=ax, label=f"Val (N={len(val_pkd)})", color="orange", linewidth=2)
+    if len(test_pkd) > 0:
+        test_pkd.plot.kde(ax=ax, label=f"Test (N={len(test_pkd)})", color="red", linewidth=2, linestyle="--")
+    ax.set_xlabel("pKd")
+    ax.set_ylabel("Density")
+    ax.set_title(f"pKd Distribution by Split (KS p={ks_p:.4f})")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(output_dir / "pkd_distribution_by_split.png")
+    plt.close(fig)
+    logger.info(f"Saved pkd_distribution_by_split.png (KS p={ks_p:.4f})")
+    return {"ks_stat": float(ks_stat), "ks_p": float(ks_p)}
+
+
+def plot_chemical_space_tsne(data_dir: Path, labels: pd.DataFrame, splits: dict, output_dir: Path):
+    """t-SNE of Morgan fingerprints coloured by split."""
+    try:
+        from rdkit import Chem
+        from rdkit.Chem import AllChem
+        from sklearn.manifold import TSNE
+    except ImportError:
+        logger.warning("RDKit or sklearn not available; skipping chemical space t-SNE")
+        return
+
+    code_to_dir_path = data_dir / "code_to_dir.json"
+    if not code_to_dir_path.exists():
+        logger.warning("code_to_dir.json not found; skipping chemical space t-SNE")
+        return
+    with open(code_to_dir_path) as f:
+        code_to_dir = json.load(f)
+
+    # Build split lookup
+    split_map = {}
+    for s, codes in splits.items():
+        for c in codes:
+            split_map[c] = s
+
+    fps, split_labels, sampled_codes = [], [], []
+    # Sample for speed: up to 3000 from train, all val, all test
+    rng = np.random.RandomState(42)
+    codes_train = [c for c in labels["pdb_code"] if split_map.get(c) == "train"]
+    codes_val = [c for c in labels["pdb_code"] if split_map.get(c) == "val"]
+    codes_test = [c for c in labels["pdb_code"] if split_map.get(c) == "test"]
+    sample_train = list(rng.choice(codes_train, min(3000, len(codes_train)), replace=False))
+    all_sample = sample_train + codes_val + codes_test
+
+    for code in all_sample:
+        base = code_to_dir.get(code)
+        if base is None:
+            continue
+        sdf_path = Path(base) / f"{code}_ligand.sdf"
+        if not sdf_path.exists():
+            continue
+        mol = Chem.MolFromMolFile(str(sdf_path), removeHs=True, sanitize=True)
+        if mol is None:
+            continue
+        fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2, nBits=1024)
+        fps.append(np.array(fp))
+        split_labels.append(split_map.get(code, "unknown"))
+        sampled_codes.append(code)
+
+    if len(fps) < 50:
+        logger.warning(f"Only {len(fps)} fingerprints; skipping t-SNE")
+        return
+
+    logger.info(f"Running t-SNE on {len(fps)} ligand fingerprints...")
+    X = np.array(fps)
+    tsne = TSNE(n_components=2, random_state=42, perplexity=min(30, len(fps) - 1))
+    emb = tsne.fit_transform(X)
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    colors = {"train": "steelblue", "val": "orange", "test": "red"}
+    for s in ["train", "val", "test"]:
+        mask = np.array([l == s for l in split_labels])
+        if mask.any():
+            ax.scatter(emb[mask, 0], emb[mask, 1], c=colors.get(s, "gray"),
+                       label=f"{s} (N={mask.sum()})", alpha=0.4, s=8)
+    ax.set_title("Chemical Space t-SNE (Morgan FP)")
+    ax.legend(markerscale=3)
+    ax.set_xlabel("t-SNE 1")
+    ax.set_ylabel("t-SNE 2")
+    fig.tight_layout()
+    fig.savefig(output_dir / "chemical_space_tsne.png")
+    plt.close(fig)
+    logger.info("Saved chemical_space_tsne.png")
+
+
+def plot_cluster_size_hist(data_dir: Path, output_dir: Path):
+    """Histogram of cluster sizes."""
+    clusters_path = data_dir / "clusters.json"
+    if not clusters_path.exists():
+        logger.warning("clusters.json not found; skipping cluster size histogram")
+        return
+    with open(clusters_path) as f:
+        clusters = json.load(f)
+
+    sizes = [len(pdbs) for pdbs in clusters.values()]
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    # Left: full distribution
+    axes[0].hist(sizes, bins=50, edgecolor="black", alpha=0.7, color="steelblue")
+    axes[0].set_xlabel("Cluster size")
+    axes[0].set_ylabel("Count")
+    axes[0].set_title(f"Cluster Size Distribution (N={len(sizes)})")
+    axes[0].axvline(np.median(sizes), color="red", linestyle="--",
+                    label=f"Median={np.median(sizes):.0f}")
+    axes[0].legend()
+
+    # Right: log-scale for long tail
+    axes[1].hist(sizes, bins=50, edgecolor="black", alpha=0.7, color="steelblue")
+    axes[1].set_xlabel("Cluster size")
+    axes[1].set_ylabel("Count (log)")
+    axes[1].set_yscale("log")
+    axes[1].set_title("Cluster Size Distribution (log scale)")
+
+    fig.tight_layout()
+    fig.savefig(output_dir / "cluster_size_hist.png")
+    plt.close(fig)
+    logger.info(f"Saved cluster_size_hist.png (median={np.median(sizes):.0f}, max={np.max(sizes)})")
 
 
 def check_data_quality(labels: pd.DataFrame, processed_dir: Path, output_dir: Path) -> list[dict]:
@@ -323,10 +540,15 @@ def main():
 
     # ── 2.2 Protein & ligand statistics ──
     size_stats = plot_pocket_ligand_sizes(processed_dir, output_dir)
-    plot_ligand_properties(pdbbind_dir, labels, output_dir)
+    plot_ligand_properties(data_dir, labels, output_dir)
 
     # ── 2.3 Split quality ──
     plot_split_summary(splits, output_dir)
+    plot_family_distribution(data_dir, output_dir)
+    plot_family_split_heatmap(data_dir, splits, output_dir)
+    ks_stats = plot_pkd_kde_by_split(labels, splits, output_dir)
+    plot_chemical_space_tsne(data_dir, labels, splits, output_dir)
+    plot_cluster_size_hist(data_dir, output_dir)
 
     # ── 2.4 Data quality ──
     issues = check_data_quality(labels, processed_dir, output_dir)
@@ -342,6 +564,7 @@ def main():
         "affinity_types": labels["affinity_type"].value_counts().to_dict(),
         "splits": {k: len(v) for k, v in splits.items()},
         "n_quality_issues": len(issues),
+        **(ks_stats if ks_stats else {}),
         **size_stats,
     }
     summary_path = output_dir / "eda_summary.json"

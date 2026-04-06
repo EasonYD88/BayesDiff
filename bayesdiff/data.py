@@ -214,7 +214,7 @@ def cluster_stratified_split(
     pdbbind_dir: str | Path,
     val_frac: float = 0.12,
     seq_identity: float = 0.30,
-    n_bins: int = 4,
+    n_bins: int = 10,
     seed: int = 42,
     pdb_to_file: Optional[dict[str, Path]] = None,
 ) -> dict[str, list[str]]:
@@ -283,9 +283,7 @@ def cluster_stratified_split(
         c["bin"] = int(np.digitize(c["median_pkd"], bin_edges[1:])) 
 
     # Step 5: Within each bin, sample clusters for validation
-    total_samples = sum(c["size"] for c in cluster_info)
-    target_val_samples = int(total_samples * val_frac)
-
+    #   Sample from EVERY bin proportionally so val pKd distribution matches train.
     val_clusters = set()
     val_count = 0
 
@@ -304,10 +302,6 @@ def cluster_stratified_split(
                 val_clusters.add(c["cluster_id"])
                 bin_val += c["size"]
                 val_count += c["size"]
-            if val_count >= target_val_samples:
-                break
-        if val_count >= target_val_samples:
-            break
 
     train_codes = []
     val_codes = []

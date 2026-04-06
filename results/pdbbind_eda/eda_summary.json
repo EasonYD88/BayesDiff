@@ -11,11 +11,13 @@
     "Ki": 4900
   },
   "splits": {
-    "train": 16260,
-    "val": 2220,
+    "train": 16108,
+    "val": 2372,
     "test": 285
   },
   "n_quality_issues": 982,
+  "ks_stat": 0.022462731536831315,
+  "ks_p": 0.24400136044916698,
   "n_protein_mean": 1305.5081801225685,
   "n_protein_std": 331.56925192882255,
   "n_protein_min": 141,
