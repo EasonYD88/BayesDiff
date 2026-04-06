@@ -125,3 +125,47 @@
 - ~~⚠️ CASF-2016 处理~~ ✅ CoreSet.dat 解析 + test split
 - ~~⚠️ 蛋白序列聚类~~ ✅ mmseqs2 安装 + 3,250 clusters
 - ~~⚠️ Split 重写~~ ✅ cluster-stratified split (12.2% val)
+
+---
+
+## Sub-Plan 1: Multi-Layer Fusion — Stage 0: Infrastructure
+
+**Status**: ✅ 完成  
+**Date**: 2026-04-06  
+**Plan**: `doc/Stage_2/03_multi_layer_fusion.md`
+
+### 架构分析
+
+| 属性 | 值 |
+|------|------|
+| 模型 | `ScorePosNet3D` → `UniTransformerO2TwoUpdateGeneral` |
+| `num_blocks` | 1 |
+| `num_layers` (base_block) | 9 |
+| 总隐藏层数 | 10（1 init_h_emb_layer + 9 AttentionLayerO2TwoUpdateNodeGeneral） |
+| `hidden_dim` | 128 |
+| `return_layer_h` | 模型已原生支持，无需 forward hooks |
+
+### 核心实现
+
+**Embedding 提取方法**：单次 forward pass + crystal ligand（`fix_x=True`），不走 diffusion sampling，速度远快于 93-pocket 方法。
+
+| 文件 | 修改/新增 | 说明 |
+|------|-----------|------|
+| `bayesdiff/sampler.py` | 修改 | 新增 3 个方法：`load_complex_data(pt_path)`, `extract_multilayer_embeddings(pt_path)`, `num_encoder_layers` property |
+| `scripts/pipeline/s08b_extract_multilayer.py` | 新增 | 多层 embedding 提取脚本，支持 `--shard_index/--num_shards` 分片并行 + `--stage merge` 合并 |
+| `slurm/s08b_extract_multilayer.sh` | 新增 | 50-shard SLURM array job（a100_chemistry partition） |
+| `slurm/s08b_merge.sh` | 新增 | 合并脚本，依赖 array job 完成后运行 |
+| `tests/stage2/__init__.py` | 新增 | Stage 2 测试目录 |
+| `tests/stage2/test_multilayer_extraction.py` | 新增 | 5 个测试：T2.1 层数=10, T2.2 shape=(128,), T2.3 无NaN/Inf, T2.4 层间差异, T2.5 load_complex_data |
+
+### 方法说明
+
+- `load_complex_data(pt_path)`: 加载 `.pt` 文件，保留蛋白质和配体数据（区别于 `load_pocket_data` 会丢弃配体）
+- `extract_multilayer_embeddings(pt_path)`: 构建 batch → protein_atom_emb + ligand_atom_emb → `compose_context()` → `refine_net(return_layer_h=True)` → 对每层 ligand hidden states 取 mean pooling → 返回 `{'layer_0': (128,), ..., 'layer_9': (128,), 'z_global': (128,), 'n_layers': 10}`
+- `num_encoder_layers`: 返回 `1 + len(self._model.refine_net.base_block)` = 10
+
+### 下一步
+
+- 提交 SLURM extraction job（18,765 complexes × 50 shards）
+- 合并 embeddings → `results/multilayer_embeddings/all_multilayer_embeddings.npz`
+- 开始 Stage 1: Single-Layer Probing（s09a_single_layer_probe.py）

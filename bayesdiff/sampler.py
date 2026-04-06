@@ -567,3 +567,163 @@ class TargetDiffSampler:
             if mol is not None:
                 writer.write(mol)
         writer.close()
+
+    # ── Multi-layer embedding extraction ─────────────────────────────────
+
+    def load_complex_data(self, pt_path: str | Path):
+        """Load a pre-processed complex (protein + ligand) from a .pt file.
+
+        Unlike load_pocket_data() which discards ligand info, this method
+        preserves both protein and ligand data for embedding extraction.
+
+        Parameters
+        ----------
+        pt_path : path
+            Path to a .pt file from data/pdbbind_v2020/processed/.
+
+        Returns
+        -------
+        data : PyG Data
+            Featurized complex with protein_atom_feature and
+            ligand_atom_feature_full fields.
+        """
+        self._load_model()
+
+        pt_path = Path(pt_path)
+        if not pt_path.exists():
+            raise FileNotFoundError(f"Complex data file not found: {pt_path}")
+
+        pocket_dict = torch.load(pt_path, map_location="cpu", weights_only=False)
+
+        try:
+            from datasets.pl_data import ProteinLigandData
+        except ImportError:
+            from torch_geometric.data import Data as ProteinLigandData
+
+        protein_dict = {
+            "element": pocket_dict["protein_element"],
+            "pos": pocket_dict["protein_pos"],
+            "is_backbone": pocket_dict["protein_is_backbone"],
+            "atom_name": pocket_dict["protein_atom_name"],
+            "atom_to_aa_type": pocket_dict["protein_atom_to_aa_type"],
+            "molecule_name": pocket_dict.get("protein_molecule_name", "pocket"),
+        }
+        ligand_dict = {
+            "element": pocket_dict["ligand_element"],
+            "pos": pocket_dict["ligand_pos"],
+            "atom_feature": pocket_dict["ligand_atom_feature"],
+            "bond_index": pocket_dict["ligand_bond_index"],
+            "bond_type": pocket_dict["ligand_bond_type"],
+        }
+
+        if hasattr(ProteinLigandData, "from_protein_ligand_dicts"):
+            data = ProteinLigandData.from_protein_ligand_dicts(
+                protein_dict=protein_dict, ligand_dict=ligand_dict
+            )
+        else:
+            from torch_geometric.data import Data
+            data = Data()
+            for k, v in protein_dict.items():
+                setattr(data, f"protein_{k}", v)
+            for k, v in ligand_dict.items():
+                setattr(data, f"ligand_{k}", v)
+
+        # Apply protein featurizer
+        data = self._protein_featurizer(data)
+        # Apply ligand featurizer to get ligand_atom_feature_full
+        data = self._ligand_featurizer(data)
+
+        return data
+
+    @torch.no_grad()
+    def extract_multilayer_embeddings(
+        self,
+        pt_path: str | Path,
+    ) -> dict[str, np.ndarray]:
+        """Extract per-layer mean-pooled embeddings from a crystal complex.
+
+        Runs a single forward pass through the encoder with
+        return_layer_h=True, using the crystal ligand pose (fix_x=True).
+
+        Parameters
+        ----------
+        pt_path : path
+            Path to a processed complex .pt file.
+
+        Returns
+        -------
+        dict with keys:
+            'layer_0' ... 'layer_9': (d,) mean-pooled ligand embedding per layer
+            'z_global': (d,) last-layer mean-pooled (backward compatible)
+            'n_layers': int, total number of layers
+        """
+        self._load_model()
+
+        data = self.load_complex_data(pt_path)
+
+        from models.common import compose_context
+        from torch_geometric.data import Batch
+        try:
+            from datasets.pl_data import FOLLOW_BATCH
+        except ImportError:
+            FOLLOW_BATCH = ["protein_element", "ligand_element"]
+
+        # Create a single-item batch
+        batch = Batch.from_data_list([data], follow_batch=FOLLOW_BATCH).to(self.device)
+
+        batch_protein = batch.protein_element_batch
+        batch_ligand = batch.ligand_element_batch
+
+        # Featurize for model input
+        h_protein = self._model.protein_atom_emb(
+            batch.protein_atom_feature.float()
+        )
+        h_ligand = self._model.ligand_atom_emb(
+            torch.nn.functional.one_hot(
+                batch.ligand_atom_feature_full, self._model.num_classes
+            ).float()
+        )
+
+        if self._model.config.node_indicator:
+            h_protein = torch.cat(
+                [h_protein, torch.zeros(len(h_protein), 1, device=self.device)], -1
+            )
+            h_ligand = torch.cat(
+                [h_ligand, torch.ones(len(h_ligand), 1, device=self.device)], -1
+            )
+
+        h_all, pos_all, batch_all, mask_ligand = compose_context(
+            h_protein=h_protein,
+            h_ligand=h_ligand,
+            pos_protein=batch.protein_pos,
+            pos_ligand=batch.ligand_pos,
+            batch_protein=batch_protein,
+            batch_ligand=batch_ligand,
+        )
+
+        outputs = self._model.refine_net(
+            h_all, pos_all, mask_ligand, batch_all,
+            return_all=False, fix_x=True, return_layer_h=True,
+        )
+
+        layer_h_list = outputs.get("layer_h_list", [])
+        result = {"n_layers": len(layer_h_list)}
+
+        for i, h in enumerate(layer_h_list):
+            ligand_h = h[mask_ligand]  # (N_lig, d)
+            z = ligand_h.mean(dim=0).cpu().numpy()  # (d,)
+            result[f"layer_{i}"] = z
+
+        # Last layer = z_global for backward compatibility
+        if layer_h_list:
+            last_h = layer_h_list[-1][mask_ligand]
+            result["z_global"] = last_h.mean(dim=0).cpu().numpy()
+
+        return result
+
+    @property
+    def num_encoder_layers(self) -> int:
+        """Return total number of hookable encoder layers (init + base_block)."""
+        self._load_model()
+        n_base = len(self._model.refine_net.base_block)
+        return 1 + n_base  # init_h_emb_layer + base_block layers
