@@ -605,7 +605,9 @@ class TargetDiffSampler:
             "pos": pocket_dict["protein_pos"],
             "is_backbone": pocket_dict["protein_is_backbone"],
             "atom_name": pocket_dict["protein_atom_name"],
-            "atom_to_aa_type": pocket_dict["protein_atom_to_aa_type"],
+            # Clamp non-standard amino acids (value >= 20) to 19
+            # to avoid F.one_hot overflow in FeaturizeProteinAtom
+            "atom_to_aa_type": pocket_dict["protein_atom_to_aa_type"].clamp(max=19),
             "molecule_name": pocket_dict.get("protein_molecule_name", "pocket"),
         }
         ligand_dict = {
@@ -630,8 +632,36 @@ class TargetDiffSampler:
 
         # Apply protein featurizer
         data = self._protein_featurizer(data)
-        # Apply ligand featurizer to get ligand_atom_feature_full
-        data = self._ligand_featurizer(data)
+
+        # Compute ligand_atom_feature_full manually because
+        # FeaturizeLigandAtom requires ligand_hybridization which
+        # is NOT stored in the PDBbind .pt files.
+        # In 'add_aromatic' mode, only element + aromatic are needed.
+        try:
+            from utils.transforms import MAP_ATOM_TYPE_AROMATIC_TO_INDEX
+            from utils.data import ATOM_FAMILIES_ID
+            AROMATIC_IDX = ATOM_FAMILIES_ID['Aromatic']
+        except ImportError:
+            MAP_ATOM_TYPE_AROMATIC_TO_INDEX = {
+                (1, False): 0, (6, False): 1, (6, True): 2,
+                (7, False): 3, (7, True): 4, (8, False): 5,
+                (8, True): 6, (9, False): 7, (15, False): 8,
+                (15, True): 9, (16, False): 10, (16, True): 11,
+                (17, False): 12,
+            }
+            AROMATIC_IDX = 2
+
+        element_list = data.ligand_element
+        aromatic_list = data.ligand_atom_feature[:, AROMATIC_IDX]
+        feat_full = []
+        for e, a in zip(element_list, aromatic_list):
+            key = (int(e), bool(a))
+            if key in MAP_ATOM_TYPE_AROMATIC_TO_INDEX:
+                feat_full.append(MAP_ATOM_TYPE_AROMATIC_TO_INDEX[key])
+            else:
+                # Unknown element → fallback to H (index 0)
+                feat_full.append(0)
+        data.ligand_atom_feature_full = torch.tensor(feat_full, dtype=torch.long)
 
         return data
 
