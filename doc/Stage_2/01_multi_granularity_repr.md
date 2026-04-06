@@ -2,7 +2,7 @@
 
 > **Priority**: P0 — Critical  
 > **Dependency**: Sub-Plan 0 (PDBbind v2020 数据集)  
-> **Training Data**: PDBbind v2020 refined set (~5,316 complexes), 见 [00a_supervised_pretraining.md](00a_supervised_pretraining.md)  
+> **Training Data**: PDBbind v2020 R1 general set (19,037), 见 [00a_supervised_pretraining.md](00a_supervised_pretraining.md)  
 > **Estimated Effort**: 2–3 weeks implementation + 1 week testing  
 > **Paper Section**: §3.X Enhanced Representation Learning
 

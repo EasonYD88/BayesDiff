@@ -599,12 +599,16 @@ The encoder layers themselves remain **frozen** (pretrained TargetDiff weights).
 - [x] **Gate 1 decision**: ✅ PROCEED — L8 val R²=0.250 > L9 val R²=0.232, ratio=1.077
 
 ### Stage 2: Weighted Sum (proceed only if Gate 1 passes)
-- [ ] Implement `WeightedSumFusion` in `layer_fusion.py`
-- [ ] Write unit tests T1.1–T1.2
-- [ ] Write `s09b_weighted_sum_fusion.py`
-- [ ] Run E2.1: weighted sum vs. best single layer
-- [ ] Run E2.2: inspect learned weights
-- [ ] **Gate 2 decision**: Does multi-layer fusion beat single layer?
+- [x] Implement `WeightedSumFusion` in `layer_fusion.py`
+- [x] Write unit tests T1.1–T1.2
+- [x] Write `s09b_weighted_sum_fusion.py`
+- [x] Run E2.1: weighted sum vs. best single layer
+- [x] Run E2.2: inspect learned weights
+- [x] **Gate 2 decision**: ❌ STOP — weighted sum val R²=0.239 < best single L8 R²=0.250 (−4.5%)
+  - top2 (L8,L6): weights collapsed to L8=0.999, val R²=0.217
+  - top4 (L8,L6,L9,L5): L9=0.653, L8=0.346, val R²=0.231
+  - all (L0–L9): L9=0.592, L8=0.407, all others→0, val R²=0.239
+  - Conclusion: weighted sum degenerates to L8+L9 blend, no improvement over single layer
 
 ### Stage 3: Layer Attention (proceed only if Gate 2 passes)
 - [ ] Implement `LayerAttentionFusion` in `layer_fusion.py`
