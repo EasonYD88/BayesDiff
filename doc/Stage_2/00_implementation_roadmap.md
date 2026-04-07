@@ -14,16 +14,24 @@ Stage 2 addresses the three core bottlenecks identified in [problem_and_solution
 
 ## Sub-Plan Index
 
-| # | Sub-Plan | File | Priority | Dependency |
-|---|----------|------|----------|------------|
-| **0** | **PDBbind v2020 R1 + CASF-2016 数据集准备** | [00a_supervised_pretraining.md](00a_supervised_pretraining.md) | **P0 — Critical (前置)** | None |
-| 1 | Multi-Granularity Representation | [01_multi_granularity_repr.md](01_multi_granularity_repr.md) | **P0 — Critical** | Sub-Plan 0 |
-| 2 | Attention-Based Aggregation | [02_attention_aggregation.md](02_attention_aggregation.md) | **P0 — Critical** | Sub-Plan 0 |
-| 3 | Multi-Layer Fusion | [03_multi_layer_fusion.md](03_multi_layer_fusion.md) | **P1 — High** | Sub-Plan 0 |
-| 4 | Hybrid Predictor (DKL) | [04_hybrid_predictor.md](04_hybrid_predictor.md) | **P1 — High** | Sub-Plans 0–3 |
-| 5 | Multi-Task Learning | [05_multi_task_learning.md](05_multi_task_learning.md) | **P2 — Medium** | Sub-Plans 0–3 |
-| 6 | Physics-Aware Features | [06_physics_aware_features.md](06_physics_aware_features.md) | **P2 — Medium** | Sub-Plan 0 |
-| 7 | Uncertainty-Guided Generation | [07_uncertainty_guided_generation.md](07_uncertainty_guided_generation.md) | **P3 — Future** | Sub-Plans 0–6 |
+> **架构决策 (2026-04-06)**：Sub-Plans 1–3 不再是独立并列的模块，而是一条**串行链**：
+> 
+> **3 → 2 → 1**（多层提纯 → 原子级注意力汇总 → 交互级+全局级融合）
+> 
+> Sub-Plan 3 负责"哪几层的表示最有用"，输出 token-level 融合后的 $\tilde{h}_i$；
+> Sub-Plan 2 不再是独立方法，而是在 $\tilde{h}_i$ 上做 attention pooling 得到 $z_{\text{atom}}$；
+> Sub-Plan 1 是主干框架，把 atom / interaction / global 三种信息统一起来。
+
+| # | Sub-Plan | File | 角色 | Priority | Dependency |
+|---|----------|------|------|----------|------------|
+| **0** | **PDBbind v2020 R1 + CASF-2016 数据集准备** | [00a_supervised_pretraining.md](00a_supervised_pretraining.md) | 数据前置 | **P0 — Critical** | None |
+| 3 | Multi-Layer Fusion (Token-Level) | [03_multi_layer_fusion.md](03_multi_layer_fusion.md) | **Step 1**: 多层表示提纯 → $\tilde{h}_i$ | **P0 — Critical** | Sub-Plan 0 |
+| 2 | Attention-Based Aggregation | [02_attention_aggregation.md](02_attention_aggregation.md) | **Step 2**: $z_{\text{atom}}$ 实现 | **P0 — Critical** | Sub-Plans 0, 3 |
+| 1 | Multi-Granularity Representation | [01_multi_granularity_repr.md](01_multi_granularity_repr.md) | **Step 3**: 主干整合框架 | **P0 — Critical** | Sub-Plans 0, 3, 2 |
+| 4 | Hybrid Predictor (DKL) | [04_hybrid_predictor.md](04_hybrid_predictor.md) | 预测器升级 | **P1 — High** | Sub-Plans 0–3 |
+| 5 | Multi-Task Learning | [05_multi_task_learning.md](05_multi_task_learning.md) | 多任务学习 | **P2 — Medium** | Sub-Plans 0–3 |
+| 6 | Physics-Aware Features | [06_physics_aware_features.md](06_physics_aware_features.md) | 物理特征增强 | **P2 — Medium** | Sub-Plan 0 |
+| 7 | Uncertainty-Guided Generation | [07_uncertainty_guided_generation.md](07_uncertainty_guided_generation.md) | 闭环生成 | **P3 — Future** | Sub-Plans 0–6 |
 
 ---
 
@@ -68,39 +76,63 @@ Stage 2 addresses the three core bottlenecks identified in [problem_and_solution
 
 ---
 
-### Phase A: Representation Upgrade (Sub-Plans 1–3)
+### Phase A: Representation Upgrade (Sub-Plans 3 → 2 → 1, 串行链)
 
 **Goal**: Replace the current mean-pooled 128-dim embedding with a richer, multi-granularity representation. **Builds on the pretrained encoder from Phase 0.**
 
+> **架构决策**：Sub-Plans 1–3 不是并列独立的候选方案，而是一条串行处理链。
+> Sub-Plan 3 先做"多层信息提纯"，Sub-Plan 2 再做"原子级重要性汇总"，
+> Sub-Plan 1 最后做"交互级 + 全局级融合"。
+
 ```
-                      ┌─────────────────────┐
-                      │  TargetDiff Encoder  │
-                      │  (SE(3)-Equivariant) │
-                      └─────────┬───────────┘
-                                │
-               ┌────────────────┼────────────────┐
-               ▼                ▼                ▼
-     ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-     │ Sub-Plan 1  │  │ Sub-Plan 2  │  │ Sub-Plan 3  │
-     │ Multi-Gran  │  │ Attn Pool   │  │ Layer Fuse  │
-     │ Repr        │  │             │  │             │
-     └──────┬──────┘  └──────┬──────┘  └──────┬──────┘
-            │                │                │
-            └────────────────┼────────────────┘
-                             ▼
-                   ┌─────────────────┐
-                   │ z_new ∈ ℝ^d_new │
-                   │  (richer repr)  │
-                   └────────┬────────┘
-                            ▼
-                 ┌──────────────────┐
-                 │   GP / Hybrid    │
-                 │   (Sub-Plan 4)   │
-                 └──────────────────┘
+  ┌─────────────────────────────────────────────┐
+  │          TargetDiff Frozen Encoder           │
+  │          (SE(3)-Equivariant, L layers)       │
+  └──────────────────┬──────────────────────────┘
+                     │  H^(1), H^(2), ..., H^(L)
+                     │  (per-layer atom-level hidden states)
+                     ▼
+  ┌─────────────────────────────────────────────┐
+  │  Step 1: Token-Level Layer Fusion (SP3)     │
+  │  对每个原子 i，融合 top-k 层的表示：         │
+  │  h̃_i = Fuse(h_i^(l₁), h_i^(l₂), ..., h_i^(lₖ)) │
+  └──────────────────┬──────────────────────────┘
+                     │  {h̃_i} — 融合后的原子表示
+                     │
+          ┌──────────┼──────────────────┐
+          ▼          ▼                  ▼
+  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+  │ Step 2 (SP2) │ │ Step 3a(SP1) │ │ Step 3b      │
+  │ Attn Pool    │ │ Interaction  │ │ Global Pool  │
+  │ on {h̃_i}    │ │ Graph + GNN  │ │ mean({h̃_i}) │
+  │              │ │ on {h̃_i} +  │ │              │
+  │              │ │ pocket feats │ │              │
+  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘
+         │                │                │
+         ▼                ▼                ▼
+      z_atom        z_interaction       z_global
+         │                │                │
+         └────────────────┼────────────────┘
+                          ▼
+               ┌──────────────────┐
+               │ Fusion (SP1)     │
+               │ MLP / Gated      │
+               │ → z_new ∈ ℝ^d   │
+               └────────┬─────────┘
+                        ▼
+              ┌──────────────────┐
+              │   GP / DKL /     │
+              │   Ranking Head   │
+              │   (Sub-Plan 4)   │
+              └──────────────────┘
 ```
 
-**Sub-Plans 1, 2, 3 are independent** — can be implemented and tested in parallel.
-Each produces a candidate embedding; final system combines the best choices.
+**串行依赖关系**：
+- Sub-Plan 3 是最上游，输出 token-level 融合后的原子表示 $\tilde{h}_i$
+- Sub-Plan 2 消费 $\tilde{h}_i$，输出 $z_{\text{atom}}$（不再是独立方法）
+- Sub-Plan 1 是主干框架，消费 $\tilde{h}_i$（建交互图 + 全局池化）和 $z_{\text{atom}}$（来自 SP2），最终融合三路信息
+
+**每个 Sub-Plan 仍可独立测试**（用于 ablation），但最终系统是这条完整链。
 
 ### Phase B: Predictor Upgrade (Sub-Plans 4–5)
 
@@ -123,13 +155,15 @@ Each produces a candidate embedding; final system combines the best choices.
 
 ### New Modules to Create
 
-| Module | Location | Purpose | Sub-Plan |
+| Module | Location | Purpose | Sub-Plan (链路位置) |
 |--------|----------|---------|----------|
 | `bayesdiff/pretrain_dataset.py` | New | PDBbind pair-level dataset & dataloader | 0 |
+| `bayesdiff/layer_fusion.py` | New | Token-level multi-layer embedding fusion: $h_i^{(l)} \to \tilde{h}_i$ | 3 (Step 1) |
+| `bayesdiff/attention_pool.py` | New | Attention-based aggregation: $\tilde{h}_i \to z_{\text{atom}}$ | 2 (Step 2) |
+| `bayesdiff/interaction_graph.py` | New | Build pocket-ligand interaction graphs from $\tilde{h}_i$ | 1 (Step 3) |
+| `bayesdiff/interaction_gnn.py` | New | Lightweight GNN for interaction encoding: graph → $z_{\text{interaction}}$ | 1 (Step 3) |
+| `bayesdiff/multi_granularity.py` | New | 主干整合: fuse $z_{\text{atom}} + z_{\text{interaction}} + z_{\text{global}} \to z_{\text{new}}$ | 1 (Step 3) |
 | `bayesdiff/pair_model.py` | New | Pair-level encoder + aggregation + predictor | 1–4 |
-| `bayesdiff/interaction_graph.py` | New | Build pocket-ligand interaction graphs | 1 |
-| `bayesdiff/attention_pool.py` | New | Attention-based aggregation module | 2 |
-| `bayesdiff/layer_fusion.py` | New | Multi-layer embedding extraction & fusion | 3 |
 | `bayesdiff/hybrid_oracle.py` | New | DKL and NN+GP hybrid predictors | 4 |
 | `bayesdiff/multi_task.py` | New | Multi-task heads (regression + rank + classification) | 5 |
 | `bayesdiff/physics_features.py` | New | Physics-aware feature extraction | 6 |
@@ -139,7 +173,7 @@ Each produces a candidate embedding; final system combines the best choices.
 
 | Module | Changes |
 |--------|---------|
-| `bayesdiff/sampler.py` | Expose per-layer embeddings; return atom-level features |
+| `bayesdiff/sampler.py` | Expose per-layer atom-level embeddings (token-level, not pooled); return atom positions and pocket data |
 | `bayesdiff/gen_uncertainty.py` | Support higher-dim inputs from multi-granularity repr |
 | `bayesdiff/gp_oracle.py` | Accept variable-dim inputs; add DKL variant |
 | `bayesdiff/fusion.py` | Generalize Delta method for new representations |
@@ -150,10 +184,11 @@ Each produces a candidate embedding; final system combines the best choices.
 | Script | Purpose | Sub-Plan |
 |--------|---------|----------|
 | `scripts/pipeline/s00_prepare_pdbbind.py` | Prepare PDBbind v2020 R1 train/val + CASF-2016 test (pocket extraction, splits) | 0 |
-| `scripts/pipeline/s08_extract_atom_embeddings.py` | Extract atom-level embeddings from encoder | 1 |
-| `scripts/pipeline/s09_build_interaction_graphs.py` | Construct pocket-ligand interaction graphs | 1 |
-| `scripts/pipeline/s10_train_enhanced.py` | Train with new representation + predictor | 1–4 |
-| `scripts/pipeline/s11_ablation_stage2.py` | Stage 2 ablation studies | All |
+| `scripts/pipeline/s08_extract_atom_embeddings.py` | Extract per-layer atom-level embeddings (token-level) from encoder | 3 (Step 1) |
+| `scripts/pipeline/s08b_extract_multilayer.py` | Extract multi-layer embeddings (already completed, used in SP3 probing) | 3 |
+| `scripts/pipeline/s09_build_interaction_graphs.py` | Construct pocket-ligand interaction graphs from $\tilde{h}_i$ | 1 (Step 3) |
+| `scripts/pipeline/s10_train_enhanced.py` | Train full chain (SP3→SP2→SP1) + predictor | 1–4 |
+| `scripts/pipeline/s11_ablation_stage2.py` | Stage 2 ablation studies (串行链逐步添加) | All |
 
 ### New Test Files
 
@@ -186,19 +221,22 @@ Each produces a candidate embedding; final system combines the best choices.
 ### Ablation Matrix (Paper Table)
 
 Each row = one configuration; columns = all metrics above.
+Ablation 沿串行链逐步添加组件，验证每一步的增量贡献。
 
-| Configuration | Sub-Plans Active |
-|---------------|-----------------|
-| Baseline (Stage 1) | None |
-| + Attention Pooling | 2 |
-| + Multi-Layer Fusion | 3 |
-| + Interaction Graph | 1 |
-| + Attention + Multi-Layer | 2 + 3 |
-| + Full Repr (1+2+3) | 1 + 2 + 3 |
-| + DKL Predictor | 1 + 2 + 3 + 4 |
-| + Multi-Task | 1 + 2 + 3 + 5 |
-| + Physics Features | 1 + 2 + 3 + 6 |
-| Full Stage 2 | 1 + 2 + 3 + 4 + 5 + 6 |
+| Configuration | 对应链路 | Sub-Plans Active |
+|---------------|---------|-----------------|
+| Baseline (Stage 1: last-layer mean pool) | — | None |
+| + Token-Level Layer Fusion (best method) → mean pool | SP3 only | 3 |
+| + Token-Level Layer Fusion → Attention Pool | SP3 → SP2 | 3 + 2 |
+| + Token-Level Layer Fusion → Attn Pool + Interaction Graph | SP3 → SP2 + SP1(interaction) | 3 + 2 + 1(partial) |
+| + Full Chain (SP3 → SP2 → SP1: z_atom + z_interaction + z_global) | 完整串行链 | 3 + 2 + 1 |
+| + Full Chain + DKL Predictor | 完整链 + 预测器升级 | 3 + 2 + 1 + 4 |
+| + Full Chain + Multi-Task | 完整链 + 多任务 | 3 + 2 + 1 + 5 |
+| + Full Chain + Physics Features | 完整链 + 物理特征 | 3 + 2 + 1 + 6 |
+| Full Stage 2 | 全部 | 3 + 2 + 1 + 4 + 5 + 6 |
+| (Ablation) SP2 only: Attn Pool on last-layer $h_i^{(L)}$ | SP2 单独 | 2 |
+| (Ablation) SP1 only: Interaction Graph on last-layer $h_i^{(L)}$ | SP1 单独 | 1 |
+| (Ablation) Shuffled-edge control on full chain | 拓扑 sanity check | 3 + 2 + 1(shuffled) |
 
 ---
 

@@ -1,0 +1,31 @@
+{
+  "best_concat_config": "ConcatMLP-d64",
+  "best_concat_test_R2": -0.002124,
+  "best_concat_test_std": 0.000356,
+  "best_concat_val_R2": -0.000263,
+  "attn_all_test_R2": 0.528,
+  "attn_all_test_std": 0.037,
+  "l8_test_R2": 0.42,
+  "improvement_vs_attn_pct": -100.4,
+  "more_stable_than_attn": true,
+  "gate4_pass": false,
+  "decision": "USE Attn-all \u2014 ConcatMLP catastrophically collapsed (R2 \u2248 0)",
+  "failure_mode": "Representation collapse: MLP maps all inputs to near-constant output during joint GP training",
+  "output_dim_comparison": {
+    "ConcatMLP-d64": {
+      "mean_test_R2": -0.002124,
+      "std_test_R2": 0.000356,
+      "mean_val_R2": -0.000263
+    },
+    "ConcatMLP-d128": {
+      "mean_test_R2": -0.00244,
+      "std_test_R2": 0.001121,
+      "mean_val_R2": -0.000296
+    },
+    "ConcatMLP-d256": {
+      "mean_test_R2": -0.002129,
+      "std_test_R2": 0.000511,
+      "mean_val_R2": -0.000316
+    }
+  }
+}

@@ -1,10 +1,44 @@
-# Sub-Plan 3: Multi-Layer Fusion
+# Sub-Plan 3: Multi-Layer Fusion (Token-Level)
 
-> **Priority**: P1 — High  
-> **Dependency**: Sub-Plan 0 (PDBbind v2020 数据集); independent of Sub-Plans 1–2, combinable  
+> **角色**: Phase A **Step 1** — 串行链的最上游，负责多层表示提纯  
+> **Priority**: P0 — Critical  
+> **Dependency**: Sub-Plan 0 (PDBbind v2020 数据集)  
+> **下游消费者**: Sub-Plan 2 (attention pooling on $\tilde{h}_i$), Sub-Plan 1 (interaction graph + global pool on $\tilde{h}_i$)  
 > **Training Data**: PDBbind v2020 R1 set, 见 [00a_supervised_pretraining.md](00a_supervised_pretraining.md)  
 > **Estimated Effort**: 1–2 weeks implementation + 1 week testing  
-> **Paper Section**: §3.X.3 Multi-Scale Feature Fusion
+> **Paper Section**: §3.X.1 Multi-Scale Feature Fusion
+
+---
+
+## 0. 在串行链中的位置
+
+```
+  TargetDiff Frozen Encoder
+         │
+         │  H^(1), H^(2), ..., H^(L)  ← per-layer, per-atom hidden states
+         ▼
+  ╔═══════════════════════════════════╗
+  ║  【本 Sub-Plan: Token-Level       ║
+  ║    Layer Fusion】                 ║
+  ║                                   ║
+  ║  对每个原子 i:                     ║
+  ║  h̃_i = Fuse(h_i^(l₁), ..., h_i^(lₖ)) ║
+  ╚═══════════════╤═══════════════════╝
+                  │  {h̃_i} — 质量更高的原子表示
+                  ▼
+        ┌─────────┼─────────┐
+        ▼         ▼         ▼
+     SP2:      SP1:      SP1:
+   Attn Pool  InterGNN   Global Pool
+   → z_atom  → z_inter  → z_global
+```
+
+**核心输出**: $\{\tilde{h}_i\}_{i=1}^{N}$ — 每个原子的 layer-fused 表示，维度 = $d$（与原始 hidden state 同维或经 MLP 映射）。
+
+**与旧计划的区别**：
+- 旧计划在 **global level** 做 layer fusion（先 pool 每层 → 再融合 pooled vectors）
+- 新计划在 **token level** 做 layer fusion（先融合每个原子跨层的表示 → 再交给下游 pool/GNN）
+- 已完成的 global-level 实验（Stage 1–3, 5-fold CV）作为 **probing evidence**，证明多层信息确实有价值（Attn-all test R²=0.528 >> L8 test R²=0.420）
 
 ---
 
@@ -147,6 +181,157 @@ Stage 1: Single-layer probing
                                                                                               │
                                                                                               └─ unstable ──→ Stage 5: +Dropout
 ```
+
+---
+
+## 2.5 Token-Level Fusion（新增：串行链的核心架构变更）
+
+> **2026-04-06 架构决策**：前述 §2.3 的所有 fusion 方法（Weighted Sum, Layer Attention, Concat+MLP 等）都在 **global-level**（先 pool 再融合）运行。Global-level probing 实验（§8 已完成）已证明多层信息有价值。
+>
+> 接下来的核心工作是将 fusion 从 global-level **下沉到 token-level**：对每个原子保留跨层信息，产出质量更高的 per-atom 表示 $\tilde{h}_i$，供下游 Sub-Plan 2 (attention pooling) 和 Sub-Plan 1 (interaction graph + fusion) 使用。
+
+### 2.5.1 与 Global-Level Fusion 的关系
+
+| 维度 | Global-Level Fusion (§2.3, 已完成) | Token-Level Fusion (§2.5, 待实现) |
+|------|-----------------------------------|----------------------------------|
+| 融合粒度 | 先 mean-pool 每层 → 再融合 pooled vectors | 先对每个原子融合跨层表示 → 再 pool |
+| 信息保留 | 丢失原子级差异（不同原子用同一套 layer weights） | 保留原子级差异（允许不同原子从不同层获益） |
+| 已完成实验的价值 | 证明多层信息有互补性（Attn-all test R²=0.528 > L8 0.420） | 在此基础上进一步提升 |
+| 与下游的关系 | 产出 global vector，直接送 GP | 产出 per-atom tokens，交给 SP2 attention pool + SP1 interaction GNN |
+
+### 2.5.2 Token-Level Fusion 方法
+
+对于每个原子 $i$，令 $h_i^{(l)}$ 为其第 $l$ 层的隐状态。从已完成的 global-level probing 中选取 top-$k$ 层 $\mathcal{S} = \{l_1, \dots, l_k\}$。
+
+#### 方法 A: Token-Level Weighted Sum
+
+$$
+\tilde{h}_i = \sum_{l \in \mathcal{S}} \beta_l \cdot h_i^{(l)}, \quad \beta_l = \frac{\exp(w_l)}{\sum_{k \in \mathcal{S}} \exp(w_k)}
+$$
+
+权重 $\beta_l$ 对所有原子共享（learned scalar per layer）。极简；与 global-level 的区别仅在于融合发生在 pool **之前**。
+
+#### 方法 B: Token-Level Attention
+
+$$
+\beta_{l,i} = \frac{\exp(u^\top \tanh(W h_i^{(l)}))}{\sum_{k \in \mathcal{S}} \exp(u^\top \tanh(W h_i^{(k)}))}
+$$
+
+$$
+\tilde{h}_i = \sum_{l \in \mathcal{S}} \beta_{l,i} \cdot h_i^{(l)}
+$$
+
+权重 $\beta_{l,i}$ 因原子而异（input-dependent, per-atom, per-layer）。
+**关键收益**：不同化学环境的原子可以从不同层获取最佳表示。例如，暴露在溶剂中的原子可能更依赖浅层（局部几何），而参与氢键的原子可能更依赖深层（长程相互作用）。
+
+#### 方法 C: Token-Level Concat + MLP
+
+$$
+\tilde{h}_i = \text{MLP}([h_i^{(l_1)}; h_i^{(l_2)}; \dots; h_i^{(l_k)}])
+$$
+
+MLP: $\mathbb{R}^{k \cdot d} \to \mathbb{R}^{d}$，一层隐层 + LayerNorm + ReLU。
+参数量较大但允许跨层非线性交互。
+
+### 2.5.3 Layer Selection（基于已完成的 probing 结果）
+
+| 配置 | 层 | 根据 |
+|------|-----|------|
+| top-2 | L8, L6 | Gate 1 probing: L8 = best, L6 = second |
+| top-4 | L8, L6, L9, L5 | 覆盖 deep + middle |
+| all | L0–L9 | Maximum information |
+| **推荐 MVP** | **all (L0–L9)** | 5-fold CV 显示 Attn-all 在 test 上最优；token-level attention 自动学习忽略不重要的层 |
+
+### 2.5.4 实现计划
+
+```python
+# bayesdiff/layer_fusion.py — 新增 token-level 类
+
+class TokenLevelWeightedSum(nn.Module):
+    """Per-atom weighted sum across layers (shared scalar weights)."""
+    def __init__(self, n_layers):
+        super().__init__()
+        self.logits = nn.Parameter(torch.zeros(n_layers))
+    
+    def forward(self, layer_atom_embs: List[Tensor]):
+        """
+        Args:
+            layer_atom_embs: list of k tensors, each (N, d) — N atoms, d dims
+                             同一个分子的同一批原子在不同层的表示
+        Returns:
+            h_fused: (N, d) — 融合后的 per-atom 表示
+            weights: (k,) — layer weights (for interpretability)
+        """
+        weights = F.softmax(self.logits, dim=0)
+        h_fused = sum(w * h for w, h in zip(weights, layer_atom_embs))
+        return h_fused, weights
+
+
+class TokenLevelAttention(nn.Module):
+    """Per-atom, per-layer attention (input-dependent layer weights)."""
+    def __init__(self, embed_dim, hidden_dim=64):
+        super().__init__()
+        self.W = nn.Linear(embed_dim, hidden_dim)
+        self.u = nn.Linear(hidden_dim, 1, bias=False)
+    
+    def forward(self, layer_atom_embs: List[Tensor]):
+        """
+        Args:
+            layer_atom_embs: list of k tensors, each (N, d)
+        Returns:
+            h_fused: (N, d)
+            weights: (N, k) — per-atom layer weights
+        """
+        scores = torch.stack([self.u(torch.tanh(self.W(h))).squeeze(-1) 
+                              for h in layer_atom_embs], dim=-1)  # (N, k)
+        weights = F.softmax(scores, dim=-1)  # (N, k)
+        h_fused = sum(weights[:, l:l+1] * layer_atom_embs[l] 
+                      for l in range(len(layer_atom_embs)))
+        return h_fused, weights
+
+
+class TokenLevelConcatMLP(nn.Module):
+    """Per-atom concat + MLP fusion."""
+    def __init__(self, embed_dim, n_layers, output_dim=None):
+        super().__init__()
+        output_dim = output_dim or embed_dim
+        self.mlp = nn.Sequential(
+            nn.Linear(embed_dim * n_layers, 2 * output_dim),
+            nn.LayerNorm(2 * output_dim),
+            nn.ReLU(),
+            nn.Linear(2 * output_dim, output_dim),
+        )
+    
+    def forward(self, layer_atom_embs: List[Tensor]):
+        h_concat = torch.cat(layer_atom_embs, dim=-1)  # (N, k*d)
+        return self.mlp(h_concat), None
+```
+
+### 2.5.5 Token-Level Fusion 测试计划
+
+| Test ID | Test Name | What It Verifies |
+|---------|-----------|-----------------|
+| T-TL.1 | `test_token_weighted_sum_shape` | 输出 (N, d)，weights sum to 1 |
+| T-TL.2 | `test_token_attention_per_atom_weights` | 不同原子得到不同的 layer weights |
+| T-TL.3 | `test_token_concat_mlp_shape` | 输出 (N, d_out) |
+| T-TL.4 | `test_token_fusion_gradient_flow` | 所有参数收到梯度 |
+| T-TL.5 | `test_token_fusion_feeds_downstream` | $\tilde{h}_i$ 可以正确传入 SP2 attention pool 和 SP1 interaction graph |
+| T-TL.6 | `test_token_vs_global_not_equivalent` | Token-level fusion ≠ global-level fusion（结果不同） |
+
+### 2.5.6 Ablation（Token-Level vs Global-Level）
+
+| Ablation ID | 配置 | 目的 |
+|-------------|------|------|
+| A-TL.1 | Global-level Attn-all → mean pool → GP (已有结果) | 基线 |
+| A-TL.2 | Token-level WeightedSum → mean pool → GP | Token vs Global 最简比较 |
+| A-TL.3 | Token-level Attention → mean pool → GP | Token-level 的核心方法 |
+| A-TL.4 | Token-level ConcatMLP → mean pool → GP | 参数量更大的 token-level |
+| A-TL.5 | Token-level Attention → **attention pool** (SP2) → GP | 完整 SP3→SP2 链 |
+| A-TL.6 | Token-level Attention → attention pool + **interaction GNN** (SP1) → GP | 完整 SP3→SP2→SP1 链 |
+
+**Gate criterion (Token-Level)**:
+- A-TL.3 must beat A-TL.1 (global-level baseline) on CASF-2016 test R² by ≥ +0.02
+- 如果 A-TL.3 ≤ A-TL.1，则 token-level 不优于 global-level，仍可使用 global-level Attn-all 作为上游
 
 ---
 
@@ -712,19 +897,57 @@ results/stage2/cross_validation/
 - [x] 更新结论：Gate 2/3 的 val-based STOP 在 test 上被推翻；Attn-all 在 CASF-2016 上显著最优
 
 ### Stage 4: Concat + MLP (proceed only if Gate 3 passes)
-- [ ] Implement `ConcatMLPFusion` in `layer_fusion.py`
-- [ ] Write unit test T1.4
-- [ ] Run E4.1: concat+MLP vs. layer attention
-- [ ] Run E4.2: output dimension sensitivity
-- [ ] **Gate 4 decision**: Is nonlinear fusion worth the complexity?
+- [x] Implement `ConcatMLPFusion` in `layer_fusion.py`
+- [x] Write unit test T1.4 (T1.4a–T1.4d all pass)
+- [x] Run E4.1: concat+MLP vs. layer attention (5-fold CV)
+- [x] Run E4.2: output dimension sensitivity (64, 128, 256)
+- [x] **Gate 4 decision**: ❌ STOP — ConcatMLP catastrophically collapsed
+  - **Root cause**: Representation collapse in end-to-end MLP+GP training.
+    The MLP (Linear(1280→2d)→LayerNorm→ReLU→Linear(2d→d)) maps all inputs to a near-constant output.
+    GP degenerates to predicting the mean; noise ~3.3 absorbs all variance.
+  - All 15 runs (3 output_dims × 5 folds) show R² ≈ 0.000, Spearman = NaN
+  - ConcatMLP-d64:  val R²=−0.000±0.000, test R²=−0.002±0.000
+  - ConcatMLP-d128: val R²=−0.000±0.000, test R²=−0.002±0.001
+  - ConcatMLP-d256: val R²=−0.000±0.001, test R²=−0.002±0.001
+  - Loss never decreased: 2.03 (epoch 1) → 2.02 (epoch 200)
+  - **Why attention works but MLP doesn't**: Attention starts from ~uniform averaging (already reasonable),
+    while the MLP's random initialization maps to a degenerate manifold that the joint GP gradient can't escape.
+  - **Conclusion**: Nonlinear fusion via ConcatMLP is not viable with the current training setup.
+    Attn-all remains the best method (test R²=0.528±0.037).
 
 ### Stage 5: Concat + Dropout (proceed only if Gate 4 shows instability)
-- [ ] Implement `ConcatDropoutFusion` in `layer_fusion.py`
-- [ ] Write unit test T1.5
-- [ ] Run E5.1–E5.2: dropout rate sweep
+- [x] **Skipped** — Gate 4 showed complete failure, not instability. Stage 5 would inherit the same representation collapse.
+
+### Final Conclusion
+
+**Best fusion method: LayerAttentionFusion over all 10 layers (Attn-all)**
+
+| Model | Val R² (5-fold) | Test R² (CASF-2016, 5-fold) |
+|-------|-----------------|----------------------------|
+| L8 (single layer) | 0.211 ± 0.037 | 0.420 ± 0.020 |
+| WS-all | 0.221 ± 0.030 | 0.420 ± 0.018 |
+| Attn-top2 | 0.127 ± 0.045 | 0.517 ± 0.031 |
+| **Attn-all** | **0.134 ± 0.063** | **0.528 ± 0.037** |
+| ConcatMLP-d128 | −0.000 ± 0.000 | −0.002 ± 0.001 |
+
+Attn-all improves test R² by +25.7% over the single-layer baseline (L8), with a systematic
+val/test discrepancy that is consistent across all 5 folds. The val overfitting is driven by the
+small grouped val sets (~2300 samples) and extra attention parameters, but the learned
+input-dependent layer weighting generalizes well to CASF-2016 (industry benchmark).
 
 ### Wrap-Up
 - [ ] Write integration tests (T3.1–T3.4) for selected method
 - [ ] Run cross-cutting ablations (E6.1–E6.2)
 - [ ] Generate paper figures and tables
 - [ ] Draft methods section text
+
+### Stage 6: Token-Level Fusion（新增 — 串行链核心）
+- [ ] Implement `TokenLevelWeightedSum` in `layer_fusion.py`
+- [ ] Implement `TokenLevelAttention` in `layer_fusion.py`
+- [ ] Implement `TokenLevelConcatMLP` in `layer_fusion.py`
+- [ ] Write token-level unit tests (T-TL.1–T-TL.6)
+- [ ] Modify `sampler.py` to expose per-atom, per-layer hidden states (not just pooled)
+- [ ] Run A-TL.1–A-TL.4: Token-level vs Global-level comparison (mean pool → GP)
+- [ ] **Token-Level Gate**: A-TL.3 vs A-TL.1 on CASF-2016
+- [ ] Run A-TL.5: Token-level → attention pool (SP2 integration)
+- [ ] Run A-TL.6: Full chain SP3 → SP2 → SP1

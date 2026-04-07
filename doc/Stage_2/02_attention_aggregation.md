@@ -1,10 +1,49 @@
 # Sub-Plan 2: Attention-Based Aggregation
 
+> **角色**: Phase A **Step 2** — 串行链的中间环节，负责从融合后的原子表示产出 $z_{\text{atom}}$  
 > **Priority**: P0 — Critical  
-> **Dependency**: Sub-Plan 0 (PDBbind v2020 数据集); can be combined with Sub-Plan 1  
+> **Dependency**: Sub-Plan 0 (PDBbind v2020 数据集); **Sub-Plan 3** (Token-Level Layer Fusion → $\tilde{h}_i$)  
+> **下游消费者**: Sub-Plan 1 (Multi-Granularity 主干框架，接收 $z_{\text{atom}}$ 作为三路之一)  
 > **Training Data**: PDBbind v2020 refined set (~5,316 complexes), 见 [00a_supervised_pretraining.md](00a_supervised_pretraining.md)  
 > **Estimated Effort**: 1–2 weeks implementation + 1 week testing  
 > **Paper Section**: §3.X.2 Attention-Based Pooling
+
+---
+
+## 0. 在串行链中的位置
+
+```
+  TargetDiff Frozen Encoder
+         │
+         ▼
+  ┌──────────────────────────┐
+  │ Step 1 (SP3):            │
+  │ Token-Level Layer Fusion │
+  │ → {h̃_i}                 │
+  └────────────┬─────────────┘
+               │
+               ▼
+  ╔════════════════════════════╗
+  ║ 【本 Sub-Plan: Attention  ║
+  ║   Pooling on {h̃_i}】     ║
+  ║                            ║
+  ║ z_atom = AttnPool({h̃_i})  ║
+  ╚════════════╤═══════════════╝
+               │  z_atom
+               ▼
+  ┌──────────────────────────┐
+  │ Step 3 (SP1):            │
+  │ Multi-Granularity Fusion │
+  │ z_atom + z_inter + z_glob│
+  │ → z_new                  │
+  └──────────────────────────┘
+```
+
+**核心变化**：
+- 本 Sub-Plan **不再**是独立的 pooling 替代方案（独立对比 mean pool vs attention pool）
+- 而是作为串行链的 Step 2，在 Sub-Plan 3 输出的 $\tilde{h}_i$ 上进行 attention pooling
+- 其输出 $z_{\text{atom}}$ 是 Sub-Plan 1 三路融合的其中一路
+- 输入从原始 $h_i^{(L)}$（最后一层）变为 $\tilde{h}_i$（layer-fused 后的原子表示）
 
 ---
 
@@ -21,7 +60,13 @@ This is biologically unrealistic. In protein-ligand binding:
 - Solvent-exposed atoms contribute minimally
 - The pocket context determines which atoms are important
 
-**Goal**: Replace mean pooling with learnable, pocket-conditioned attention pooling that produces a more informative global embedding.
+**Goal**: Replace mean pooling with learnable, pocket-conditioned attention pooling that produces a more informative atom-level summary embedding $z_{\text{atom}}$.
+
+**在串行链中的具体目标**：
+- 输入：Sub-Plan 3 输出的 layer-fused 原子表示 $\{\tilde{h}_i\}_{i=1}^{N}$
+- 输出：$z_{\text{atom}} = \text{AttentionPool}(\{\tilde{h}_i\})$
+- 该 $z_{\text{atom}}$ 作为 Sub-Plan 1 三路融合的一路参与最终表示构建
+- 不再单独作为系统的完整 pooling 方案（那是旧架构的定位）
 
 ---
 
@@ -197,35 +242,41 @@ def _pad_atom_embeddings(self, atom_embs_list, max_atoms=None):
     ...
 ```
 
-### 3.3 Integration with GP Oracle
+### 3.3 Integration with Multi-Granularity Framework (Sub-Plan 1)
 
-The attention-pooled embedding replaces mean-pooled embedding:
+In the serial chain, attention-pooled embedding $z_{\text{atom}}$ is one of three inputs to the final fusion:
 
 ```python
-# In training pipeline:
-# Old:
-z = embeddings.mean(dim=0)  # (d,)
+# In the full chain (SP3 → SP2 → SP1):
+# Step 1 (SP3): token-level layer fusion
+h_tilde = token_level_fusion(layer_atom_embs)  # (N, d) — fused per-atom repr
 
-# New:
-attn_pool = SelfAttentionPooling(input_dim=128)
-z, alpha = attn_pool(atom_embeddings.unsqueeze(0))  # (1, d)
-z = z.squeeze(0)  # (d,)
+# Step 2 (SP2): attention pooling on fused atoms → z_atom
+attn_pool = SelfAttentionPooling(input_dim=d)  # or CrossAttention
+z_atom, alpha = attn_pool(h_tilde.unsqueeze(0))  # (1, d_atom)
+
+# Step 3 (SP1): interaction graph + global pool + fusion
+z_interaction = interaction_gnn(build_graph(h_tilde, pocket_feats))
+z_global = h_tilde.mean(dim=0)  # simple mean pool on fused atoms
+z_new = fusion_mlp(torch.cat([z_atom, z_interaction, z_global], dim=-1))
 ```
 
 **Critical**: Attention weights are computed per-molecule, so generation uncertainty estimation over M samples naturally works — each sample $m_i$ gets its own attention-pooled $z_i$, then statistics are computed over $\{z_1, \dots, z_M\}$.
 
 ### 3.4 Training Strategy
 
-The attention module parameters need to be trained. Two options:
+The attention module parameters need to be trained **jointly** with SP3 (token-level fusion) and SP1 (interaction GNN + fusion MLP) parameters:
 
-**Option 1 — Joint training with GP** (recommended):
+**Recommended — End-to-end joint training**:
 - Freeze TargetDiff encoder (too expensive to retrain)
-- Train attention pooling parameters + GP parameters jointly
-- Loss = GP marginal likelihood + attention regularization
+- Train SP3 token-level fusion + SP2 attention pooling + SP1 interaction GNN + fusion MLP + GP/DKL jointly
+- Loss = GP marginal likelihood + attention entropy regularization
+- 所有可训练参数统一优化，避免 stage-wise 训练的 distribution shift
 
-**Option 2 — Pre-train on proxy task**:
-- Pre-train attention module on a molecular property prediction task
-- Then freeze and use with GP
+**Fallback — Stage-wise training** (if joint training unstable):
+- Phase 1: 固定 SP3 (e.g., uniform weights) → 训练 SP2 attention + GP
+- Phase 2: 解冻 SP3 → fine-tune SP3 + SP2 jointly
+- Phase 3: 加入 SP1 interaction GNN
 
 ---
 
@@ -352,27 +403,42 @@ def test_self_attn_mask_handling():
 
 ## 7. Compatibility Notes
 
-### 7.1 With Sub-Plan 1 (Multi-Granularity)
+### 7.1 With Sub-Plan 3 (Token-Level Layer Fusion) — 上游
 
-Attention pooling naturally serves as the atom-level encoder $z_{\text{atom}}$ in the multi-granularity framework:
-
-$$
-z_{\text{atom}} = \text{AttentionPool}(\{h_i^{(L)}\})
-$$
-
-### 7.2 With Generation Uncertainty
-
-Each of $M$ generated molecules $m_1, \dots, m_M$ gets independently attention-pooled:
+本 Sub-Plan 的输入不再是原始编码器最后一层的 $h_i^{(L)}$，而是 SP3 输出的 $\tilde{h}_i$：
 
 $$
-z_j = \text{AttentionPool}(\{h_i^{(L, j)}\}), \quad j = 1, \dots, M
+z_{\text{atom}} = \text{AttentionPool}(\{\tilde{h}_i\})
 $$
 
-Then $\hat{\Sigma}_{\text{gen}}$ is estimated over $\{z_1, \dots, z_M\}$ as before. The attention weights may vary across molecules, which is correct behavior.
+其中 $\tilde{h}_i = \text{TokenLevelFusion}(h_i^{(l_1)}, \dots, h_i^{(l_k)})$。
 
-### 7.3 With Delta Method
+**维度兼容**：如果 SP3 的 token-level fusion 输出维度 $d_{\text{fused}}$ 与原始 $d=128$ 不同，则 attention pooling 的 `input_dim` 需要相应调整。推荐 SP3 输出维度与原始相同（$d_{\text{fused}} = d$），避免额外复杂度。
 
-The Jacobian $J_\mu = \partial \mu / \partial z$ is now $\partial \mu / \partial z_{\text{attn}}$. Since the attention module is differentiable, `autograd` handles this automatically.
+### 7.2 With Sub-Plan 1 (Multi-Granularity) — 下游
+
+Attention pooling 的输出 $z_{\text{atom}}$ 是 SP1 三路融合的其中一路：
+
+$$
+z_{\text{new}} = \text{FusionMLP}([z_{\text{atom}}; z_{\text{interaction}}; z_{\text{global}}])
+$$
+
+### 7.3 With Generation Uncertainty
+
+Each of $M$ generated molecules $m_1, \dots, m_M$ gets independently processed through the full chain:
+
+$$
+\tilde{h}_i^{(j)} = \text{TokenFusion}(h_i^{(l_1, j)}, \dots) \quad \text{(SP3)}
+$$
+$$
+z_{\text{atom}}^{(j)} = \text{AttentionPool}(\{\tilde{h}_i^{(j)}\}) \quad \text{(SP2)}
+$$
+
+Then $\hat{\Sigma}_{\text{gen}}$ is estimated over $\{z_{\text{new}}^{(1)}, \dots, z_{\text{new}}^{(M)}\}$. The attention weights may vary across molecules, which is correct behavior.
+
+### 7.4 With Delta Method
+
+The Jacobian $J_\mu = \partial \mu / \partial z_{\text{new}}$ chains through SP3 → SP2 → SP1. Since all modules are differentiable, `autograd` handles this automatically.
 
 ---
 

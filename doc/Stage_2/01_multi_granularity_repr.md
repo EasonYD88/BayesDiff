@@ -1,7 +1,8 @@
-# Sub-Plan 1: Multi-Granularity Representation
+# Sub-Plan 1: Multi-Granularity Representation (主干整合框架)
 
+> **角色**: Phase A **Step 3** — 串行链的最下游，负责把 atom / interaction / global 三种信息统一成最终表示 $z_{\text{new}}$  
 > **Priority**: P0 — Critical  
-> **Dependency**: Sub-Plan 0 (PDBbind v2020 数据集)  
+> **Dependency**: Sub-Plan 0 (PDBbind v2020 数据集); **Sub-Plan 3** (Token-Level Layer Fusion → $\tilde{h}_i$); **Sub-Plan 2** (Attention Pooling → $z_{\text{atom}}$)  
 > **Training Data**: PDBbind v2020 R1 general set (19,037), 见 [00a_supervised_pretraining.md](00a_supervised_pretraining.md)  
 > **Data Split**: 默认使用 `splits.json`（= fold 0 单次划分: Train / Val / CASF-2016 Test）。5-fold 仅在需要稳健性评估或超参选择时启用（见 §8）。  
 > **Estimated Effort**: 1–2 weeks MVP implementation + testing; 1 week v2 extensions (conditional on MVP gain)  
@@ -31,29 +32,81 @@ $$
 z_{\text{new}} = \phi(z_{\text{atom}}, z_{\text{interaction}}, z_{\text{global}}) \in \mathbb{R}^{d_{\text{new}}}
 $$
 
+### 在串行链中的位置
+
+本 Sub-Plan 是串行链 (SP3 → SP2 → SP1) 的最终环节，也是**主干整合框架**。它消费上游产出：
+- $\tilde{h}_i$ from SP3 (token-level layer fusion) — 用于构建交互图和全局池化
+- $z_{\text{atom}}$ from SP2 (attention pooling on $\tilde{h}_i$) — 三路融合的其中一路
+
+```
+  ┌─────────────────────────────────────────┐
+  │  SP3: Token-Level Layer Fusion          │
+  │  → {h̃_i} (per-atom fused repr)         │
+  └──────────────────┬──────────────────────┘
+                     │
+          ┌──────────┼──────────────────┐
+          ▼          │                  │
+  ┌──────────────┐   │                  │
+  │ SP2: Attn    │   │                  │
+  │ Pool({h̃_i}) │   │                  │
+  │ → z_atom     │   │                  │
+  └──────┬───────┘   │                  │
+         │           ▼                  ▼
+         │   ╔══════════════╗   ╔══════════════╗
+         │   ║ Interaction  ║   ║ Global Pool  ║
+         │   ║ Graph + GNN  ║   ║ mean({h̃_i}) ║
+         │   ║ → z_inter    ║   ║ → z_global   ║
+         │   ╚══════╤═══════╝   ╚══════╤═══════╝
+         │          │                  │
+         └──────────┼──────────────────┘
+                    ▼
+  ╔═════════════════════════════════════════╗
+  ║  【本 Sub-Plan: Multi-Granularity      ║
+  ║    Fusion】                            ║
+  ║  z_new = MLP([z_atom; z_inter; z_glob])║
+  ╚═════════════════╤═══════════════════════╝
+                    ▼
+              GP / DKL / Ranking Head
+```
+
 ---
 
 ## 2. Architecture Design
 
 ### 2.1 Three-Level Representation
 
+> **架构变更 (2026-04-06)**：三层表示不再从原始编码器最后一层 $h_i^{(L)}$ 直接派生，
+> 而是基于 SP3 token-level layer fusion 输出的 $\tilde{h}_i$。
+
 ```
-  TargetDiff Encoder
+  TargetDiff Encoder (Frozen)
          │
-         ├──→ Level 1: Atom-Level Tokens
-         │       h_i^(L) for selected atoms
-         │       → Set-Transformer / attention pooling
+         │ 提取多层 hidden states: H^(1), ..., H^(L)
+         ▼
+  SP3: Token-Level Layer Fusion
+         │
+         │ {h̃_i} = fused per-atom representations
+         ▼
+         ├──→ Level 1: Atom-Level Summary (SP2)
+         │       attention pooling over {h̃_i}
          │       → z_atom ∈ ℝ^d₁
          │
-         ├──→ Level 2: Interaction Graph
+         ├──→ Level 2: Interaction Graph (本 SP1)
          │       Bipartite graph G = (V_L, V_P, E)
+         │       ligand nodes use {h̃_i} as features
          │       → Interaction-GNN (2-3 layers)
          │       → z_interaction ∈ ℝ^d₂
          │
-         └──→ Level 3: Global Embedding
-                 Mean/attention pool over all atoms
-                 → z_global ∈ ℝ^d₃ (current method, retained)
+         └──→ Level 3: Global Embedding (本 SP1)
+                 Mean pool over {h̃_i}
+                 → z_global ∈ ℝ^d₃
 ```
+
+**与旧架构的区别**：
+- 旧：三路各自独立从 $h_i^{(L)}$ 出发
+- 新：三路共享同一个 $\tilde{h}_i$（经过 SP3 多层融合后的更优表示）
+- SP2 attention pooling 的输入从 $h_i^{(L)}$ 变为 $\tilde{h}_i$
+- 交互图的 ligand node features 从 $h_i^{(L)}$ 变为 $\tilde{h}_i$
 
 ### 2.2 Interaction Graph Construction
 
@@ -74,7 +127,7 @@ Given ligand atom positions $\{r_i^{(L)}\}$ and pocket heavy-atom positions $\{r
    - Interaction type indicator: hydrogen bond / hydrophobic / π-π / salt bridge / van der Waals
    - Rationale for deferral: rule-based interaction labels on generated (noisy) poses inject hard-coded chemical priors that are difficult to validate and may introduce systematic bias. Adding them only after the geometry-only branch shows improvement isolates the contribution of each component.
 5. **Node features**:
-   - Ligand atoms: $h_i^{(L)}$ from TargetDiff encoder
+   - Ligand atoms: $\tilde{h}_i$ from SP3 token-level layer fusion (replaces $h_i^{(L)}$ from original encoder)
    - Pocket heavy atoms: element embedding + parent residue embedding (learned, d=32 each → concatenated to d=64). No external pretrained encoder in MVP.
 
 ### 2.3 Interaction GNN
@@ -207,47 +260,57 @@ class BipartiteMessagePassing(nn.Module):
 
 ```python
 class MultiGranularityEncoder(nn.Module):
-    """Combines atom-level, interaction-level, and global-level representations."""
+    """
+    主干整合框架：combines atom-level, interaction-level, and global-level representations.
+    
+    在串行链中的位置：
+    - 接收 SP3 输出的 {h̃_i} (layer-fused per-atom repr)
+    - 接收 SP2 输出的 z_atom (attention-pooled)
+    - 自身负责：interaction graph → z_interaction, mean pool → z_global
+    - 最终融合三路 → z_new
+    """
     
     def __init__(self, atom_dim, interaction_dim, global_dim, output_dim=128, fusion='concat_mlp'):
         ...
     
-    def forward(self, atom_embeddings, interaction_graph, global_embedding):
+    def forward(self, h_tilde, z_atom, pocket_data):
         """
         Args:
-            atom_embeddings: (N_atoms, d) per-atom features from encoder
-            interaction_graph: PyG Data from InteractionGraphBuilder
-            global_embedding: (d,) current mean-pooled embedding
+            h_tilde: (N_atoms, d) per-atom layer-fused features from SP3
+            z_atom: (d₁,) attention-pooled embedding from SP2
+            pocket_data: dict with pocket positions, elements, residue types
         
         Returns:
             z_new: (d_out,) multi-granularity representation
         """
-        z_atom = self.atom_encoder(atom_embeddings)        # (d₁,)
+        # Build interaction graph from h_tilde + pocket
+        interaction_graph = self.graph_builder(h_tilde, pocket_data)
         z_interaction = self.interaction_gnn(interaction_graph)  # (d₂,)
-        z_global = self.global_proj(global_embedding)       # (d₃,)
-        return self.fuse(z_atom, z_interaction, z_global)   # (d_out,)
+        z_global = h_tilde.mean(dim=0)                          # (d₃,)
+        return self.fuse(z_atom, z_interaction, z_global)        # (d_out,)
 ```
 
 ### 3.4 Modifications to `bayesdiff/sampler.py`
 
-**Change**: Expose atom-level embeddings and positions alongside the current global embedding.
+**Change**: Expose per-layer, per-atom embeddings (token-level) alongside positions and pocket data. This supports the full serial chain: SP3 token-level fusion → SP2 attention pool → SP1 interaction graph.
 
 ```python
 # Current: returns z_global only
-# New: returns dict with multiple levels
+# New: returns dict with multi-layer atom-level data for the serial chain
 
 class TargetDiffSampler:
-    def sample_and_embed(self, pocket_pdb, num_samples=64):
+    def sample_and_embed(self, pocket_pdb, num_samples=64, extract_layers=None):
         ...
         return {
-            'z_global': z_global,          # (M, d) — as before
-            'atom_embeddings': atom_embs,  # list of M tensors, each (N_i, d)
-            'atom_positions': atom_pos,    # list of M tensors, each (N_i, 3)
-            'atom_types': atom_types,      # list of M tensors, each (N_i,)
-            'pocket_positions': pocket_pos,  # (N_P, 3) — heavy-atom coords
-            'pocket_elements': pocket_elem,   # (N_P,) element type indices
-            'pocket_residue_types': pocket_res,  # (N_P,) amino acid type indices
-            'pocket_features': pocket_feat,  # (N_P, d_p) — element + residue embeddings
+            'z_global': z_global,                 # (M, d) — as before (backward compat)
+            'atom_embeddings_per_layer': layer_h,  # dict: layer_idx → list of M × (N_i, d) 
+                                                   # ← SP3 token-level fusion input
+            'atom_positions': atom_pos,            # list of M tensors, each (N_i, 3)
+            'atom_types': atom_types,              # list of M tensors, each (N_i,)
+            'pocket_positions': pocket_pos,        # (N_P, 3) — heavy-atom coords
+            'pocket_elements': pocket_elem,        # (N_P,) element type indices
+            'pocket_residue_types': pocket_res,    # (N_P,) amino acid type indices
+            'pocket_features': pocket_feat,        # (N_P, d_p) — element + residue embeddings
         }
 ```
 
@@ -412,15 +475,15 @@ def test_graph_construction_basic():
 
 > **§3.X.1 Multi-Granularity Molecular Representation**
 > 
-> To address the representation bottleneck identified in our Stage 1 analysis, we replace the single mean-pooled embedding with a three-level representation that captures complementary aspects of protein-ligand binding:
+> To address the representation bottleneck identified in our Stage 1 analysis, we propose a serial representation pipeline that systematically enriches the embedding at three stages:
 > 
-> 1. *Atom-level representation* $z_{\text{atom}}$: preserves individual pharmacophore features via attention-weighted pooling over ligand atom embeddings $\{h_i^{(L)}\}$ from the SE(3)-equivariant encoder.
+> **Token-level multi-layer fusion.** Rather than using only the final layer's atom embeddings $\{h_i^{(L)}\}$, we fuse representations from multiple encoder layers at the atom level. For each atom $i$, we compute $\tilde{h}_i = \sum_{l \in \mathcal{S}} \beta_{l,i} h_i^{(l)}$, where $\beta_{l,i}$ are input-dependent layer attention weights, and $\mathcal{S}$ is a selected subset of encoder layers. This preserves multi-scale geometric and chemical information per atom that would be lost by extracting only the final layer.
 > 
-> 2. *Interaction-level representation* $z_{\text{interaction}}$: encodes the binding interface via a lightweight message-passing GNN operating on a pocket-ligand contact graph constructed at **heavy-atom resolution** (not Cα), where edges connect atom pairs within a distance cutoff of $d_c$ = 4.5 Å. Edge features are purely geometric in the MVP (distance RBF + atom/residue type); chemistry-aware interaction type labels are deferred to avoid injecting rule-based priors before geometric gains are validated.
+> **Attention-based atom summary.** We apply learned attention pooling over the fused atom representations $\{\tilde{h}_i\}$ to obtain $z_{\text{atom}} = \sum_i \alpha_i \tilde{h}_i$, where $\alpha_i$ reflects each atom's importance for binding affinity prediction.
 > 
-> 3. *Global representation* $z_{\text{global}}$: the original mean-pooled embedding, capturing overall molecular shape and property distributions.
+> **Interaction-level and global-level embedding.** Using the same $\{\tilde{h}_i\}$, we construct a bipartite pocket-ligand contact graph at **heavy-atom resolution** (not Cα), with edges connecting atom pairs within a distance cutoff of $d_c$ = 4.5 Å. A lightweight message-passing GNN encodes this graph into $z_{\text{interaction}}$, capturing the binding interface geometry. A simple mean pool over $\{\tilde{h}_i\}$ yields $z_{\text{global}}$, retaining overall molecular shape information.
 > 
-> These three representations are fused via [concat+MLP / gated fusion] to produce $z_{\text{new}} \in \mathbb{R}^{d_{\text{new}}}$, which replaces the original embedding in all downstream uncertainty computations.
+> The three representations are fused via [concat+MLP / gated fusion] to produce $z_{\text{new}} \in \mathbb{R}^{d_{\text{new}}}$, which replaces the original embedding in all downstream uncertainty computations.
 
 ### 6.2 Figures
 

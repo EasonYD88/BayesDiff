@@ -100,3 +100,49 @@ class LayerAttentionFusion(nn.Module):
         for i, z in enumerate(layer_embeddings):
             z_fuse = z_fuse + weights[:, i].unsqueeze(-1) * z
         return z_fuse, weights
+
+
+class ConcatMLPFusion(nn.Module):
+    """Concatenation + bottleneck MLP fusion.
+
+    Concatenates all layer embeddings and projects through a two-layer
+    MLP with LayerNorm and ReLU, producing a fixed-size output.
+
+    Parameters
+    ----------
+    embed_dim : int
+        Dimensionality of each per-layer embedding.
+    n_layers : int
+        Number of layers to fuse.
+    output_dim : int
+        Output embedding dimension.
+    """
+
+    def __init__(self, embed_dim: int, n_layers: int, output_dim: int):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            nn.Linear(embed_dim * n_layers, 2 * output_dim),
+            nn.LayerNorm(2 * output_dim),
+            nn.ReLU(),
+            nn.Linear(2 * output_dim, output_dim),
+        )
+
+    def forward(
+        self, layer_embeddings: list[torch.Tensor]
+    ) -> tuple[torch.Tensor, None]:
+        """Fuse per-layer embeddings via concatenation + MLP.
+
+        Parameters
+        ----------
+        layer_embeddings : list of Tensor
+            Each tensor has shape (B, d).
+
+        Returns
+        -------
+        z_fuse : Tensor, shape (B, output_dim)
+            MLP-projected fused embedding.
+        weights : None
+            No interpretable weights for this method.
+        """
+        z_concat = torch.cat(layer_embeddings, dim=-1)
+        return self.mlp(z_concat), None
