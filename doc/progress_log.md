@@ -323,3 +323,154 @@
 - Stage 2: Weighted Sum Fusion — 实现 `WeightedSumFusion` 可学习层权重
 - 在已有 multi-layer embeddings 上训练 weighted sum GP
 - Gate 2: 多层融合是否超过最佳单层？
+
+---
+
+## Sub-Plan 3: Multi-Layer Fusion — Stage 2: Weighted Sum Fusion
+
+**Status**: ✅ 完成  
+**Date**: 2026-04-07  
+**Script**: `scripts/pipeline/s09b_weighted_sum_fusion.py`
+
+### 结果
+
+| Config | Layers | Val R² | Val ρ | Test R² | Test ρ | Dominant Weights |
+|--------|--------|--------|-------|---------|--------|-----------------|
+| top2 | [8, 6] | 0.217 | 0.507 | 0.408 | 0.685 | L8≈100% |
+| top4 | [8, 6, 9, 5] | 0.231 | 0.497 | 0.421 | 0.686 | L8=35%, L9=65% |
+| all | [0–9] | 0.239 | 0.497 | 0.415 | 0.685 | L8=41%, L9=59% |
+| **baseline (L8)** | — | **0.250** | **0.512** | — | — | — |
+
+**关键发现：**
+- Weighted sum collapse: top2 的权重几乎全部集中在 L8（99.9%），退化为单层
+- top4/all 时 L8+L9 平分，其余层权重接近零
+- 所有 config 都未超过最佳单层 L8（Val R²=0.250）
+
+### Gate 2 Decision
+
+| 指标 | 值 |
+|------|------|
+| Best single layer (L8) val R² | 0.2501 |
+| Best weighted sum (all) val R² | 0.2388 |
+| Improvement | -4.5% |
+| **Decision** | ❌ **STOP** — weighted sum did not beat best single layer |
+
+> **结论**：简单可学习标量权重无法充分利用多层信息。
+> 继续尝试 per-sample 动态注意力权重（Layer Attention Fusion）。
+
+---
+
+## Sub-Plan 3: Multi-Layer Fusion — Stage 3: Layer Attention Fusion
+
+**Status**: ✅ 完成  
+**Date**: 2026-04-07  
+**Script**: `scripts/pipeline/s09c_layer_attention_fusion.py`
+
+### 方法
+
+每个样本对应一组动态注意力权重 $\beta_{l,i} = \text{softmax}(W_a h_i^{(l)})$（`SimpleAttentionFusion`），
+而非全局标量权重。在 GP 训练期间联合优化注意力参数。
+
+### 结果
+
+| Config | Layers | Val R² | Val ρ | Test R² | Test ρ | Weight Entropy | Max CV |
+|--------|--------|--------|-------|---------|--------|---------------|--------|
+| top2 | [8, 6] | 0.202 | 0.505 | 0.494 | 0.683 | 0.823 (norm) | 0.568 |
+| top4 | [8, 6, 9, 5] | 0.118 | 0.458 | 0.491 | 0.678 | 0.685 (norm) | 1.308 |
+| all | [0–9] | 0.120 | 0.458 | **0.513** | **0.717** | 0.652 (norm) | 4.793 |
+| **baseline (L8)** | — | **0.250** | — | — | — | — |
+
+**关键发现：**
+- 测试集上 attn-all 达到 R²=0.513, ρ=0.717（显著优于单层）
+- 但验证集 R²=0.120，低于 baseline（0.250）→ 验证集-测试集泛化不一致
+- 注意力权重分布多样，CV 高（weights_vary=True），说明per-sample 动态权重确有差异化
+- 验证集表现不足解释为：attention 权重对 CASF-2016 distribution 复杂过拟合
+
+### Gate 3 Decision
+
+| 指标 | 值 |
+|------|------|
+| Best single layer (L8) val R² | 0.2501 |
+| Best attention (top2) val R² | 0.2025 |
+| Improvement vs single | -19.0% |
+| Improvement vs WS | -15.2% |
+| **Decision** | ❌ **STOP** — layer attention did not beat baseline on val |
+
+> **结论**：Layer attention 在验证集上不稳定（过参数化）。
+> SP3 最佳结果仍是单层 L8 (Val R²=0.250)。
+> 继续 SP1：用 InteractionGNN 提取交互图表示，与 z_global(L8) 结合。
+
+---
+
+## Sub-Plan 1: Multi-Granularity Representation (InteractionGNN)
+
+**Status**: ✅ 完成（Gate FAIL）  
+**Date**: 2026-04-07  
+**Commits**: `6d4b849`, `ca8df66`  
+**Plan**: `doc/Stage_2/01_multi_granularity_repr.md`
+
+### 新增模块
+
+| 模块 | 文件 | 说明 |
+|------|------|------|
+| `InteractionGraphBuilder` | `bayesdiff/interaction_graph.py` | 构建 heavy-atom 二部图（4.5Å cutoff），edge_dim=51（16 RBF + 9 ligand element + 5 pocket element + 21 AA type），含 `build_graph_shuffled()`（ablation A1.10） |
+| `InteractionGNN` | `bayesdiff/interaction_gnn.py` | 2 层 `BipartiteMessagePassing`，hidden/output_dim=128，支持 edge/node/both readout；239,713 参数 |
+| `InteractionGNNPredictor` | `bayesdiff/interaction_gnn.py` | GNN + linear head，用于 pKd 预训练 |
+| `MultiGranularityEncoder` | `bayesdiff/multi_granularity.py` | z_interaction + z_global concat (或 concat_mlp) 融合 |
+
+### 单元测试
+
+| 测试文件 | 测试数 | 结果 |
+|----------|--------|------|
+| `tests/stage2/test_interaction_graph.py` | 8 | ✅ 全通过 |
+| `tests/stage2/test_interaction_gnn.py` | 7 | ✅ 全通过 |
+| `tests/stage2/test_multi_granularity.py` | 6 | ✅ 全通过 |
+
+### 训练实验（4 个模型）
+
+| 模型 | Readout | Edges | Best Epoch | Val R² | Val ρ | Test R² | Test ρ |
+|------|---------|-------|-----------|--------|-------|---------|--------|
+| interaction_gnn | edge | real | 3 | 0.106 | 0.351 | 0.242 | 0.536 |
+| interaction_gnn_shuffled | edge | shuffled | 52 | 0.244 | 0.510 | 0.392 | 0.651 |
+| interaction_gnn_node | node | real | 11 | 0.116 | 0.364 | 0.351 | 0.626 |
+| interaction_gnn_shuffled_node | node | shuffled | 87 | 0.242 | 0.493 | 0.421 | 0.649 |
+
+**关键发现：edge readout collapse** — 真实拓扑边的 RBF 距离特征高度同质（所有边 ≤4.5Å），
+edge-level readout 近乎常量输出。Node readout 略有改善但问题根源未解决。
+Shuffled-edge GNN 始终优于真实拓扑，因为随机边带来更丰富的距离分布。
+
+### GP 组合实验（s11）
+
+| Config | dim | Val R² | Val ρ | Test R² | Test ρ |
+|--------|-----|--------|-------|---------|--------|
+| z_global only (L8, 基线) | 128 | 0.252 | 0.510 | 0.438 | 0.692 |
+| z_interaction only | 128 | 0.121 | 0.397 | 0.433 | 0.667 |
+| **z_global + z_interaction** | **256** | **0.203** | **0.487** | **0.472** | **0.711** |
+| z_global + z_shuffled | 256 | 0.259 | 0.520 | 0.469 | 0.706 |
+
+### Gate 4 Decision
+
+| 指标 | 要求 | 实际 | 通过？ |
+|------|------|------|--------|
+| ΔVal R² vs baseline | ≥ +0.03 | -0.049 | ❌ |
+| ΔVal ρ vs baseline | ≥ +0.04 | -0.023 | ❌ |
+| Real beats shuffled (val) | Yes | No (-0.057 R²) | ❌ |
+| **Gate PASS** | — | — | ❌ **FAIL** |
+
+**根本原因**：InteractionGNN 从原始原子特征（element + 坐标）训练，
+未使用编码器学到的 SE(3)-等变表示 $h_i^{(l)}$。
+因此 z_interaction 与 z_global 已包含的信息高度重叠或质量更低。
+
+**下一步**：依据串行链架构（SP3 → SP2 → SP1），
+先实现 SP2（attention pooling on $\tilde{h}_i$），
+再在 SP1 中以编码器的 $\tilde{h}_i$ 作为配体节点特征构建交互图，
+而非使用原始 element embedding。
+
+### Pipeline 脚本 & SLURM
+
+| 脚本 | 说明 |
+|------|------|
+| `scripts/pipeline/s10_train_interaction_gnn.py` | 训练 InteractionGNN，提取 z_interaction embeddings；支持 `--shuffle_edges`, `--readout_mode` |
+| `scripts/pipeline/s11_multigranularity_gp.py` | z_global + z_interaction GP 组合，4 个 config，gate 自动判断 |
+| `slurm/s10_{a,b,c,d}.sh` | SLURM 脚本：edge/node readout × real/shuffled，分配至 a100 + l40s |
+| `slurm/s11_{a,b}.sh` | SLURM 脚本：GP 组合评估（依赖 s10 完成） |
