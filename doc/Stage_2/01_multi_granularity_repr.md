@@ -511,7 +511,9 @@ def test_graph_construction_basic():
 | Data | Source | Size | Status |
 |------|--------|------|--------|
 | Ligand atom positions | PDBbind v2020 crystal structures | ~5,316 complexes | ✅ Available |
-| Ligand atom embeddings | SE(3) encoder hidden states | ~5,316 × (N_atoms, 128) | ⚠️ Requires forward pass |
+| Ligand **multi-layer** atom embeddings | SE(3) encoder hidden states, all layers | ~5,316 × L × (N_atoms, 128) | ✅ Available (SP3 已提取 `all_multilayer_embeddings.npz`) |
+| Layer-fused atom embeddings ($\tilde{h}_i$) | SP3 token-level fusion output | ~5,316 × (N_atoms, d) | ⚠️ 需 SP3 token-level fusion 模块 |
+| $z_{\text{atom}}$ | SP2 attention pooling on $\tilde{h}_i$ | ~5,316 × (d₁,) | ⚠️ 需 SP2 attention pooling 模块 |
 | Pocket heavy-atom positions | PDBbind v2020 structures (all non-H atoms within 10 Å of ligand) | ~5,316 complexes × 200–500 atoms/pocket | ✅ Available (extract from PDB) |
 | Pocket atom element types | Parsed from PDB ATOM records | ~5,316 complexes | ✅ Available |
 | Pocket residue types (per atom) | Parsed from PDB ATOM records | ~5,316 complexes | ✅ Available |
@@ -523,11 +525,15 @@ def test_graph_construction_basic():
 
 ### Phase 1 — MVP (must ship first, gate for Phase 2)
 
+> **前置条件**：SP3 token-level fusion 和 SP2 attention pooling 须先实现并验证。
+
 | Component | MVP Scope | Deferred to v2 |
 |-----------|-----------|----------------|
+| **上游输入** | SP3 TokenLevelAttention + SP2 SelfAttentionPooling | 更复杂的 SP3/SP2 变体 |
 | **Data split** | `splits.json`（fold 0 单次 Train/Val/Test） | 5-fold（`splits_5fold.json`）仅在超参选择或稳健性评估时启用 |
 | Pocket graph nodes | Heavy atoms (all non-H) | — |
 | Edge features | distance + RBF + ligand element + pocket element/residue type | H-bond / hydrophobic / π-π / salt bridge / vdW interaction labels |
+| Ligand node features | $\tilde{h}_i$ from SP3 (不再是 $h_i^{(L)}$) | — |
 | Fusion | concat + MLP | Gated fusion |
 | Output dim | 128 | 192 / 256 (ablation A1.11) |
 | Ablation | A1.1–A1.6, **A1.10 (shuffled-edge control)** | A1.7 (gated), A1.8–A1.9, A1.11 |
@@ -537,7 +543,7 @@ def test_graph_construction_basic():
 - 在 CASF-2016 test set 上报告最终指标。
 - 只有在 MVP 通过 gate criterion 后、准备写论文或对比超参时，才切换到 `splits_5fold.json` 做 5-fold 评估（报告 Val 均值 ± std）。
 
-**Gate criterion**: MVP must show $\Delta R^2 \geq +0.03$ AND $\Delta \rho \geq +0.04$ over baseline AND z_interaction must beat shuffled-edge control (p < 0.05). Only then proceed to Phase 2.
+**Gate criterion**: MVP must show $\Delta R^2 \geq +0.03$ AND $\Delta \rho \geq +0.04$ over baseline（baseline = SP3+SP2 无交互图）AND z_interaction must beat shuffled-edge control (p < 0.05). Only then proceed to Phase 2.
 
 ### Phase 2 — Extensions (conditional)
 
@@ -552,18 +558,26 @@ def test_graph_construction_basic():
 
 ## 9. Implementation Checklist
 
-- [ ] Modify `sampler.py` to expose atom-level embeddings, positions, and pocket heavy-atom data
-- [ ] Implement `interaction_graph.py` with `InteractionGraphBuilder` (heavy-atom resolution, MVP edge features only)
+> **注意**：本 checklist 假设 SP3 (token-level fusion) 和 SP2 (attention pooling) 已在各自的 Sub-Plan 中实现。
+
+### 前置 (SP3 + SP2)
+- [ ] 确认 SP3 `TokenLevelAttention` 模块已实现并通过测试
+- [ ] 确认 SP2 `SelfAttentionPooling` / `CrossAttentionPooling` 模块已实现并通过测试
+- [ ] 确认 `sampler.py` 已暴露 per-layer, per-atom hidden states
+
+### 本 Sub-Plan (SP1: 交互级 + 全局级 + 融合)
+- [ ] Implement `interaction_graph.py` with `InteractionGraphBuilder` (heavy-atom resolution, MVP edge features only; ligand node features = $\tilde{h}_i$)
 - [ ] Implement `interaction_gnn.py` with `InteractionGNN`
-- [ ] Implement `multi_granularity.py` with `MultiGranularityEncoder` (output_dim=128, concat+MLP)
-- [ ] Write `s08_extract_atom_embeddings.py` pipeline script (include pocket heavy-atom extraction)
-- [ ] Write `s09_build_interaction_graphs.py` pipeline script
+- [ ] Implement `multi_granularity.py` with `MultiGranularityEncoder` (接收 $\tilde{h}_i$, $z_{\text{atom}}$, pocket data; output_dim=128, concat+MLP)
+- [ ] Write `s09_build_interaction_graphs.py` pipeline script (从 $\tilde{h}_i$ 构建图)
 - [ ] Update `gen_uncertainty.py` for variable-dim embeddings
 - [ ] Update `fusion.py` for variable-dim Jacobians
 - [ ] Write all unit tests (T1.1–T3.6)
-- [ ] Write integration tests (T4.1–T4.4)
+- [ ] Write integration tests (T4.1–T4.4) — 覆盖完整 SP3→SP2→SP1 链
+
+### 端到端验证
 - [ ] Implement shuffled-edge graph builder for ablation A1.10
-- [ ] Run MVP ablation experiments (A1.1–A1.6, A1.10)
+- [ ] Run MVP ablation experiments (A1.1–A1.6, A1.10) — 所有配置均使用 $\tilde{h}_i$ 作为输入
 - [ ] **Decision gate**: evaluate MVP results against gate criteria
 - [ ] (Phase 2) Add chemistry-aware edge features, gated fusion, extended ablations
 - [ ] Generate paper figures and tables

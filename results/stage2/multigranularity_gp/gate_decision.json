@@ -1,0 +1,22 @@
+{
+  "baseline_config": "z_global_only",
+  "baseline_layer": 8,
+  "combined_config": "z_global+z_interaction",
+  "delta_val_R2": 0.029544055461883545,
+  "delta_val_rho": 0.027025086724329128,
+  "delta_test_R2": 0.01973414421081543,
+  "delta_test_rho": 0.017660283892989792,
+  "gate_R2_pass": false,
+  "gate_rho_pass": false,
+  "shuffled_check": {
+    "real_val_R2": 0.2505190372467041,
+    "shuffled_val_R2": 0.2897905707359314,
+    "delta_R2": -0.039271533489227295,
+    "real_val_rho": 0.5146344944862032,
+    "shuffled_val_rho": 0.5445671426401318,
+    "delta_rho": -0.029932648153928598,
+    "real_beats_shuffled": false
+  },
+  "gate_pass": false,
+  "decision": "FAIL \u2014 Multi-granularity representation does NOT meet gate criteria"
+}
