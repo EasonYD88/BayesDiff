@@ -1,0 +1,50 @@
+{
+  "A3.5": {
+    "val": {
+      "R2": 0.24994194507598877,
+      "spearman_rho": 0.5425700214875545,
+      "spearman_p": 1.0826707864441191e-181,
+      "RMSE": 1.53675377368927
+    },
+    "test": {
+      "R2": 0.5653326511383057,
+      "spearman_rho": 0.7550791946447781,
+      "spearman_p": 8.159215199211011e-54,
+      "RMSE": 1.4309405088424683
+    },
+    "n_params": 123909,
+    "head_diversity": {
+      "head_0_entropy_mean": 2.032072067260742,
+      "head_0_entropy_std": 0.6101803779602051,
+      "head_1_entropy_mean": 1.7003138065338135,
+      "head_1_entropy_std": 0.6163239479064941,
+      "head_2_entropy_mean": 2.0599558353424072,
+      "head_2_entropy_std": 0.5124019384384155,
+      "head_3_entropy_mean": 1.8477783203125,
+      "head_3_entropy_std": 0.5463356375694275,
+      "avg_pairwise_cosine": 0.23715786635875702,
+      "diversity_score": 0.762842133641243
+    },
+    "elapsed_s": 369.56214928627014
+  },
+  "A3.6": {
+    "val": {
+      "R2": 0.2774829864501953,
+      "spearman_rho": 0.5677681784208525,
+      "spearman_p": 1.560576446133675e-202,
+      "RMSE": 1.5082762241363525
+    },
+    "test": {
+      "R2": 0.5742957592010498,
+      "spearman_rho": 0.7783466543131705,
+      "spearman_p": 3.7474868804952192e-59,
+      "RMSE": 1.4161102771759033
+    },
+    "n_params": 108171,
+    "elapsed_s": 212.8469581604004
+  },
+  "VIZ": {
+    "viz_dir": "results/stage2/ablation_viz/attention_viz",
+    "n_molecules_analyzed": 285
+  }
+}

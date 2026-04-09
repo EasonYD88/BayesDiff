@@ -29,5 +29,7 @@ external/targetdiff/**/*.pyc
 
 # Large result files
 results/multilayer_embeddings/
+results/atom_embeddings/
 results/stage2/layer_probing/gp_layer_*.pt
 results/stage2/layer_probing/*.png
+results/stage2/phase3_refinement/*.pt

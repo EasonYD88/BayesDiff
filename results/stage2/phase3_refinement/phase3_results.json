@@ -1,0 +1,76 @@
+{
+  "A3.2": {
+    "val": {
+      "R2": 0.24621015787124634,
+      "spearman_rho": 0.534426024754426,
+      "spearman_p": 2.5045984638409647e-175,
+      "RMSE": 1.540571928024292
+    },
+    "test": {
+      "R2": 0.544214129447937,
+      "spearman_rho": 0.7559187287979945,
+      "spearman_p": 5.364784236482668e-54,
+      "RMSE": 1.465289831161499
+    }
+  },
+  "A3.4": {
+    "val": {
+      "R2": 0.25831687450408936,
+      "spearman_rho": 0.5496677467680681,
+      "spearman_p": 2.2049535083458159e-187,
+      "RMSE": 1.528150200843811
+    },
+    "test": {
+      "R2": 0.5070297122001648,
+      "spearman_rho": 0.7185437776534496,
+      "spearman_p": 1.529870132091947e-46,
+      "RMSE": 1.5238895416259766
+    },
+    "uncertainty": {
+      "error_sigma_rho": -0.0075632299501832475,
+      "error_sigma_p": 0.8988432909625002,
+      "mean_sigma_test": 1.3028876781463623,
+      "mean_sigma_val": 1.3026604652404785,
+      "noise_variance": 1.6542737483978271
+    },
+    "gp_final_loss": 1.693402347891509,
+    "step1_mlp": {
+      "val": {
+        "R2": 0.26185745000839233,
+        "spearman_rho": 0.5548560065511973,
+        "spearman_p": 1.247098330712636e-191,
+        "RMSE": 1.5244983434677124
+      },
+      "test": {
+        "R2": 0.5722527503967285,
+        "spearman_rho": 0.7610759412236028,
+        "spearman_p": 3.931041481047944e-55,
+        "RMSE": 1.419504165649414
+      }
+    }
+  },
+  "args": {
+    "atom_emb_dir": "results/atom_embeddings",
+    "labels": "data/pdbbind_v2020/labels.csv",
+    "splits": "data/pdbbind_v2020/splits.json",
+    "output": "results/stage2/phase3_refinement",
+    "experiment": [
+      "A3.2",
+      "A3.4"
+    ],
+    "embed_dim": 128,
+    "attn_hidden_dim": 64,
+    "entropy_weight": 0.01,
+    "lr": 0.001,
+    "n_epochs": 200,
+    "batch_size": 64,
+    "patience": 30,
+    "n_inducing": 512,
+    "gp_epochs": 200,
+    "gp_batch_size": 256,
+    "gp_lr": 0.01,
+    "device": "cuda",
+    "seed": 42
+  },
+  "elapsed_seconds": 1076.7273516654968
+}

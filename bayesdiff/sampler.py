@@ -751,6 +751,94 @@ class TargetDiffSampler:
 
         return result
 
+    @torch.no_grad()
+    def extract_multilayer_atom_embeddings(
+        self,
+        pt_path: str | Path,
+    ) -> dict[str, np.ndarray | int]:
+        """Extract per-layer ATOM-LEVEL embeddings from a crystal complex.
+
+        Same encoder forward pass as extract_multilayer_embeddings, but
+        returns full (N_lig, d) tensors instead of mean-pooled (d,).
+
+        Parameters
+        ----------
+        pt_path : path
+            Path to a processed complex .pt file.
+
+        Returns
+        -------
+        dict with keys:
+            'layer_0' ... 'layer_9': (N_lig, d) atom-level ligand embedding
+            'pocket_mean': (d,) mean-pooled pocket embedding from last layer
+            'n_ligand_atoms': int
+            'n_layers': int
+        """
+        self._load_model()
+
+        data = self.load_complex_data(pt_path)
+
+        from models.common import compose_context
+        from torch_geometric.data import Batch
+        try:
+            from datasets.pl_data import FOLLOW_BATCH
+        except ImportError:
+            FOLLOW_BATCH = ["protein_element", "ligand_element"]
+
+        batch = Batch.from_data_list([data], follow_batch=FOLLOW_BATCH).to(self.device)
+
+        batch_protein = batch.protein_element_batch
+        batch_ligand = batch.ligand_element_batch
+
+        h_protein = self._model.protein_atom_emb(
+            batch.protein_atom_feature.float()
+        )
+        h_ligand = self._model.ligand_atom_emb(
+            torch.nn.functional.one_hot(
+                batch.ligand_atom_feature_full, self._model.num_classes
+            ).float()
+        )
+
+        if self._model.config.node_indicator:
+            h_protein = torch.cat(
+                [h_protein, torch.zeros(len(h_protein), 1, device=self.device)], -1
+            )
+            h_ligand = torch.cat(
+                [h_ligand, torch.ones(len(h_ligand), 1, device=self.device)], -1
+            )
+
+        h_all, pos_all, batch_all, mask_ligand = compose_context(
+            h_protein=h_protein,
+            h_ligand=h_ligand,
+            pos_protein=batch.protein_pos,
+            pos_ligand=batch.ligand_pos,
+            batch_protein=batch_protein,
+            batch_ligand=batch_ligand,
+        )
+
+        outputs = self._model.refine_net(
+            h_all, pos_all, mask_ligand, batch_all,
+            return_all=False, fix_x=True, return_layer_h=True,
+        )
+
+        layer_h_list = outputs.get("layer_h_list", [])
+        mask_pocket = ~mask_ligand
+        result = {
+            "n_layers": len(layer_h_list),
+        }
+
+        for i, h in enumerate(layer_h_list):
+            ligand_h = h[mask_ligand]  # (N_lig, d)
+            result[f"layer_{i}"] = ligand_h.cpu().numpy()
+
+        # Pocket mean from last layer (for optional cross-attention)
+        if layer_h_list:
+            pocket_h = layer_h_list[-1][mask_pocket]
+            result["pocket_mean"] = pocket_h.mean(dim=0).cpu().numpy()
+
+        result["n_ligand_atoms"] = int(mask_ligand.sum().item())
+        return result
+
     @property
     def num_encoder_layers(self) -> int:
         """Return total number of hookable encoder layers (init + base_block)."""

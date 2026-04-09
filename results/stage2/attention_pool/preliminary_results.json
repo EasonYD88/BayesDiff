@@ -1,0 +1,62 @@
+{
+  "P0": {
+    "val": {
+      "R2": 0.23652809858322144,
+      "spearman_rho": 0.5219114568460711,
+      "spearman_p": 7.002241807575949e-166,
+      "RMSE": 1.5504343509674072
+    },
+    "test": {
+      "R2": 0.5235939025878906,
+      "spearman_rho": 0.7434965263197464,
+      "spearman_p": 2.2435653784076307e-51,
+      "RMSE": 1.4980688095092773
+    }
+  },
+  "P1": {
+    "val": {
+      "R2": 0.27718520164489746,
+      "spearman_rho": 0.5507940152287634,
+      "spearman_p": 2.6772983256496357e-188,
+      "RMSE": 1.5085868835449219
+    },
+    "test": {
+      "R2": 0.5604881644248962,
+      "spearman_rho": 0.7529403135603875,
+      "spearman_p": 2.356469268612723e-53,
+      "RMSE": 1.4388926029205322
+    },
+    "attn_stats": {
+      "mean_entropy": 2.8659911155700684,
+      "std_entropy": 0.4306734800338745,
+      "mean_max_weight": 0.15138550102710724,
+      "std_max_weight": 0.08469663560390472
+    }
+  },
+  "go_no_go": {
+    "decision": "GO",
+    "P0_test_rho": 0.7434965263197464,
+    "P1_test_rho": 0.7529403135603875,
+    "delta": 0.0094437872406411
+  },
+  "args": {
+    "atom_emb_dir": "results/atom_embeddings",
+    "labels": "data/pdbbind_v2020/labels.csv",
+    "splits": "data/pdbbind_v2020/splits.json",
+    "output": "results/stage2/attention_pool",
+    "experiment": [
+      "P0",
+      "P1"
+    ],
+    "embed_dim": 128,
+    "attn_hidden_dim": 64,
+    "entropy_weight": 0.01,
+    "lr": 0.001,
+    "n_epochs": 200,
+    "batch_size": 64,
+    "patience": 30,
+    "device": "cuda",
+    "seed": 42
+  },
+  "elapsed_seconds": 325.5839536190033
+}
