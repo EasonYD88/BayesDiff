@@ -263,6 +263,17 @@ def run_A36(train_loader, val_loader, test_loader, args, device) -> dict:
         model, mlp, train_loader, val_loader, test_loader,
         args, device, "A3.6: SchemeB Independent AttnPool"
     )
+
+    # Save checkpoints for FrozenSP2Embedder before popping
+    out_dir = Path(args.output) if hasattr(args, "output") else Path("results/stage2/ablation_viz")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    if res.get("model_state"):
+        torch.save(res["model_state"], str(out_dir / "A36_independent_model.pt"))
+        logger.info(f"  Saved A3.6 model checkpoint → {out_dir / 'A36_independent_model.pt'}")
+    if res.get("mlp_state"):
+        torch.save(res["mlp_state"], str(out_dir / "A36_independent_mlp.pt"))
+        logger.info(f"  Saved A3.6 MLP checkpoint → {out_dir / 'A36_independent_mlp.pt'}")
+
     res.pop("model_state", None)
     res.pop("mlp_state", None)
     return res
