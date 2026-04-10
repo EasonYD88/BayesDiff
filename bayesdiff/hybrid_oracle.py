@@ -8,6 +8,8 @@ Implements the oracle head family:
   - DKLEnsembleOracle:    M independent DKL models
   - NNResidualOracle:     MLP readout + GP on residuals
   - PCA_GPOracle:         PCA dimensionality reduction + SVGP
+  - SNGPOracle:           Spectral Normalized Neural GP (RFF approximation)
+  - EvidentialOracle:     Normal-Inverse-Gamma evidential regression
 
 All classes implement OracleHead ABC from oracle_interface.py.
 predict() returns (mu, sigma2) only; predict_for_fusion() adds Jacobian.
@@ -922,3 +924,732 @@ class PCA_GPOracle(OracleHead):
         with open(path / "pca.pkl", "rb") as f:
             self.pca = pickle.load(f)
         self.gp.load(path / "gp_model.pt")
+
+
+# ============================================================================
+# C1: SNGP (Spectral Normalized Neural GP) Oracle
+# ============================================================================
+
+
+class _RandomFourierFeatureLayer(nn.Module):
+    """Approximate GP output layer using Random Fourier Features (RFF).
+
+    Implements the Gaussian RBF kernel approximation:
+        φ(x) = sqrt(2/D) * cos(Wx + b)
+    where W ~ N(0, 1/lengthscale^2), b ~ Uniform(0, 2π).
+
+    The posterior mean and variance are computed via Woodbury identity:
+        Σ = (Φ^T Φ + I/β)^{-1}
+        μ = Σ Φ^T y
+    At test time, for input x:
+        μ(x) = φ(x)^T w,  σ²(x) = φ(x)^T Σ φ(x)
+    """
+
+    def __init__(self, in_features: int, n_rff: int = 1024,
+                 lengthscale: float = 1.0, output_scale: float = 1.0):
+        super().__init__()
+        self.in_features = in_features
+        self.n_rff = n_rff
+
+        # Fixed random weights for RFF (not learned)
+        self.register_buffer(
+            "W", torch.randn(in_features, n_rff) / lengthscale
+        )
+        self.register_buffer(
+            "b", torch.rand(n_rff) * 2 * np.pi
+        )
+
+        # Learnable output weight and precision
+        self.beta = nn.Parameter(torch.tensor(1.0))  # precision (1/noise_var)
+        self.output_scale = nn.Parameter(torch.tensor(output_scale))
+
+        # Posterior covariance (updated during training via reset_covariance / update_covariance)
+        self.register_buffer("precision", torch.eye(n_rff))  # Σ^{-1}
+        self.register_buffer("mean_weight", torch.zeros(n_rff))  # posterior mean weight
+
+    def _phi(self, x: torch.Tensor) -> torch.Tensor:
+        """Compute RFF features: φ(x) = sqrt(2/D) * cos(Wx + b)."""
+        proj = x @ self.W + self.b  # (B, n_rff)
+        return (2.0 / self.n_rff) ** 0.5 * torch.cos(proj) * self.output_scale
+
+    def forward(self, x: torch.Tensor):
+        """Return (mean, variance) predictions."""
+        phi = self._phi(x)  # (B, D)
+        mu = phi @ self.mean_weight  # (B,)
+
+        # Variance: φ^T Σ φ, where Σ = precision^{-1}
+        # Use solve instead of explicit inverse for numerical stability
+        # v = Σ φ^T = precision^{-1} @ φ^T
+        v = torch.linalg.solve(self.precision, phi.T)  # (D, B)
+        var = (phi.T * v).sum(dim=0)  # (B,)
+        var = var.clamp(min=1e-8)
+
+        return mu, var
+
+    def reset_covariance(self):
+        """Reset precision matrix to prior: Σ^{-1} = I."""
+        self.precision.copy_(torch.eye(self.n_rff, device=self.precision.device))
+        self.mean_weight.zero_()
+
+    def update_covariance(self, x: torch.Tensor, y: torch.Tensor):
+        """Update posterior precision with a batch of data.
+
+        precision += β * Φ^T Φ
+        After all batches, call finalize_covariance() to compute posterior mean.
+        """
+        phi = self._phi(x)  # (B, D)
+        beta = F.softplus(self.beta)
+        self.precision.add_(beta * (phi.T @ phi))
+
+    def finalize_covariance(self, dataloader, hidden_fn):
+        """Compute posterior mean weight: w = Σ * β * Σ_batches Φ^T y.
+
+        Must be called after all update_covariance() calls.
+        """
+        beta = F.softplus(self.beta)
+        # Accumulate Φ^T y
+        phi_ty = torch.zeros(self.n_rff, device=self.precision.device)
+        for x_batch, y_batch in dataloader:
+            h = hidden_fn(x_batch)
+            phi = self._phi(h)
+            phi_ty.add_(beta * (phi.T @ y_batch))
+
+        # w = Σ * (Φ^T y) = precision^{-1} @ phi_ty
+        self.mean_weight.copy_(
+            torch.linalg.solve(self.precision, phi_ty)
+        )
+
+
+class SNGPOracle(OracleHead):
+    """Spectral Normalized Neural GP (SNGP) Oracle.
+
+    Architecture:
+        z ∈ ℝ^128 → SN-MLP (2 layers, 256 hidden) → RFF-GP (1024 features) → ŷ, σ²
+
+    Spectral normalization constrains hidden-layer Lipschitz constant,
+    preserving input-space distances → meaningful GP variance.
+
+    Reference: Liu et al., "Simple and Principled Uncertainty Estimation
+    with Deterministic Deep Learning via Distance Awareness", ICML 2020.
+    """
+
+    def __init__(
+        self,
+        input_dim: int = 128,
+        hidden_dim: int = 256,
+        n_layers: int = 2,
+        n_rff: int = 1024,
+        lengthscale: float = 1.0,
+        spectral_norm_bound: float = 0.95,
+        dropout: float = 0.1,
+        device: str = "cuda",
+    ):
+        self.input_dim = input_dim
+        self.hidden_dim = hidden_dim
+        self.n_layers = n_layers
+        self.n_rff = n_rff
+        self.lengthscale = lengthscale
+        self.spectral_norm_bound = spectral_norm_bound
+        self.dropout = dropout
+        self.device = torch.device(device if torch.cuda.is_available() else "cpu")
+
+        # Build spectral-normalized MLP backbone
+        layers = []
+        dims = [input_dim] + [hidden_dim] * n_layers
+        for i in range(len(dims) - 1):
+            lin = nn.Linear(dims[i], dims[i + 1])
+            # Apply spectral norm with bound
+            lin = torch.nn.utils.parametrizations.spectral_norm(lin)
+            layers.append(lin)
+            layers.append(nn.ReLU())
+            layers.append(nn.Dropout(dropout))
+        self.backbone = nn.Sequential(*layers).to(self.device)
+
+        # RFF-GP output layer
+        self.rff_layer = _RandomFourierFeatureLayer(
+            in_features=hidden_dim, n_rff=n_rff,
+            lengthscale=lengthscale,
+        ).to(self.device)
+
+    def _hidden(self, X: torch.Tensor) -> torch.Tensor:
+        """Forward through SN backbone only."""
+        return self.backbone(X)
+
+    def fit(
+        self,
+        X_train, y_train, X_val, y_val,
+        n_epochs=300, batch_size=256,
+        lr=1e-3, weight_decay=1e-4,
+        patience=20, verbose=True,
+        **kwargs,
+    ) -> dict:
+        """Two-phase training:
+        Phase 1: Train SN-MLP backbone with NLL loss (mu from linear readout, fixed sigma2).
+        Phase 2: Compute RFF covariance for posterior GP variance.
+        """
+        X_t = torch.tensor(X_train, dtype=torch.float32, device=self.device)
+        y_t = torch.tensor(y_train, dtype=torch.float32, device=self.device)
+        X_v = torch.tensor(X_val, dtype=torch.float32, device=self.device)
+        N = len(X_t)
+
+        # Temporary linear head for training backbone
+        linear_head = nn.Linear(self.hidden_dim, 1).to(self.device)
+        log_noise = nn.Parameter(torch.tensor(0.0, device=self.device))
+
+        all_params = (
+            list(self.backbone.parameters())
+            + list(linear_head.parameters())
+            + [log_noise]
+        )
+        optimizer = torch.optim.AdamW(all_params, lr=lr, weight_decay=weight_decay)
+
+        dataset = torch.utils.data.TensorDataset(X_t, y_t)
+        loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+        history: dict = {"loss": [], "val_rho": []}
+        best_val_rho = -float("inf")
+        best_state = None
+        patience_counter = 0
+
+        # Phase 1: Train backbone + linear head with Gaussian NLL
+        for epoch in range(n_epochs):
+            self.backbone.train()
+            linear_head.train()
+            epoch_loss = 0.0
+
+            for xb, yb in loader:
+                h = self.backbone(xb)
+                mu = linear_head(h).squeeze(-1)
+                noise_var = torch.exp(log_noise).clamp(min=1e-6)
+                loss = 0.5 * torch.mean(
+                    (yb - mu) ** 2 / noise_var + torch.log(noise_var)
+                )
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                epoch_loss += loss.item() * len(yb)
+
+            epoch_loss /= N
+            history["loss"].append(epoch_loss)
+
+            # Validate
+            self.backbone.eval()
+            linear_head.eval()
+            with torch.no_grad():
+                h_v = self.backbone(X_v)
+                mu_v = linear_head(h_v).squeeze(-1).cpu().numpy()
+            val_rho, _ = spearmanr(mu_v, y_val)
+            history["val_rho"].append(val_rho)
+
+            if val_rho > best_val_rho:
+                best_val_rho = val_rho
+                best_state = {
+                    "backbone": {k: v.cpu().clone() for k, v in self.backbone.state_dict().items()},
+                    "log_noise": log_noise.detach().cpu().clone(),
+                }
+                patience_counter = 0
+            else:
+                patience_counter += 1
+
+            if verbose and (epoch + 1) % 20 == 0:
+                logger.info(
+                    f"  SNGP Epoch {epoch+1}/{n_epochs}: loss={epoch_loss:.4f}, val_ρ={val_rho:.4f}"
+                )
+
+            if patience_counter >= patience:
+                logger.info(f"  SNGP early stopping at epoch {epoch+1}")
+                break
+
+        # Restore best backbone
+        if best_state:
+            self.backbone.load_state_dict(best_state["backbone"])
+
+        self.backbone.eval()
+
+        # Phase 2: Compute RFF posterior covariance
+        logger.info("  SNGP Phase 2: Computing RFF posterior covariance...")
+        self.rff_layer.reset_covariance()
+
+        with torch.no_grad():
+            for xb, yb in loader:
+                h = self.backbone(xb)
+                self.rff_layer.update_covariance(h, yb)
+
+        # Finalize: compute posterior mean weight
+        self.rff_layer.finalize_covariance(
+            loader,
+            lambda x: self.backbone(x),
+        )
+
+        return history
+
+    def predict(self, X: np.ndarray) -> OracleResult:
+        """Fast prediction: mu and sigma2, no Jacobian."""
+        X_t = torch.tensor(X, dtype=torch.float32, device=self.device)
+
+        self.backbone.eval()
+        with torch.no_grad():
+            h = self.backbone(X_t)
+            mu, var = self.rff_layer(h)
+            mu = mu.cpu().numpy()
+            var = var.cpu().numpy()
+
+        return OracleResult(mu=mu, sigma2=var, aux={})
+
+    def predict_for_fusion(self, X: np.ndarray) -> OracleResult:
+        """Full prediction with Jacobian ∂μ/∂z for Delta method fusion."""
+        X_t = torch.tensor(X, dtype=torch.float32, device=self.device)
+        X_t.requires_grad_(True)
+
+        self.backbone.eval()
+        h = self.backbone(X_t)
+        mu, var = self.rff_layer(h)
+
+        # Jacobian ∂μ/∂z
+        J_rows = []
+        for i in range(len(X_t)):
+            if X_t.grad is not None:
+                X_t.grad.zero_()
+            mu[i].backward(retain_graph=True)
+            J_rows.append(X_t.grad[i].clone().cpu().numpy())
+
+        J_mu = np.stack(J_rows, axis=0)
+        mu_np = mu.detach().cpu().numpy()
+        var_np = var.detach().cpu().numpy()
+
+        return OracleResult(mu=mu_np, sigma2=var_np, jacobian=J_mu, aux={})
+
+    def save(self, path: str | Path) -> None:
+        path = Path(path)
+        path.mkdir(parents=True, exist_ok=True)
+        torch.save(
+            {
+                "backbone": self.backbone.state_dict(),
+                "rff_layer": self.rff_layer.state_dict(),
+                "config": {
+                    "input_dim": self.input_dim,
+                    "hidden_dim": self.hidden_dim,
+                    "n_layers": self.n_layers,
+                    "n_rff": self.n_rff,
+                    "lengthscale": self.lengthscale,
+                    "spectral_norm_bound": self.spectral_norm_bound,
+                    "dropout": self.dropout,
+                },
+            },
+            path / "sngp_model.pt",
+        )
+
+    def load(self, path: str | Path) -> None:
+        path = Path(path)
+        ckpt = torch.load(path / "sngp_model.pt", map_location=self.device, weights_only=False)
+        cfg = ckpt["config"]
+
+        # Rebuild backbone
+        layers = []
+        dims = [cfg["input_dim"]] + [cfg["hidden_dim"]] * cfg["n_layers"]
+        for i in range(len(dims) - 1):
+            lin = nn.Linear(dims[i], dims[i + 1])
+            lin = torch.nn.utils.parametrizations.spectral_norm(lin)
+            layers.append(lin)
+            layers.append(nn.ReLU())
+            layers.append(nn.Dropout(cfg["dropout"]))
+        self.backbone = nn.Sequential(*layers).to(self.device)
+
+        self.rff_layer = _RandomFourierFeatureLayer(
+            in_features=cfg["hidden_dim"], n_rff=cfg["n_rff"],
+            lengthscale=cfg["lengthscale"],
+        ).to(self.device)
+
+        self.backbone.load_state_dict(ckpt["backbone"])
+        self.rff_layer.load_state_dict(ckpt["rff_layer"])
+        self.backbone.eval()
+
+    def evaluate(self, X: np.ndarray, y: np.ndarray, y_target: float = 7.0) -> dict:
+        """Override base evaluate for consistency."""
+        from bayesdiff.evaluate import gaussian_nll
+
+        result = self.predict(X)
+        sigma = np.sqrt(np.clip(result.sigma2, 1e-10, None))
+
+        ss_res = np.sum((y - result.mu) ** 2)
+        ss_tot = np.sum((y - y.mean()) ** 2)
+        r2 = 1 - ss_res / ss_tot if ss_tot > 0 else float("nan")
+        rho, _ = spearmanr(result.mu, y)
+        rmse = np.sqrt(np.mean((y - result.mu) ** 2))
+        nll = gaussian_nll(result.mu, sigma, y)
+
+        errors = np.abs(y - result.mu)
+        err_sigma_rho, err_sigma_p = spearmanr(errors, sigma)
+
+        return {
+            "R2": float(r2),
+            "spearman_rho": float(rho),
+            "rmse": float(rmse),
+            "nll": float(nll),
+            "err_sigma_rho": float(err_sigma_rho),
+            "err_sigma_p": float(err_sigma_p),
+            "mean_sigma": float(sigma.mean()),
+        }
+
+
+# ============================================================================
+# C2: Evidential Regression Oracle
+# ============================================================================
+
+
+class EvidentialOracle(OracleHead):
+    """Evidential Regression Oracle — Normal-Inverse-Gamma posterior.
+
+    Architecture:
+        z ∈ ℝ^128 → MLP (2 layers, 256→128 hidden) → (γ, ν, α, β) heads
+
+    Learns to output parameters of a NIG distribution over the prediction:
+        γ: predicted mean
+        ν: evidence for the mean (> 0, via Softplus)
+        α: shape of the IG prior (> 1, via Softplus + 1)
+        β: scale of the IG prior (> 0, via Softplus)
+
+    Uncertainty decomposition:
+        σ²_aleatoric = β / (α - 1)
+        σ²_epistemic = β / (ν * (α - 1))
+        σ²_total = σ²_aleatoric + σ²_epistemic
+
+    Training: NIG NLL + evidence regularization (Amini et al., NeurIPS 2020).
+
+    Reference: Amini et al., "Deep Evidential Regression", NeurIPS 2020.
+    """
+
+    def __init__(
+        self,
+        input_dim: int = 128,
+        hidden_dim: int = 256,
+        mid_dim: int = 128,
+        dropout: float = 0.1,
+        lambda_ev: float = 0.1,
+        lambda_anneal_epochs: int = 50,
+        device: str = "cuda",
+    ):
+        self.input_dim = input_dim
+        self.hidden_dim = hidden_dim
+        self.mid_dim = mid_dim
+        self.dropout = dropout
+        self.lambda_ev = lambda_ev
+        self.lambda_anneal_epochs = lambda_anneal_epochs
+        self.device = torch.device(device if torch.cuda.is_available() else "cpu")
+
+        # Shared backbone
+        self.backbone = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, mid_dim),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+        ).to(self.device)
+
+        # 4 output heads
+        self.gamma_head = nn.Linear(mid_dim, 1).to(self.device)  # mean
+        self.nu_head = nn.Linear(mid_dim, 1).to(self.device)     # evidence for mean
+        self.alpha_head = nn.Linear(mid_dim, 1).to(self.device)  # IG shape
+        self.beta_head = nn.Linear(mid_dim, 1).to(self.device)   # IG scale
+
+        self._init_weights()
+
+    def _init_weights(self):
+        for m in [self.backbone, self.gamma_head, self.nu_head, self.alpha_head, self.beta_head]:
+            for p in m.modules():
+                if isinstance(p, nn.Linear):
+                    nn.init.kaiming_normal_(p.weight, nonlinearity="relu")
+                    nn.init.zeros_(p.bias)
+
+    def _all_parameters(self):
+        return (
+            list(self.backbone.parameters())
+            + list(self.gamma_head.parameters())
+            + list(self.nu_head.parameters())
+            + list(self.alpha_head.parameters())
+            + list(self.beta_head.parameters())
+        )
+
+    def _forward(self, X: torch.Tensor):
+        """Forward pass → (gamma, nu, alpha, beta) all (B,)."""
+        h = self.backbone(X)
+        gamma = self.gamma_head(h).squeeze(-1)
+        nu = F.softplus(self.nu_head(h).squeeze(-1)) + 1e-6       # > 0
+        alpha = F.softplus(self.alpha_head(h).squeeze(-1)) + 1.0   # > 1
+        beta = F.softplus(self.beta_head(h).squeeze(-1)) + 1e-6    # > 0
+        return gamma, nu, alpha, beta
+
+    @staticmethod
+    def _nig_nll(y: torch.Tensor, gamma: torch.Tensor,
+                 nu: torch.Tensor, alpha: torch.Tensor, beta: torch.Tensor):
+        """Negative log-likelihood of NIG distribution.
+
+        NLL = 0.5*log(π/ν) - α*log(Ω) + (α+0.5)*log((y-γ)²ν + Ω) + log(Γ(α)/Γ(α+0.5))
+        where Ω = 2β(1+ν)
+        """
+        omega = 2.0 * beta * (1.0 + nu)
+        nll = (
+            0.5 * torch.log(np.pi / nu)
+            - alpha * torch.log(omega)
+            + (alpha + 0.5) * torch.log((y - gamma) ** 2 * nu + omega)
+            + torch.lgamma(alpha) - torch.lgamma(alpha + 0.5)
+        )
+        return nll.mean()
+
+    @staticmethod
+    def _evidence_reg(y: torch.Tensor, gamma: torch.Tensor,
+                      nu: torch.Tensor, alpha: torch.Tensor):
+        """Evidence regularization: penalize evidence on incorrect predictions.
+
+        L_reg = |y - γ| * (2ν + α)
+        """
+        return (torch.abs(y - gamma) * (2.0 * nu + alpha)).mean()
+
+    def fit(
+        self,
+        X_train, y_train, X_val, y_val,
+        n_epochs=300, batch_size=256,
+        lr=1e-3, weight_decay=1e-4,
+        patience=20, verbose=True,
+        **kwargs,
+    ) -> dict:
+        """Train with NIG NLL + annealed evidence regularization."""
+        X_t = torch.tensor(X_train, dtype=torch.float32, device=self.device)
+        y_t = torch.tensor(y_train, dtype=torch.float32, device=self.device)
+        X_v = torch.tensor(X_val, dtype=torch.float32, device=self.device)
+        N = len(X_t)
+
+        optimizer = torch.optim.AdamW(
+            self._all_parameters(), lr=lr, weight_decay=weight_decay
+        )
+
+        dataset = torch.utils.data.TensorDataset(X_t, y_t)
+        loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+        history: dict = {"loss": [], "val_rho": [], "val_nll": []}
+        best_val_rho = -float("inf")
+        best_state = None
+        patience_counter = 0
+
+        for epoch in range(n_epochs):
+            self.backbone.train()
+            epoch_loss = 0.0
+
+            # Anneal regularization coefficient
+            if self.lambda_anneal_epochs > 0:
+                coeff = min(1.0, epoch / self.lambda_anneal_epochs) * self.lambda_ev
+            else:
+                coeff = self.lambda_ev
+
+            for xb, yb in loader:
+                gamma, nu, alpha, beta = self._forward(xb)
+                nig_loss = self._nig_nll(yb, gamma, nu, alpha, beta)
+                reg_loss = self._evidence_reg(yb, gamma, nu, alpha)
+                loss = nig_loss + coeff * reg_loss
+
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                epoch_loss += loss.item() * len(yb)
+
+            epoch_loss /= N
+            history["loss"].append(epoch_loss)
+
+            # Validate
+            self.backbone.eval()
+            with torch.no_grad():
+                gamma_v, nu_v, alpha_v, beta_v = self._forward(X_v)
+                mu_v = gamma_v.cpu().numpy()
+                sigma2_alea = (beta_v / (alpha_v - 1.0)).cpu().numpy()
+                sigma2_epi = (beta_v / (nu_v * (alpha_v - 1.0))).cpu().numpy()
+                sigma2_v = sigma2_alea + sigma2_epi
+
+            val_rho, _ = spearmanr(mu_v, y_val)
+            val_nll = float(
+                np.mean(0.5 * np.log(2 * np.pi * np.clip(sigma2_v, 1e-10, None))
+                        + (y_val - mu_v) ** 2 / (2 * np.clip(sigma2_v, 1e-10, None)))
+            )
+            history["val_rho"].append(val_rho)
+            history["val_nll"].append(val_nll)
+
+            if val_rho > best_val_rho:
+                best_val_rho = val_rho
+                best_state = {
+                    "backbone": {k: v.cpu().clone() for k, v in self.backbone.state_dict().items()},
+                    "gamma_head": {k: v.cpu().clone() for k, v in self.gamma_head.state_dict().items()},
+                    "nu_head": {k: v.cpu().clone() for k, v in self.nu_head.state_dict().items()},
+                    "alpha_head": {k: v.cpu().clone() for k, v in self.alpha_head.state_dict().items()},
+                    "beta_head": {k: v.cpu().clone() for k, v in self.beta_head.state_dict().items()},
+                }
+                patience_counter = 0
+            else:
+                patience_counter += 1
+
+            if verbose and (epoch + 1) % 20 == 0:
+                logger.info(
+                    f"  Evidential Epoch {epoch+1}/{n_epochs}: loss={epoch_loss:.4f}, "
+                    f"val_ρ={val_rho:.4f}, val_NLL={val_nll:.4f}"
+                )
+
+            if patience_counter >= patience:
+                logger.info(f"  Evidential early stopping at epoch {epoch+1}")
+                break
+
+        # Restore best
+        if best_state:
+            self.backbone.load_state_dict(best_state["backbone"])
+            self.gamma_head.load_state_dict(best_state["gamma_head"])
+            self.nu_head.load_state_dict(best_state["nu_head"])
+            self.alpha_head.load_state_dict(best_state["alpha_head"])
+            self.beta_head.load_state_dict(best_state["beta_head"])
+
+        self.backbone.eval()
+        return history
+
+    def predict(self, X: np.ndarray) -> OracleResult:
+        """Fast prediction: mu and sigma2 (aleatoric + epistemic), no Jacobian."""
+        X_t = torch.tensor(X, dtype=torch.float32, device=self.device)
+
+        self.backbone.eval()
+        with torch.no_grad():
+            gamma, nu, alpha, beta = self._forward(X_t)
+
+        gamma_np = gamma.cpu().numpy()
+        nu_np = nu.cpu().numpy()
+        alpha_np = alpha.cpu().numpy()
+        beta_np = beta.cpu().numpy()
+
+        alpha_m1 = np.clip(alpha_np - 1.0, 1e-6, None)
+        sigma2_alea = beta_np / alpha_m1
+        sigma2_epi = beta_np / (nu_np * alpha_m1)
+        sigma2_total = sigma2_alea + sigma2_epi
+
+        return OracleResult(
+            mu=gamma_np,
+            sigma2=np.clip(sigma2_total, 1e-10, None),
+            aux={
+                "sigma2_aleatoric": sigma2_alea,
+                "sigma2_epistemic": sigma2_epi,
+                "nu": nu_np,
+                "alpha": alpha_np,
+                "beta": beta_np,
+            },
+        )
+
+    def predict_for_fusion(self, X: np.ndarray) -> OracleResult:
+        """Full prediction with Jacobian ∂γ/∂z for Delta method fusion."""
+        X_t = torch.tensor(X, dtype=torch.float32, device=self.device)
+        X_t.requires_grad_(True)
+
+        self.backbone.eval()
+        gamma, nu, alpha, beta = self._forward(X_t)
+
+        # Jacobian ∂γ/∂z
+        J_rows = []
+        for i in range(len(X_t)):
+            if X_t.grad is not None:
+                X_t.grad.zero_()
+            gamma[i].backward(retain_graph=True)
+            J_rows.append(X_t.grad[i].clone().cpu().numpy())
+
+        J_mu = np.stack(J_rows, axis=0)
+
+        gamma_np = gamma.detach().cpu().numpy()
+        nu_np = nu.detach().cpu().numpy()
+        alpha_np = alpha.detach().cpu().numpy()
+        beta_np = beta.detach().cpu().numpy()
+
+        alpha_m1 = np.clip(alpha_np - 1.0, 1e-6, None)
+        sigma2_alea = beta_np / alpha_m1
+        sigma2_epi = beta_np / (nu_np * alpha_m1)
+        sigma2_total = sigma2_alea + sigma2_epi
+
+        return OracleResult(
+            mu=gamma_np,
+            sigma2=np.clip(sigma2_total, 1e-10, None),
+            jacobian=J_mu,
+            aux={
+                "sigma2_aleatoric": sigma2_alea,
+                "sigma2_epistemic": sigma2_epi,
+                "nu": nu_np,
+                "alpha": alpha_np,
+                "beta": beta_np,
+            },
+        )
+
+    def save(self, path: str | Path) -> None:
+        path = Path(path)
+        path.mkdir(parents=True, exist_ok=True)
+        torch.save(
+            {
+                "backbone": self.backbone.state_dict(),
+                "gamma_head": self.gamma_head.state_dict(),
+                "nu_head": self.nu_head.state_dict(),
+                "alpha_head": self.alpha_head.state_dict(),
+                "beta_head": self.beta_head.state_dict(),
+                "config": {
+                    "input_dim": self.input_dim,
+                    "hidden_dim": self.hidden_dim,
+                    "mid_dim": self.mid_dim,
+                    "dropout": self.dropout,
+                    "lambda_ev": self.lambda_ev,
+                    "lambda_anneal_epochs": self.lambda_anneal_epochs,
+                },
+            },
+            path / "evidential_model.pt",
+        )
+
+    def load(self, path: str | Path) -> None:
+        path = Path(path)
+        ckpt = torch.load(path / "evidential_model.pt", map_location=self.device, weights_only=False)
+        cfg = ckpt["config"]
+
+        self.backbone = nn.Sequential(
+            nn.Linear(cfg["input_dim"], cfg["hidden_dim"]),
+            nn.ReLU(),
+            nn.Dropout(cfg["dropout"]),
+            nn.Linear(cfg["hidden_dim"], cfg["mid_dim"]),
+            nn.ReLU(),
+            nn.Dropout(cfg["dropout"]),
+        ).to(self.device)
+
+        self.gamma_head = nn.Linear(cfg["mid_dim"], 1).to(self.device)
+        self.nu_head = nn.Linear(cfg["mid_dim"], 1).to(self.device)
+        self.alpha_head = nn.Linear(cfg["mid_dim"], 1).to(self.device)
+        self.beta_head = nn.Linear(cfg["mid_dim"], 1).to(self.device)
+
+        self.backbone.load_state_dict(ckpt["backbone"])
+        self.gamma_head.load_state_dict(ckpt["gamma_head"])
+        self.nu_head.load_state_dict(ckpt["nu_head"])
+        self.alpha_head.load_state_dict(ckpt["alpha_head"])
+        self.beta_head.load_state_dict(ckpt["beta_head"])
+
+        self.backbone.eval()
+
+    def evaluate(self, X: np.ndarray, y: np.ndarray, y_target: float = 7.0) -> dict:
+        """Override base evaluate for consistency."""
+        from bayesdiff.evaluate import gaussian_nll
+
+        result = self.predict(X)
+        sigma = np.sqrt(np.clip(result.sigma2, 1e-10, None))
+
+        ss_res = np.sum((y - result.mu) ** 2)
+        ss_tot = np.sum((y - y.mean()) ** 2)
+        r2 = 1 - ss_res / ss_tot if ss_tot > 0 else float("nan")
+        rho, _ = spearmanr(result.mu, y)
+        rmse = np.sqrt(np.mean((y - result.mu) ** 2))
+        nll = gaussian_nll(result.mu, sigma, y)
+
+        errors = np.abs(y - result.mu)
+        err_sigma_rho, err_sigma_p = spearmanr(errors, sigma)
+
+        return {
+            "R2": float(r2),
+            "spearman_rho": float(rho),
+            "rmse": float(rmse),
+            "nll": float(nll),
+            "err_sigma_rho": float(err_sigma_rho),
+            "err_sigma_p": float(err_sigma_p),
+            "mean_sigma": float(sigma.mean()),
+        }

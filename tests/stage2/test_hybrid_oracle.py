@@ -11,6 +11,7 @@ import torch
 
 from bayesdiff.hybrid_oracle import (
     FeatureExtractor, DKLOracle, DKLEnsembleOracle, NNResidualOracle,
+    SNGPOracle, EvidentialOracle,
 )
 from bayesdiff.oracle_interface import OracleResult, OracleHead
 
@@ -47,6 +48,10 @@ ALL_ORACLE_CLASSES = [
                                       "n_inducing": 50, "hidden_dim": 64, "device": "cpu"}, id="DKLEnsemble"),
     pytest.param(NNResidualOracle, {"input_dim": 128, "hidden_dim": 64, "n_inducing": 50,
                                      "device": "cpu"}, id="NNResidual"),
+    pytest.param(SNGPOracle, {"input_dim": 128, "hidden_dim": 64, "n_layers": 2,
+                               "n_rff": 128, "device": "cpu"}, id="SNGP"),
+    pytest.param(EvidentialOracle, {"input_dim": 128, "hidden_dim": 64, "mid_dim": 32,
+                                     "device": "cpu"}, id="Evidential"),
 ]
 
 
@@ -284,3 +289,104 @@ def test_ood_uncertainty(OracleClass, kwargs, synthetic_data):
     assert result_ood.sigma2.mean() >= result_id.sigma2.mean() * 0.99, \
         f"{OracleClass.__name__}: OOD sigma2 ({result_ood.sigma2.mean():.4f}) " \
         f"should not be less than ID sigma2 ({result_id.sigma2.mean():.4f})"
+
+
+# =================================================================
+# T1.15 – T1.17: SNGP Oracle
+# =================================================================
+
+def test_sngp_forward(synthetic_data):
+    """T1.15: SNGP predict() produces OracleResult with correct shapes."""
+    X_train, y_train, X_val, y_val = synthetic_data
+    oracle = SNGPOracle(input_dim=128, hidden_dim=64, n_layers=2, n_rff=128, device="cpu")
+    oracle.fit(X_train, y_train, X_val, y_val, n_epochs=30, patience=100, verbose=False)
+
+    result = oracle.predict(X_val)
+    assert isinstance(result, OracleResult)
+    assert result.mu.shape == (len(X_val),)
+    assert result.sigma2.shape == (len(X_val),)
+    assert result.jacobian is None, "predict() should not compute Jacobian"
+    assert (result.sigma2 > 0).all(), "All sigma2 must be positive"
+
+
+def test_sngp_training_loss_decreases(synthetic_data):
+    """T1.16: SNGP NLL loss should decrease during training."""
+    X_train, y_train, X_val, y_val = synthetic_data
+    oracle = SNGPOracle(input_dim=128, hidden_dim=64, n_layers=2, n_rff=128, device="cpu")
+    history = oracle.fit(X_train, y_train, X_val, y_val, n_epochs=50, patience=100, verbose=False)
+    assert history["loss"][-1] < history["loss"][0], \
+        f"Loss did not decrease: {history['loss'][0]:.4f} -> {history['loss'][-1]:.4f}"
+
+
+def test_sngp_jacobian(synthetic_data):
+    """T1.17: SNGP predict_for_fusion() returns valid Jacobian."""
+    X_train, y_train, X_val, y_val = synthetic_data
+    oracle = SNGPOracle(input_dim=128, hidden_dim=64, n_layers=2, n_rff=128, device="cpu")
+    oracle.fit(X_train, y_train, X_val, y_val, n_epochs=20, patience=100, verbose=False)
+
+    result = oracle.predict_for_fusion(X_val[:5])
+    assert result.jacobian is not None
+    assert result.jacobian.shape == (5, 128)
+    assert np.isfinite(result.jacobian).all(), "Jacobian contains NaN or Inf"
+
+
+# =================================================================
+# T1.18 – T1.21: Evidential Oracle
+# =================================================================
+
+def test_evidential_forward(synthetic_data):
+    """T1.18: Evidential predict() produces OracleResult with NIG aux."""
+    X_train, y_train, X_val, y_val = synthetic_data
+    oracle = EvidentialOracle(input_dim=128, hidden_dim=64, mid_dim=32, device="cpu")
+    oracle.fit(X_train, y_train, X_val, y_val, n_epochs=30, patience=100, verbose=False)
+
+    result = oracle.predict(X_val)
+    assert isinstance(result, OracleResult)
+    assert result.mu.shape == (len(X_val),)
+    assert result.sigma2.shape == (len(X_val),)
+    assert result.jacobian is None
+    assert (result.sigma2 > 0).all(), "All sigma2 must be positive"
+
+    # Check NIG parameters in aux
+    assert "sigma2_aleatoric" in result.aux
+    assert "sigma2_epistemic" in result.aux
+    assert "nu" in result.aux
+    assert "alpha" in result.aux
+    assert "beta" in result.aux
+    # nu > 0, alpha > 1, beta > 0
+    assert (result.aux["nu"] > 0).all(), "nu must be positive"
+    assert (result.aux["alpha"] > 1.0).all(), "alpha must be > 1"
+    assert (result.aux["beta"] > 0).all(), "beta must be positive"
+
+
+def test_evidential_uncertainty_decomposition(synthetic_data):
+    """T1.19: sigma2_total = sigma2_aleatoric + sigma2_epistemic."""
+    X_train, y_train, X_val, y_val = synthetic_data
+    oracle = EvidentialOracle(input_dim=128, hidden_dim=64, mid_dim=32, device="cpu")
+    oracle.fit(X_train, y_train, X_val, y_val, n_epochs=30, patience=100, verbose=False)
+
+    result = oracle.predict(X_val)
+    sigma2_sum = result.aux["sigma2_aleatoric"] + result.aux["sigma2_epistemic"]
+    np.testing.assert_allclose(result.sigma2, sigma2_sum, rtol=1e-4,
+                                err_msg="sigma2 should equal aleatoric + epistemic")
+
+
+def test_evidential_training_loss_decreases(synthetic_data):
+    """T1.20: Evidential loss should decrease during training."""
+    X_train, y_train, X_val, y_val = synthetic_data
+    oracle = EvidentialOracle(input_dim=128, hidden_dim=64, mid_dim=32, device="cpu")
+    history = oracle.fit(X_train, y_train, X_val, y_val, n_epochs=50, patience=100, verbose=False)
+    assert history["loss"][-1] < history["loss"][0], \
+        f"Loss did not decrease: {history['loss'][0]:.4f} -> {history['loss'][-1]:.4f}"
+
+
+def test_evidential_jacobian(synthetic_data):
+    """T1.21: Evidential predict_for_fusion() returns valid Jacobian."""
+    X_train, y_train, X_val, y_val = synthetic_data
+    oracle = EvidentialOracle(input_dim=128, hidden_dim=64, mid_dim=32, device="cpu")
+    oracle.fit(X_train, y_train, X_val, y_val, n_epochs=20, patience=100, verbose=False)
+
+    result = oracle.predict_for_fusion(X_val[:5])
+    assert result.jacobian is not None
+    assert result.jacobian.shape == (5, 128)
+    assert np.isfinite(result.jacobian).all(), "Jacobian contains NaN or Inf"

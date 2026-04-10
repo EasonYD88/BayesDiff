@@ -2,13 +2,13 @@
 
 **Date**: April 9–10, 2026  
 **Author**: Auto-generated from experimental results  
-**Status**: Phase F complete. Phase G (this document).
+**Status**: Phase G complete. Phase C' (SNGP + Evidential) complete.
 
 ---
 
 ## 1. Executive Summary
 
-The DKL Ensemble oracle head (M=5, bootstrap, residual MLP) is the clear winner from a systematic 5-method comparison. It is the **only** method producing statistically significant uncertainty–error correlation on CASF-2016:
+The DKL Ensemble oracle head (M=5, bootstrap, residual MLP) is the clear winner from a systematic 7-method comparison (5 Tier 1 + 2 Tier 1b). It is the **only** method producing statistically significant uncertainty–error correlation on CASF-2016:
 
 | Metric | DKL Ensemble | Runner-up (NN+GP Residual) | Baseline (Raw SVGP) |
 |--------|-------------|---------------------------|---------------------|
@@ -35,19 +35,27 @@ The stretch target of ρ_{|err|,σ} > 0.15 was not reached, but the achieved 0.1
 
 ## 3. Tier 1: Method Family Comparison
 
-Five oracle head architectures compared on identical frozen embeddings:
+Seven oracle head architectures compared on identical frozen embeddings (Tier 1 + Tier 1b):
 
 | Head | Architecture | Params | ρ | R² | RMSE | NLL | ρ_{|err|,σ} | p-value | Time |
 |------|-------------|--------|------|------|------|------|-------------|---------|------|
 | **DKL Ensemble** | 5× DKL (bootstrap) | ~225K | **0.781** | **0.607** | **1.361** | **1.758** | **0.144** | **0.015** | 127s |
 | DKL | ResidualMLP→SVGP | ~45K | 0.775 | 0.589 | 1.391 | 1.818 | 0.001 | 0.99 | 32s |
+| Evidential | NIG regression | ~50K | 0.773 | 0.578 | 1.409 | 1.762 | 0.074 | — | 12s |
+| SNGP | SN-MLP→RFF-GP | ~80K | 0.768 | 0.584 | 1.401 | 1453† | 0.018 | — | 23s |
 | NN+GP Residual | MLP + GP on residuals | ~50K | 0.765 | 0.582 | 1.404 | 1.767 | 0.064 | 0.39 | 145s |
 | Raw SVGP | Direct GP on z | ~66K | 0.763 | 0.573 | 1.418 | 1.781 | 0.020 | 0.73 | 199s |
 | PCA+SVGP | PCA(32)→SVGP | ~17K | 0.758 | 0.579 | 1.408 | 1.771 | 0.015 | 0.80 | 200s |
 
-**Key finding**: Only DKL Ensemble achieves statistically significant ρ_{|err|,σ} (p=0.015). All single-model GPs produce near-zero uncertainty–error correlation despite having comparable point-prediction quality.
+† SNGP NLL is mis-calibrated: the RFF posterior variance is orders of magnitude too small, causing extreme NLL. Point prediction is competitive.
 
-**SLURM**: Jobs 5857850 (L40S) + 5857851 (A100).
+**Key findings**:
+1. Only DKL Ensemble achieves statistically significant ρ_{|err|,σ} (p=0.015). All single-model methods produce near-zero uncertainty–error correlation.
+2. **Evidential** is the runner-up for ρ_{|err|,σ} (0.074) — its learned per-sample uncertainty outperforms GP-based methods, but still falls far short of ensemble disagreement.
+3. **SNGP** preserves input-space distances via spectral normalization, but the RFF GP posterior collapses to near-zero variance (NLL=1453), making its uncertainty useless despite competitive point prediction.
+4. Ensemble disagreement remains the only reliable mechanism for producing meaningful uncertainty on this dataset.
+
+**SLURM**: Tier 1 — Jobs 5857850 (L40S) + 5857851 (A100). Tier 1b — Job 5881543 (L40S).
 
 ---
 
@@ -167,11 +175,11 @@ All in `results/stage2/oracle_heads/figures/`:
 
 | Suite | Tests | Status |
 |-------|-------|--------|
-| Unit (`test_hybrid_oracle.py`) | 21 | ✅ All pass |
+| Unit (`test_hybrid_oracle.py`) | 34 | ✅ All pass |
 | Integration (`test_hybrid_integration.py`) | 5 | ✅ All pass |
-| **Total** | **26** | **✅ 26/26 pass** |
+| **Total** | **39** | **✅ 39/39 pass** |
 
-Verified on L40S GPU (job 5865532).
+Verified on L40S GPU (job 5881541). Includes T1.15–T1.21 for SNGP and Evidential.
 
 ---
 
@@ -189,7 +197,8 @@ Verified on L40S GPU (job 5865532).
 | `slurm/s18_tier2_ablation.sh` | ~80 | Tier 2 SLURM script |
 | `slurm/s19_oracle_diagnostics.sh` | ~30 | Diagnostics SLURM script |
 | `slurm/run_tests.sh` | ~25 | Test runner SLURM script |
-| `tests/stage2/test_hybrid_oracle.py` | ~290 | Unit tests T1.1–T1.14 |
+| `slurm/s18_tier1b_baselines.sh` | ~35 | Tier 1b SLURM script (SNGP + Evidential) |
+| `tests/stage2/test_hybrid_oracle.py` | ~340 | Unit tests T1.1–T1.21 (incl. SNGP, Evidential) |
 | `tests/stage2/test_hybrid_integration.py` | ~150 | Integration tests T2.1–T2.6 |
 
 ### Modified Files
@@ -197,6 +206,7 @@ Verified on L40S GPU (job 5865532).
 | File | Changes |
 |------|---------|
 | `bayesdiff/__init__.py` | Added OracleHead, OracleResult imports |
+| `bayesdiff/hybrid_oracle.py` | Added SNGPOracle + EvidentialOracle (~500 lines) |
 | `doc/Stage_2/04_hybrid_predictor.md` | Updated §7.2 results, §8.1 methods, §9 checklist |
 
 ---
@@ -209,7 +219,8 @@ Verified on L40S GPU (job 5865532).
 | Tier 2 | L40S | ~30 min | 5863003 |
 | Tests | L40S | ~1 min | 5865532 |
 | Diagnostics | L40S | ~1 min | 5868900 |
-| **Total** | | **~52 min GPU** | |
+| Tier 1b (SNGP+Evid.) | L40S | ~1 min | 5881543 |
+| **Total** | | **~53 min GPU** | |
 
 ---
 
@@ -222,7 +233,7 @@ Verified on L40S GPU (job 5865532).
 4. **Single dataset evaluation**: Results on CASF-2016 only; generalization unknown.
 
 ### Recommended Next Steps
-1. **Phase C' (deferred)**: Implement SNGP and Evidential baselines for completeness
+1. ~~**Phase C' (deferred)**: Implement SNGP and Evidential baselines~~ **DONE** — see Tier 1b results in §3
 2. **Larger test set**: Evaluate on held-out PDBbind subsets for more stable ρ_{|err|,σ}
 3. **Calibration integration**: Apply isotonic calibration in the fusion pipeline
 4. **Feature diversity**: Explore different random seeds for feature extractor init, or heterogeneous architectures, to increase M_eff

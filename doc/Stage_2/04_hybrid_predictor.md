@@ -2714,14 +2714,18 @@ python scripts/pipeline/s19_oracle_diagnostics.py \
 
 ### Phase C' (Deferred — Tier 1b, after Phase E analysis)
 
-- [ ] **C.1** Implement `SNGPOracle` (spectral normalized neural GP baseline)
-  - File: `bayesdiff/hybrid_oracle.py` (~150 lines)
+- [x] **C.1** Implement `SNGPOracle` (spectral normalized neural GP baseline)
+  - File: `bayesdiff/hybrid_oracle.py` (~250 lines: `_RandomFourierFeatureLayer` + `SNGPOracle`)
   - Depends on: A.1
-  - Verify: T1.12 (interface compliance), T1.14 (OOD) pass
-- [ ] **C.2** Implement `EvidentialOracle` (evidential regression baseline)
-  - File: `bayesdiff/hybrid_oracle.py` (~120 lines)
+  - Verified: T1.12 (interface), T1.14 (OOD), T1.15–T1.17 (SNGP-specific) all pass
+  - Result: ρ=0.768, ρ_{|err|,σ}=0.018, NLL=1453 (RFF variance mis-calibrated)
+- [x] **C.2** Implement `EvidentialOracle` (evidential regression baseline)
+  - File: `bayesdiff/hybrid_oracle.py` (~250 lines: `EvidentialOracle`)
   - Depends on: A.1
-  - Verify: T1.12 (interface compliance), T1.14 (OOD) pass
+  - Verified: T1.12 (interface), T1.14 (OOD), T1.18–T1.21 (Evidential-specific) all pass
+  - Result: ρ=0.773, ρ_{|err|,σ}=0.074, NLL=1.762 (reasonable but below DKL Ensemble)
+- [x] **C.3** Run Tier 1b experiment: SLURM job 5881543
+  - File: `slurm/s18_tier1b_baselines.sh`
 
 ### Phase D: Pipeline & Tests (Days 7–8)
 

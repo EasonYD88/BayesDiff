@@ -211,6 +211,7 @@ def build_head_registry(args):
     """Build registry of oracle head constructors."""
     from bayesdiff.hybrid_oracle import (
         DKLOracle, DKLEnsembleOracle, NNResidualOracle, PCA_GPOracle,
+        SNGPOracle, EvidentialOracle,
     )
     from bayesdiff.gp_oracle import GPOracle
 
@@ -238,6 +239,14 @@ def build_head_registry(args):
         "pca_svgp": lambda: PCA_GPOracle(
             input_dim=128, pca_dim=32, n_inducing=args.n_inducing,
             device=args.device,
+        ),
+        "sngp": lambda: SNGPOracle(
+            input_dim=128, hidden_dim=args.hidden_dim, n_layers=args.dkl_n_layers,
+            n_rff=args.n_rff, dropout=args.dropout, device=args.device,
+        ),
+        "evidential": lambda: EvidentialOracle(
+            input_dim=128, hidden_dim=args.hidden_dim,
+            dropout=args.dropout, device=args.device,
         ),
     }
 
@@ -283,6 +292,7 @@ def main():
     parser.add_argument("--mc_dropout", type=int, default=1, help="1=True, 0=False (nn_residual)")
     parser.add_argument("--mc_samples", type=int, default=20)
     parser.add_argument("--dropout", type=float, default=0.1)
+    parser.add_argument("--n_rff", type=int, default=1024, help="Number of random Fourier features (SNGP)")
     # Embedding extraction
     parser.add_argument("--extract_embeddings", action="store_true")
     parser.add_argument("--schemeb_checkpoint", type=str, default="results/stage2/ablation_viz/A36_independent_model.pt")
