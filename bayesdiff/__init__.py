@@ -19,6 +19,7 @@ from .gen_uncertainty import estimate_gen_uncertainty
 
 # === §4.2 Oracle Module ===
 from .gp_oracle import GPOracle
+from .oracle_interface import OracleHead, OracleResult
 
 # === §4.3 Fusion Module ===
 from .fusion import fuse_uncertainties

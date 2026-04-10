@@ -25,7 +25,7 @@ echo "Date: $(date)"
 echo "================"
 
 # Phase A.3: Extract frozen embeddings (if not already cached)
-FROZEN_EMB="results/stage2/frozen_embeddings.npz"
+FROZEN_EMB="results/stage2/oracle_heads/frozen_embeddings.npz"
 if [ ! -f "$FROZEN_EMB" ]; then
     echo "=== Phase A.3: Extracting frozen embeddings ==="
     python scripts/pipeline/s18_train_oracle_heads.py \
@@ -36,8 +36,8 @@ if [ ! -f "$FROZEN_EMB" ]; then
         --labels data/pdbbind_v2020/labels.csv \
         --splits data/pdbbind_v2020/splits.json \
         --output results/stage2/oracle_heads \
+        --heads none \
         --device cuda
-    FROZEN_EMB="results/stage2/oracle_heads/frozen_embeddings.npz"
 fi
 
 # Phase 4.2: Train all Tier 1 oracle heads

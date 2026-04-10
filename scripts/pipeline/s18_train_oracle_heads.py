@@ -26,7 +26,8 @@ Usage:
     # Extract frozen embeddings first (requires model checkpoint + data):
     python scripts/pipeline/s18_train_oracle_heads.py \\
         --extract_embeddings \\
-        --schemeb_checkpoint results/stage2/phase3_refinement/A34_step1_model.pt \\
+        --schemeb_checkpoint results/stage2/ablation_viz/A36_independent_model.pt \\
+        --model_type independent \\
         --atom_emb_dir results/atom_embeddings \\
         --labels data/pdbbind_v2020/labels.csv \\
         --splits data/pdbbind_v2020/splits.json \\
@@ -215,17 +216,21 @@ def build_head_registry(args):
 
     return {
         "dkl": lambda: DKLOracle(
-            input_dim=128, feature_dim=32, n_inducing=args.n_inducing,
-            hidden_dim=256, n_layers=2, device=args.device,
+            input_dim=128, feature_dim=args.feature_dim, n_inducing=args.n_inducing,
+            hidden_dim=args.hidden_dim, n_layers=args.dkl_n_layers,
+            residual=bool(args.residual), dropout=args.dropout, device=args.device,
         ),
         "dkl_ensemble": lambda: DKLEnsembleOracle(
             input_dim=128, n_members=args.ensemble_members,
-            feature_dim=32, n_inducing=args.n_inducing,
-            hidden_dim=256, n_layers=2, device=args.device,
+            bootstrap=bool(args.bootstrap),
+            feature_dim=args.feature_dim, n_inducing=args.n_inducing,
+            hidden_dim=args.hidden_dim, n_layers=args.dkl_n_layers,
+            residual=bool(args.residual), dropout=args.dropout, device=args.device,
         ),
         "nn_residual": lambda: NNResidualOracle(
-            input_dim=128, hidden_dim=128, n_inducing=args.n_inducing,
-            device=args.device,
+            input_dim=128, hidden_dim=args.hidden_dim, n_inducing=args.n_inducing,
+            mc_dropout=bool(args.mc_dropout), mc_samples=args.mc_samples,
+            dropout=args.dropout, device=args.device,
         ),
         "svgp": lambda: GPOracleWrapper(
             GPOracle(d=128, n_inducing=args.n_inducing, device=args.device)
@@ -269,6 +274,15 @@ def main():
     parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--seed", type=int, default=42)
+    # Tier 2: DKL hyperparameter overrides
+    parser.add_argument("--feature_dim", type=int, default=32)
+    parser.add_argument("--hidden_dim", type=int, default=256)
+    parser.add_argument("--dkl_n_layers", type=int, default=2)
+    parser.add_argument("--residual", type=int, default=1, help="1=True, 0=False")
+    parser.add_argument("--bootstrap", type=int, default=1, help="1=True, 0=False (ensemble)")
+    parser.add_argument("--mc_dropout", type=int, default=1, help="1=True, 0=False (nn_residual)")
+    parser.add_argument("--mc_samples", type=int, default=20)
+    parser.add_argument("--dropout", type=float, default=0.1)
     # Embedding extraction
     parser.add_argument("--extract_embeddings", action="store_true")
     parser.add_argument("--schemeb_checkpoint", type=str, default="results/stage2/ablation_viz/A36_independent_model.pt")
@@ -294,6 +308,11 @@ def main():
             device=args.device,
         )
         args.frozen_embeddings = emb_path
+
+    # Early exit for extraction-only mode
+    if args.heads.strip().lower() == "none":
+        logger.info("Extraction-only mode (--heads none). Exiting.")
+        return
 
     # Load frozen embeddings
     emb_path = args.frozen_embeddings
