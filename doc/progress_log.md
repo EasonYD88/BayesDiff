@@ -619,3 +619,119 @@ A3.5 Head Diversity: score=0.763, avg pairwise cosine=0.237（heads 学到不同
 | `slurm/s14_phase3_refinement.sh` | Phase 3 SLURM |
 | `slurm/s15_gp_fix.sh` | GP Fix SLURM |
 | `slurm/s17_ablation_viz.sh` | A3.5/A3.6 + VIZ SLURM |
+
+---
+
+## Sub-Plan 4: Uncertainty-Aware Hybrid Predictor
+
+**Status**: ✅ 全部完成（Phase A–G + Phase C'）  
+**Commits**: `c1e4cc2`, `2368e5c`, `c7e2668`  
+**结果文档**: `doc/Stage_2/04_hybrid_predictor_RESULTS.md`
+
+### 目标
+
+在冻结的 A3.6 表征（z ∈ ℝ¹²⁸）上，系统比较 7 种 oracle head 的预测精度和不确定性质量，找到能产生有意义 |err|–σ 相关性的方法。
+
+### Phase A–B: 实现 & 基础设施（2026-04-09）
+
+- 定义 `OracleResult` dataclass + `OracleHead` ABC (`bayesdiff/oracle_interface.py`)
+- 实现 5 种 oracle head (`bayesdiff/hybrid_oracle.py`):
+  - **DKLOracle**: ResidualMLP→SVGP
+  - **DKLEnsembleOracle**: M 个独立 DKL (bootstrap + seed diversity)
+  - **NNResidualOracle**: MLP + GP on residuals + optional MC Dropout
+  - **PCA_GPOracle**: PCA(32)→SVGP
+  - GPOracleWrapper: 包装已有 GPOracle
+- 实现训练 pipeline `scripts/pipeline/s18_train_oracle_heads.py`
+- 冻结 embedding 提取: SchemeB Independent → `frozen_embeddings.npz`
+
+### Phase D–E: Tier 1 实验（2026-04-09, Jobs 5857850/5857851）
+
+7 种方法在 CASF-2016 test set (N=285) 上的统一评估：
+
+| Head | ρ | R² | RMSE | NLL | ρ_{|err|,σ} | p-value | Time |
+|------|------|------|------|------|-------------|---------|------|
+| **DKL Ensemble** | **0.781** | **0.607** | **1.361** | **1.758** | **0.144** | **0.015** | 127s |
+| DKL | 0.775 | 0.589 | 1.391 | 1.818 | 0.001 | 0.99 | 32s |
+| Evidential† | 0.773 | 0.578 | 1.409 | 1.762 | 0.074 | — | 12s |
+| SNGP† | 0.768 | 0.584 | 1.401 | 1453‡ | 0.018 | — | 23s |
+| NN+GP Residual | 0.765 | 0.582 | 1.404 | 1.767 | 0.064 | 0.39 | 145s |
+| Raw SVGP | 0.763 | 0.573 | 1.418 | 1.781 | 0.020 | 0.73 | 199s |
+| PCA+SVGP | 0.758 | 0.579 | 1.408 | 1.771 | 0.015 | 0.80 | 200s |
+
+† Phase C' Tier 1b (Job 5881543)  
+‡ SNGP NLL 畸高：RFF 后验方差接近零导致
+
+**核心发现**: 只有 DKL Ensemble 产生了统计显著的 ρ_{|err|,σ} (p=0.015)。所有单模型方法（包括 SNGP 和 Evidential）的不确定性–误差相关性接近零。
+
+### Phase E: Tier 2 消融实验（2026-04-09, Job 5863003）
+
+DKL Ensemble 配置消融（基准: M=5, d_u=32, residual=True, bootstrap=True）：
+
+| 消融 | ρ | ρ_{|err|,σ} | 发现 |
+|------|------|-------------|------|
+| 基准 (3-seed avg) | 0.780 | 0.091±0.025 | 参考 |
+| bootstrap=False | 0.785 | **−0.056** | **Bootstrap 是关键机制** |
+| residual=False | 0.781 | 0.017 | Residual 对 UQ 重要（5× 差异） |
+| feature_dim=64 | 0.782 | 0.003 | 大 bottleneck 损害 UQ |
+| feature_dim=16 | 0.777 | 0.105 | 小 bottleneck 稍好 |
+| M=3 | 0.793 | 0.057 | 最佳点预测，但 UQ 较弱 |
+| n_inducing=1024 | 0.785 | 0.041 | 更多 inducing points 反而损害 UQ |
+
+### Phase F: 诊断 & 可视化（2026-04-10, Job 5868900）
+
+`scripts/pipeline/s19_oracle_diagnostics.py` 生成 D.2–D.8 图表：
+
+| 诊断 | 发现 |
+|------|------|
+| 不确定性分解 | Epistemic 驱动全部信号 (ρ=0.180)，Aleatoric ≈ 0 (ρ=0.011) |
+| Ensemble 多样性 | M_eff=1.05 (mean pairwise ρ=0.941)，成员高度相关 |
+| 校准曲线 | 所有 head 均 under-confident（预测区间偏窄） |
+| Binned |err| vs σ | DKL Ensemble 呈单调递增趋势 |
+
+### Phase C': SNGP + Evidential Tier 1b（2026-04-10, Job 5881543）
+
+- **SNGPOracle**: SN-MLP backbone + 1024 RFF features
+  - ρ=0.768, ρ_{|err|,σ}=0.018, NLL=1453（RFF 方差严重错误校准）
+- **EvidentialOracle**: NIG 回归 + 退火证据正则化
+  - ρ=0.773, ρ_{|err|,σ}=0.074, NLL=1.762（合理但远低于 DKL Ensemble）
+- 结论: Ensemble disagreement 是唯一可靠的 UQ 机制
+
+### Phase G: 文档 & 提交（2026-04-10）
+
+- 创建 `doc/Stage_2/04_hybrid_predictor_RESULTS.md`（229 行，12 节，完整实验报告）
+- 更新 `doc/Stage_2/04_hybrid_predictor.md` §8.1 方法文本 + §9 checklist
+- 所有 checklist 项 A–G + C' 标记完成
+
+### 测试
+
+| 测试集 | 数量 | 状态 |
+|--------|------|------|
+| Unit tests (`test_hybrid_oracle.py`) | 34 | ✅ 全通过 |
+| Integration tests (`test_hybrid_integration.py`) | 5 | ✅ 全通过 |
+| **总计** | **39** | **✅ 39/39** |
+
+验证于 L40S GPU (Job 5881541)。
+
+### 关键 Takeaways
+
+1. **DKL Ensemble (M=5, bootstrap) 是唯一胜者**: ρ_{|err|,σ}=0.144 (p=0.015)，其他方法均 ≈ 0
+2. **Bootstrap 是关键**: 无 bootstrap → ρ_{|err|,σ} = −0.056，ensemble 成员多样性必须通过数据级扰动实现
+3. **Epistemic > Aleatoric**: 虽然 epistemic 仅占总方差 7.6%，但驱动了全部 uncertainty–error correlation
+4. **SNGP/Evidential 均不足**: 单模型方法无法产生可靠 UQ，Evidential 是 runner-up (0.074) 但仍远不及 ensemble
+5. **未达 stretch target**: ρ_{|err|,σ}=0.091±0.025 < 0.15，N=285 的 CASF-2016 可能是限制因素
+
+### Pipeline 脚本 & SLURM
+
+| 脚本 | 说明 |
+|------|------|
+| `scripts/pipeline/s18_train_oracle_heads.py` | 统一 oracle head 训练 + 评估（7 种方法） |
+| `scripts/pipeline/s19_oracle_diagnostics.py` | 诊断可视化（D.2–D.8 图表） |
+| `slurm/s18_oracle_heads.sh` | Tier 1 SLURM |
+| `slurm/s18_tier2_ablation.sh` | Tier 2 消融 SLURM |
+| `slurm/s18_tier1b_baselines.sh` | Tier 1b SLURM (SNGP + Evidential) |
+| `slurm/s19_oracle_diagnostics.sh` | 诊断 SLURM |
+| `slurm/run_tests.sh` | 测试运行 SLURM |
+
+### Next: Sub-Plan 05 (Delta Method Fusion)
+
+使用 DKL Ensemble 作为 oracle head，进行 generation–oracle uncertainty 融合。
