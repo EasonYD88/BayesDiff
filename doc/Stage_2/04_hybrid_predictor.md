@@ -2785,7 +2785,9 @@ python scripts/pipeline/s19_oracle_diagnostics.py \
 - [x] **G.3** Update `doc/Stage_2/04_hybrid_predictor_RESULTS.md` with final findings
   - Created comprehensive results document with 12 sections
   - Includes: executive summary, Tier 1/2 tables, uncertainty decomposition, calibration, config, figures, tests, compute budget, limitations
-- [ ] **G.4** Commit all results, figures, and documentation
+- [x] **G.4** Commit all results, figures, and documentation
+  - Commit `c1e4cc2`: "SP4 complete: Tier 1/2 experiments, tests (26/26), diagnostics, results doc"
+  - 11 files changed, +4138 −274 lines
 
 ### Dependency Graph
 
